@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #F26522;
+  --color-primary-hover: #EA580C;
+  --color-primary-dark: #C2410C;
+  --color-primary-light: #FFEDD5;
+  --color-navy: #14366A;
+  --color-navy-light: #1A365D;
+  --color-status-success: #10B981;
+  --color-status-danger: #EF4444;
+}
+
+:root {
+  --ukwms-orange: #F26522;
+  --ukwms-orange-hover: #EA580C;
+  --ukwms-orange-light: #FFF7ED;
+  --ukwms-navy: #14366A;
+  --ukwms-bg-slate: #F8FAFC;
+  --ukwms-success: #10B981;
+  --ukwms-danger: #EF4444;
+}
+
+@layer base {
+  body {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+}
+
+@layer utilities {
+
+  /* Glassmorphism Surface */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.07),
+      0 0 15px rgba(255, 255, 255, 0.5) inset;
+  }
+
+  .glass-card-dark {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Weightless Floating Hover Effect */
+  .antigravity-hover {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+  }
+
+  .antigravity-hover:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Subtle Perspective Tilt Container */
+  .perspective-container {
+    perspective: 1000px;
+  }
+}
