@@ -21,7 +21,6 @@ test-results/
 coverage/
 *.spec.js
 *.test.js
-playwright.config.*
 **/scripts/create-test-*.mjs
 backend/fix-test-db.js
 
