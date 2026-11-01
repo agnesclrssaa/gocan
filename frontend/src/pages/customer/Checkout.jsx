@@ -106,6 +106,11 @@ export const Checkout = () => {
         items: cartItems,
         totalPrice: grandTotal,
         canteenId: currentCanteen?.id || cartItems[0]?.canteen_id,
+        orderType,
+        buildingName: orderType === 'delivery' ? building.trim() : null,
+        meetingPoint: orderType === 'delivery' ? meetingPoint.trim() : null,
+        classInfo: orderType === 'delivery' ? classInfo.trim() : null,
+        deliveryNote: orderType === 'delivery' ? additionalNote.trim() : pickupNote.trim(),
       });
 
       setIsOrderSubmitted(true);

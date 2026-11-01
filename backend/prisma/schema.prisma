@@ -8,60 +8,65 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("customer")
-  approvalStatus String @default("pending") @map("approval_status")
-  canteenId String?
-  canteen   Canteen? @relation(fields: [canteenId], references: [id], onDelete: SetNull)
-  orders    Order[]
-  courierOrders Order[] @relation("CourierOrders")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  password       String
+  role           String   @default("customer")
+  approvalStatus String   @default("pending") @map("approval_status")
+  canteenId      String?
+  canteen        Canteen? @relation(fields: [canteenId], references: [id], onDelete: SetNull)
+  orders         Order[]
+  courierOrders  Order[]  @relation("CourierOrders")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Order {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  canteenId  String   @default("canteen-pak-brazil")
-  items      String
-  totalPrice Float
-  status     String   @default("pending")
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  canteen    Canteen  @relation(fields: [canteenId], references: [id], onDelete: Restrict)
-  courierId  Int?
-  courier    User?    @relation("CourierOrders", fields: [courierId], references: [id], onDelete: SetNull)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  canteenId    String   @default("canteen-pak-brazil")
+  items        String
+  totalPrice   Float
+  orderType    String   @default("delivery") @map("order_type")
+  buildingName String?  @map("building_name")
+  meetingPoint String?  @map("meeting_point")
+  classInfo    String?  @map("class_info")
+  deliveryNote String?  @map("delivery_note")
+  status       String   @default("pending")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  canteen      Canteen  @relation(fields: [canteenId], references: [id], onDelete: Restrict)
+  courierId    Int?
+  courier      User?    @relation("CourierOrders", fields: [courierId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([userId, createdAt])
   @@index([canteenId, status])
 }
 
 model Canteen {
-  id          String   @id
+  id          String  @id
   name        String
   description String
   location    String?
   imageUrl    String?
-  isOpen      Boolean  @default(true)
+  isOpen      Boolean @default(true)
   users       User[]
   orders      Order[]
   menus       Menu[]
 }
 
 model Menu {
-  id          String   @id
+  id          String  @id
   name        String
   price       Int
   canteenId   String
   imageUrl    String
   category    String?
   description String?
-  isAvailable Boolean  @default(true)
-  canteen     Canteen  @relation(fields: [canteenId], references: [id], onDelete: Cascade)
+  isAvailable Boolean @default(true)
+  canteen     Canteen @relation(fields: [canteenId], references: [id], onDelete: Cascade)
 
   @@index([canteenId, name])
 }
