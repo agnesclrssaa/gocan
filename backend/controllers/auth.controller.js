@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { randomUUID } = require('crypto');
 const jwt = require('jsonwebtoken');
 const prisma = require('../src/lib/prisma');
 
@@ -58,13 +59,27 @@ const register = async (req, res, next) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await prisma.user.create({
-      data: {
-        name: name.trim(),
-        email: normalizedEmail,
-        password: hashedPassword,
-        role,
-      },
+    const user = await prisma.$transaction(async (transaction) => {
+      const canteen = role === 'canteen'
+        ? await transaction.canteen.create({
+            data: {
+              id: randomUUID(),
+              name: name.trim(),
+              description: 'Mitra kantin GoCan',
+            },
+          })
+        : null;
+
+      return transaction.user.create({
+        data: {
+          name: name.trim(),
+          email: normalizedEmail,
+          password: hashedPassword,
+          role,
+          approvalStatus: role === 'runner' ? 'pending' : 'approved',
+          ...(canteen ? { canteenId: canteen.id } : {}),
+        },
+      });
     });
 
     return res.status(201).json({

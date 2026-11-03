@@ -75,8 +75,8 @@ export default function CanteenOrders() {
   return (
     <div className="space-y-6">
       {notificationMsg && (
-        <div className="fixed right-6 top-20 z-50 flex items-center gap-3 rounded-2xl border border-emerald-500/40 bg-slate-900 px-5 py-3.5 text-white shadow-2xl">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+        <div className="fixed right-6 top-20 z-50 flex items-center gap-3 rounded-xl border border-blue-500/40 bg-slate-900 px-5 py-3.5 text-white shadow-sm">
+          <CheckCircle2 className="h-5 w-5 text-blue-400" />
           <span className="text-xs font-semibold sm:text-sm">{notificationMsg}</span>
           <button
             type="button"
@@ -89,9 +89,9 @@ export default function CanteenOrders() {
         </div>
       )}
 
-      <header className="glass-card flex flex-col justify-between gap-4 rounded-2xl p-4 sm:flex-row sm:items-center sm:p-5">
+      <header className="bg-white border border-slate-200 flex flex-col justify-between gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500 text-slate-950">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500 text-slate-950">
             <Utensils className="h-6 w-6" />
           </div>
           <div>
@@ -110,7 +110,7 @@ export default function CanteenOrders() {
         </button>
       </header>
 
-      <nav aria-label="Filter status pesanan" className="glass-card flex gap-1.5 overflow-x-auto rounded-2xl p-2">
+      <nav aria-label="Filter status pesanan" className="bg-white border border-slate-200 flex gap-1.5 overflow-x-auto rounded-xl p-2">
         {statusTabs.map((tab) => {
           const count = orders.filter((order) => tab.statuses.includes(order.status)).length;
           return (
@@ -120,13 +120,13 @@ export default function CanteenOrders() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === tab.id
-                  ? 'bg-emerald-600 text-white shadow-md'
+                  ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'
               }`}
             >
               {tab.label}
               {count > 0 && (
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === tab.id ? 'bg-white text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === tab.id ? 'bg-white text-blue-800' : 'bg-slate-200 text-slate-700'}`}>
                   {count}
                 </span>
               )}
@@ -136,7 +136,7 @@ export default function CanteenOrders() {
       </nav>
 
       {ordersError && (
-        <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
           {ordersError}
         </div>
       )}
@@ -150,7 +150,7 @@ export default function CanteenOrders() {
         </div>
 
         {loadingOrders && (
-          <div role="status" className="glass-card rounded-2xl p-8 text-center text-sm text-slate-500">
+          <div role="status" className="bg-white border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-500">
             Memuat pesanan kantin...
           </div>
         )}
@@ -159,7 +159,7 @@ export default function CanteenOrders() {
           <article
             key={order.id}
             data-testid="canteen-order-card"
-            className="glass-card space-y-4 rounded-2xl border border-white/60 p-5 shadow-sm"
+            className="space-y-4 rounded-xl border border-slate-200 bg-white p-5"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -172,7 +172,7 @@ export default function CanteenOrders() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-black text-emerald-700">
+                <p className="font-black text-blue-700">
                   Rp {Number(order.totalPrice || 0).toLocaleString('id-ID')}
                 </p>
                 <p className="mt-1 text-xs font-semibold capitalize text-slate-500">{order.status}</p>
@@ -189,7 +189,7 @@ export default function CanteenOrders() {
                   type="button"
                   disabled={updatingOrderId === order.id}
                   onClick={() => updateOrderStatus(order.id, 'cooking')}
-                  className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60"
+                  className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"
                 >
                   {updatingOrderId === order.id ? 'Menyimpan...' : 'Terima Pesanan'}
                 </button>
@@ -212,7 +212,7 @@ export default function CanteenOrders() {
         ))}
 
         {!loadingOrders && !ordersError && filteredOrders.length === 0 && (
-          <div className="glass-card rounded-2xl p-8 text-center text-sm text-slate-500">
+          <div className="bg-white border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-500">
             Tidak ada pesanan pada status ini.
           </div>
         )}

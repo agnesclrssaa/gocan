@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/common/BrandLogo';
 import { useAuth } from '../context/AuthContext';
@@ -8,18 +8,33 @@ import {
   Building2,
   Receipt,
   Database,
-  Users,
   ExternalLink,
-  Bell,
   Menu,
   X,
   LogOut
 } from 'lucide-react';
+import { api } from '../lib/api';
 
 export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [overview, setOverview] = useState(null);
+  const [overviewError, setOverviewError] = useState('');
   const { signOut } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+    api.get('/admin/overview')
+      .then((data) => {
+        if (active) setOverview(data);
+      })
+      .catch((error) => {
+        if (active) setOverviewError(error.message || 'Gagal memuat status admin.');
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleLogout = async () => {
     await signOut();
@@ -54,7 +69,7 @@ export default function AdminLayout() {
       end: false,
       label: 'Master Data & Approval',
       icon: Database,
-      badge: '2 Pending',
+      badge: overview?.metrics?.pendingApprovals ? `${overview.metrics.pendingApprovals} Pending` : null,
       desc: 'User, stan, kurir, gedung'
     }
   ];
@@ -101,10 +116,14 @@ export default function AdminLayout() {
 
             {/* Quick SLA Badge */}
             <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2.5 text-amber-300">
-              <ShieldAlert className="w-5 h-5 shrink-0 text-amber-400 animate-bounce" />
+              <ShieldAlert className="w-5 h-5 shrink-0 text-amber-400" />
               <div className="text-xs">
-                <p className="font-bold">SLA Alert Aktif</p>
-                <p className="text-[10px] text-amber-200/80">Pantau 5 orderan mengambang</p>
+                <p className="font-bold">Pesanan siap antar</p>
+                <p className="text-[10px] text-amber-200/80">
+                  {overview
+                    ? `${overview.metrics.unassignedOrderCount} belum ditugaskan`
+                    : overviewError || 'Memuat status pesanan...'}
+                </p>
               </div>
             </div>
           </div>
@@ -195,8 +214,8 @@ export default function AdminLayout() {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Database Realtime Terhubung
+            <span className={`w-2 h-2 rounded-full ${overview ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+            {overview ? 'API admin terhubung' : overviewError ? 'API admin tidak tersedia' : 'Memuat koneksi API'}
             </div>
             <button
               type="button"

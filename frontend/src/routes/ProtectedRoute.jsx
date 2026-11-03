@@ -77,10 +77,8 @@ export const ProtectedRoute = ({ allowedRoles = [], requireApproval = true }) =>
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // 5. Pemeriksaan Status Persetujuan Admin (Canteen & Runner)
-  //    PENTING: HANYA status 'approved' yang diizinkan mengakses operasi portal.
-  //    Status 'pending', 'rejected', null, maupun nilai tak dikenal otomatis diblokir!
-  if (requireApproval && (profile.role === 'canteen' || profile.role === 'runner')) {
+  // 5. Pemeriksaan Status Persetujuan Admin (Runner)
+  if (requireApproval && profile.role === 'runner') {
     if (profile.approval_status !== 'approved') {
       return (
         <PendingApprovalScreen

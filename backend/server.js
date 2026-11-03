@@ -20,6 +20,7 @@ const cors = require('cors');
 const express = require('express');
 const prisma = require('./src/lib/prisma');
 const authRoutes = require('./routes/auth.routes');
+const adminRoutes = require('./routes/admin.routes');
 const healthRoutes = require('./routes/health.routes');
 const menuRoutes = require('./routes/menuRoutes');
 const orderRoutes = require('./routes/orderRoutes');
@@ -60,6 +61,7 @@ app.use((_req, res, next) => {
 
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/canteens', menuRoutes);
 app.use('/api/orders', orderRoutes);
 

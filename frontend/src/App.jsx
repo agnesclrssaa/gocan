@@ -107,8 +107,10 @@ function RoleLanding() {
     );
   }
 
-  // Role Customer langsung ke Beranda Utama
-  if (profile.role === 'customer') return <Home />;
+  // Keep the storefront available at the root URL for customers and canteen partners.
+  if (profile.role === 'customer' || profile.role === 'canteen' || profile.role === 'canteen_staff') {
+    return <Home />;
+  }
 
   // Role selain customer dialihkan ke portal masing-masing
   const destination = roleHome[profile.role];
@@ -191,7 +193,7 @@ export function App() {
             </Route>
 
             {/* Canteen Portal Routes (Terproteksi Role & Approval) */}
-            <Route element={<ProtectedRoute allowedRoles={['canteen', 'canteen_staff']} requireApproval={true} />}>
+            <Route element={<ProtectedRoute allowedRoles={['canteen', 'canteen_staff']} requireApproval={false} />}>
               <Route path="/canteen-dashboard" element={<CanteenLayout />}>
                 <Route index element={<CanteenDashboard />} />
                 <Route path="orders" element={<CanteenOrders />} />

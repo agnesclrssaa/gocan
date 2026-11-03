@@ -31,6 +31,7 @@ export const api = {
   get: async (path) => (await client.get(path)).data,
   post: async (path, body) => (await client.post(path, body)).data,
   patch: async (path, body) => (await client.patch(path, body)).data,
+  delete: async (path) => (await client.delete(path)).data,
 };
 
 export const AUTH_TOKEN_KEY = TOKEN_KEY;

@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 
@@ -53,6 +55,13 @@ const menus = [
 
 const testAccounts = [
   {
+    name: 'GoCan Admin',
+    email: process.env.ADMIN_EMAIL || 'admin@gocan.test',
+    password: process.env.ADMIN_PASSWORD || 'AdminGoCan123!',
+    role: 'admin',
+    canteenId: null,
+  },
+  {
     name: 'Kantin Pak Brazil',
     email: 'kantin.pakbrazil@test.com',
     password: process.env.SEED_CANTEEN_PASSWORD || 'KantinTest123!',
@@ -69,6 +78,13 @@ const testAccounts = [
 ];
 
 async function main() {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD)
+  ) {
+    throw new Error('ADMIN_EMAIL dan ADMIN_PASSWORD wajib diatur sebelum menjalankan seed di production.');
+  }
+
   await prisma.canteen.upsert({
     where: { id: canteen.id },
     update: canteen,
@@ -92,6 +108,7 @@ async function main() {
         password: hashedPassword,
         role: account.role,
         canteenId: account.canteenId,
+        approvalStatus: 'approved',
       },
       create: {
         name: account.name,
@@ -99,11 +116,15 @@ async function main() {
         password: hashedPassword,
         role: account.role,
         canteenId: account.canteenId,
+        approvalStatus: 'approved',
       },
     });
   }
 
   console.log(`Seeded ${menus.length} menus and ${testAccounts.length} test accounts.`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Development admin account: ${process.env.ADMIN_EMAIL || 'admin@gocan.test'}`);
+  }
 }
 
 main()

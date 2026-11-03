@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/common/BrandLogo';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -15,10 +16,49 @@ import {
 } from 'lucide-react';
 
 export default function CanteenLayout() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [canteen, setCanteen] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [canteenLoading, setCanteenLoading] = useState(true);
+  const [canteenError, setCanteenError] = useState(null);
+  const [updatingStoreStatus, setUpdatingStoreStatus] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const refreshCanteen = useCallback(async () => {
+    setCanteenLoading(true);
+    setCanteenError(null);
+    try {
+      const currentCanteen = await api.get('/canteens/mine');
+      setCanteen(currentCanteen);
+      setIsOpen(currentCanteen.isOpen);
+      return currentCanteen;
+    } catch (error) {
+      setCanteenError(`Gagal memuat data kantin: ${error.message}`);
+      return null;
+    } finally {
+      setCanteenLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshCanteen();
+  }, [refreshCanteen]);
+
+  const handleStoreStatusChange = async () => {
+    if (updatingStoreStatus) return;
+    setUpdatingStoreStatus(true);
+    setCanteenError(null);
+    try {
+      const updatedCanteen = await api.patch('/canteens/mine', { isOpen: !isOpen });
+      setCanteen((current) => ({ ...current, ...updatedCanteen }));
+      setIsOpen(updatedCanteen.isOpen);
+    } catch (error) {
+      setCanteenError(`Gagal mengubah status stan: ${error.message}`);
+    } finally {
+      setUpdatingStoreStatus(false);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -50,36 +90,31 @@ export default function CanteenLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-100 flex flex-col md:flex-row text-slate-800 font-sans relative selection:bg-emerald-500 selection:text-white">
-      {/* Ambient background glow orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-300/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/3 -right-40 w-96 h-96 bg-teal-300/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-slate-400/10 rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800 font-sans selection:bg-blue-200 selection:text-blue-950">
 
       {/* Mobile Top Header */}
-      <div className="md:hidden glass-card-dark text-white px-4 py-3 flex items-center justify-between border-b border-emerald-900/60 sticky top-0 z-50">
+      <div className="md:hidden bg-[#123B72] text-white px-4 py-3 flex items-center justify-between border-b border-[#0D2C55] sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <BrandLogo className="h-8 w-8 rounded-lg" />
           <div>
             <h1 className="text-sm font-bold leading-tight">GoCan Merchant</h1>
-            <p className="text-[10px] text-emerald-300">Stan Kantin UKWMS</p>
+            <p className="text-[10px] text-blue-200">Stan Kantin UKWMS</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={handleStoreStatusChange}
+            disabled={canteenLoading || updatingStoreStatus}
             className={`px-2 py-1 rounded-full text-[10px] font-bold border transition ${isOpen
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                ? 'bg-blue-500/20 text-blue-100 border-blue-400/40'
                 : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-              }`}
+              } disabled:cursor-wait disabled:opacity-60`}
           >
             {isOpen ? '🟢 BUKA' : '🔴 TUTUP'}
           </button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-emerald-200"
+            className="p-1.5 rounded-lg bg-blue-800 hover:bg-blue-700 text-blue-100"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -88,7 +123,7 @@ export default function CanteenLayout() {
 
       {/* Merchant Sidebar (Desktop + Mobile Drawer) */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-40 h-full md:h-screen w-64 md:w-72 bg-emerald-950 text-white flex flex-col justify-between border-r border-emerald-900/60 shadow-xl transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed md:sticky top-0 left-0 z-40 h-full md:h-screen w-64 md:w-72 bg-[#123B72] text-white flex flex-col justify-between border-r border-[#0D2C55] transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
       >
         <div className="p-5 flex flex-col gap-6">
@@ -96,12 +131,12 @@ export default function CanteenLayout() {
           <div>
             <div className="flex items-center justify-between">
               <Link to="/" className="flex items-center gap-2 group">
-                <BrandLogo className="h-9 w-9 rounded-xl shadow-md shadow-emerald-500/20" />
+                <BrandLogo className="h-9 w-9 rounded-xl" />
                 <div>
                   <span className="text-lg font-black tracking-tight text-white">
-                    Go<span className="text-emerald-400">Can</span>
+                    Go<span className="text-blue-300">Can</span>
                   </span>
-                  <span className="ml-1.5 text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-emerald-800/80 text-emerald-200 border border-emerald-700">
+                  <span className="ml-1.5 text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-blue-800 text-blue-100 border border-blue-700">
                     Merchant
                   </span>
                 </div>
@@ -109,16 +144,16 @@ export default function CanteenLayout() {
             </div>
 
             {/* Merchant Identity Card */}
-            <div className="mt-4 p-3 rounded-xl bg-emerald-900/60 border border-emerald-800/60">
-              <p className="text-xs text-emerald-300 font-medium">Stan Aktif:</p>
-              <h2 className="text-sm font-bold text-white truncate">Stan 04 - Dapur Bu Siti</h2>
-              <p className="text-[11px] text-emerald-400/80">Kantin Utama UKWMS Dinoyo</p>
+            <div className="mt-4 p-3 rounded-xl bg-blue-900/50 border border-blue-800">
+              <p className="text-xs text-blue-200 font-medium">Akun Mitra:</p>
+              <h2 className="text-sm font-bold text-white truncate">{user?.name || 'Mitra Kantin'}</h2>
+              <p className="text-[11px] text-blue-200 truncate">{user?.email}</p>
 
               {/* Status Toko Toggle */}
-              <div className="mt-3 pt-3 border-t border-emerald-800/70 flex items-center justify-between">
+              <div className="mt-3 pt-3 border-t border-blue-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${isOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'
+                    className={`w-2.5 h-2.5 rounded-full ${isOpen ? 'bg-blue-300' : 'bg-rose-500'
                       }`}
                   />
                   <span className="text-xs font-semibold">
@@ -127,8 +162,10 @@ export default function CanteenLayout() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsOpen(!isOpen)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isOpen ? 'bg-emerald-500' : 'bg-slate-700'
+                  onClick={handleStoreStatusChange}
+                  disabled={canteenLoading || updatingStoreStatus}
+                  aria-label={isOpen ? 'Tutup stan' : 'Buka stan'}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:cursor-wait disabled:opacity-60 ${isOpen ? 'bg-blue-500' : 'bg-slate-700'
                     }`}
                 >
                   <span
@@ -142,7 +179,7 @@ export default function CanteenLayout() {
 
           {/* Navigation Menu */}
           <nav className="flex flex-col gap-1.5">
-            <p className="text-[11px] font-bold text-emerald-400/70 uppercase tracking-wider px-3 mb-1">
+            <p className="text-[11px] font-bold text-blue-200 uppercase tracking-wider px-3 mb-1">
               Menu Utama
             </p>
             {navItems.map((item) => {
@@ -155,8 +192,8 @@ export default function CanteenLayout() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
                     `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition group ${isActive
-                      ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                      : 'text-emerald-100/90 hover:bg-emerald-900 hover:text-white'
+                      ? 'bg-blue-500 text-white font-bold'
+                      : 'text-blue-100 hover:bg-blue-900 hover:text-white'
                     }`
                   }
                 >
@@ -164,7 +201,7 @@ export default function CanteenLayout() {
                     <>
                       <div className="flex items-center gap-3">
                         <Icon
-                          className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-emerald-400 group-hover:text-emerald-200'
+                          className={`w-4 h-4 ${isActive ? 'text-white' : 'text-blue-200 group-hover:text-white'
                             }`}
                         />
                         <span>{item.label}</span>
@@ -172,8 +209,8 @@ export default function CanteenLayout() {
                       {item.badge && (
                         <span
                           className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${isActive
-                              ? 'bg-slate-950 text-emerald-300'
-                              : 'bg-emerald-700 text-emerald-200'
+                              ? 'bg-blue-950 text-blue-100'
+                              : 'bg-blue-800 text-blue-100'
                             }`}
                         >
                           {item.badge}
@@ -188,10 +225,10 @@ export default function CanteenLayout() {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-emerald-900/80 bg-emerald-950/60 flex flex-col gap-2">
+        <div className="p-4 border-t border-blue-800 bg-[#102F5A] flex flex-col gap-2">
           <Link
             to="/"
-            className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-emerald-300 hover:bg-emerald-900/60 hover:text-white transition"
+            className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-blue-200 hover:bg-blue-900 hover:text-white transition"
           >
             <span className="flex items-center gap-2">
               <ExternalLink className="w-3.5 h-3.5" />
@@ -207,9 +244,9 @@ export default function CanteenLayout() {
             <LogOut className="w-3.5 h-3.5" />
             <span>Keluar dari Akun Kantin</span>
           </button>
-          <div className="pt-2 border-t border-emerald-900/40 flex items-center justify-between text-[11px] text-emerald-400/60 px-1">
+          <div className="pt-2 border-t border-blue-800 flex items-center justify-between text-[11px] text-blue-300 px-1">
             <span>GoCan v1.0 • UKWMS</span>
-            <span className="text-emerald-300 font-medium">Merchant Mode</span>
+            <span className="text-blue-200 font-medium">Merchant Mode</span>
           </div>
         </div>
       </aside>
@@ -217,27 +254,27 @@ export default function CanteenLayout() {
       {/* Main Content Area */}
       <main className="flex-1 min-w-0 flex flex-col min-h-screen">
         {/* Desktop Topbar */}
-        <header className="hidden md:flex h-16 bg-white/70 backdrop-blur-md border-b border-white/60 px-6 items-center justify-between sticky top-0 z-30 shadow-xs">
+        <header className="hidden md:flex h-16 bg-white border-b border-slate-200 px-6 items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-bold text-slate-800 tracking-tight">Portal Mitra Stan Kantin</h2>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-800 border border-emerald-500/30 font-bold flex items-center gap-1.5 shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-600" />
               Live Operasional
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/80 border border-slate-200/80 text-xs text-slate-700 font-semibold shadow-2xs">
-              <span className={`w-2.5 h-2.5 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 font-semibold">
+              <span className={`w-2.5 h-2.5 rounded-full ${isOpen ? 'bg-blue-600' : 'bg-rose-500'}`} />
               {isOpen ? 'Stan Menerima Pesanan' : 'Stan Sedang Tutup'}
             </div>
             <Link
               to="/canteen-portal/orders"
-              className="p-2 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-white/80 border border-transparent hover:border-emerald-200 relative transition shadow-2xs"
+              className="p-2 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-50 border border-transparent hover:border-blue-200 relative transition"
               title="Notifikasi Pesanan"
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white animate-bounce"></span>
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-blue-600 ring-2 ring-white"></span>
             </Link>
             <button
               type="button"
@@ -252,7 +289,27 @@ export default function CanteenLayout() {
 
         {/* Page Outlet */}
         <div className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto relative z-10">
-          <Outlet />
+          {canteenError && (
+            <div role="alert" className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+              {canteenError}
+              <button type="button" onClick={refreshCanteen} className="ml-3 font-bold underline">
+                Coba lagi
+              </button>
+            </div>
+          )}
+          {canteenLoading && !canteen ? (
+            <div role="status" className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+              Memuat data kantin...
+            </div>
+          ) : (
+            <Outlet context={{
+              canteen,
+              refreshCanteen,
+              isOpen,
+              updateStoreStatus: handleStoreStatusChange,
+              updatingStoreStatus,
+            }} />
+          )}
         </div>
       </main>
     </div>

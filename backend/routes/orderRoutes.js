@@ -15,9 +15,9 @@ router.use(requireAuth);
 router.get('/', listOrders);
 router.post('/', createOrder);
 router.get('/canteen', requireRole('canteen'), listCanteenOrders);
-router.get('/courier', requireRole('courier'), listCourierOrders);
+router.get('/courier', requireRole('runner', 'courier'), listCourierOrders);
 router.get('/:id', getOrder);
 router.post('/:id/cancel', cancelOrder);
-router.patch('/:id/status', requireRole('canteen', 'courier'), updateOrderStatus);
+router.patch('/:id/status', requireRole('canteen', 'runner', 'courier'), updateOrderStatus);
 
 module.exports = router;

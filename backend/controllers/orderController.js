@@ -53,9 +53,27 @@ const createOrder = async (req, res, next) => {
       return res.status(400).json({ error: 'ID kantin wajib disertakan pada pesanan.' });
     }
 
-    const canteen = await prisma.canteen.findUnique({ where: { id: canteenId }, select: { id: true } });
+    const canteen = await prisma.canteen.findUnique({
+      where: { id: canteenId },
+      select: { id: true, isOpen: true },
+    });
     if (!canteen) {
       return res.status(400).json({ error: 'Kantin pada pesanan tidak ditemukan.' });
+    }
+    if (!canteen.isOpen) {
+      return res.status(409).json({ error: 'Kantin sedang tutup dan tidak menerima pesanan.' });
+    }
+
+    const menuIds = [...new Set(items.map((item) => item.id).filter((id) => typeof id === 'string'))];
+    if (menuIds.length === 0 || items.some((item) => typeof item.id !== 'string')) {
+      return res.status(400).json({ error: 'Setiap item pesanan harus memiliki ID menu yang valid.' });
+    }
+    const availableMenus = await prisma.menu.findMany({
+      where: { id: { in: menuIds }, canteenId: canteen.id, isAvailable: true },
+      select: { id: true },
+    });
+    if (availableMenus.length !== menuIds.length) {
+      return res.status(409).json({ error: 'Ada menu yang tidak tersedia atau sudah habis.' });
     }
 
     const order = await prisma.order.create({
@@ -93,8 +111,8 @@ const listCanteenOrders = async (req, res, next) => {
     }
 
     const orders = await prisma.order.findMany({
-      where: { canteenId: user.canteenId, status: 'pending' },
-      orderBy: { createdAt: 'asc' },
+      where: { canteenId: user.canteenId },
+      orderBy: { createdAt: 'desc' },
     });
     return res.json(orders.map(parseOrderItems));
   } catch (error) {
@@ -110,6 +128,16 @@ const updateOrderStatus = async (req, res, next) => {
       userRole === 'canteen' ? ['cooking', 'ready'] : ['delivering', 'completed'];
     if (!allowedStatuses.includes(targetStatus)) {
       return res.status(400).json({ error: 'Status tujuan tidak valid untuk peran akun ini.' });
+    }
+
+    if (userRole === 'runner' || userRole === 'courier') {
+      const courier = await prisma.user.findUnique({
+        where: { id: req.auth.userId },
+        select: { approvalStatus: true },
+      });
+      if (!courier || courier.approvalStatus !== 'approved') {
+        return res.status(403).json({ error: 'Akun runner belum disetujui admin.' });
+      }
     }
 
     const orderId = Number(req.params.id);
@@ -148,7 +176,11 @@ const updateOrderStatus = async (req, res, next) => {
       });
     } else if (targetStatus === 'delivering') {
       const claimed = await prisma.order.updateMany({
-        where: { id: orderId, status: 'ready', courierId: null },
+        where: {
+          id: orderId,
+          status: 'ready',
+          OR: [{ courierId: null }, { courierId: req.auth.userId }],
+        },
         data: { status: 'delivering', courierId: req.auth.userId },
       });
       if (claimed.count !== 1) {
@@ -178,10 +210,19 @@ const updateOrderStatus = async (req, res, next) => {
 
 const listCourierOrders = async (req, res, next) => {
   try {
+    const courier = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      select: { approvalStatus: true },
+    });
+    if (!courier || courier.approvalStatus !== 'approved') {
+      return res.status(403).json({ error: 'Akun runner belum disetujui admin.' });
+    }
+
     const orders = await prisma.order.findMany({
       where: {
         OR: [
           { status: 'ready', courierId: null },
+          { status: 'ready', courierId: req.auth.userId },
           { status: 'delivering', courierId: req.auth.userId },
         ],
       },
