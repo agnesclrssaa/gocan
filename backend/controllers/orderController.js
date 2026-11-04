@@ -2,7 +2,20 @@ const prisma = require('../src/lib/prisma');
 
 const createOrder = async (req, res, next) => {
   try {
+<<<<<<< HEAD
     let { items, totalPrice, canteenId } = req.body || {};
+=======
+    let {
+      items,
+      totalPrice,
+      canteenId,
+      orderType = 'delivery',
+      buildingName,
+      meetingPoint,
+      classInfo,
+      deliveryNote,
+    } = req.body || {};
+>>>>>>> 8466e8d987e5d2648f68fd3799c0a99c630dbd0a
 
     if (typeof items === 'string') {
       try {
@@ -18,7 +31,18 @@ const createOrder = async (req, res, next) => {
       !items.every((item) => item && typeof item === 'object' && !Array.isArray(item)) ||
       typeof totalPrice !== 'number' ||
       !Number.isFinite(totalPrice) ||
+<<<<<<< HEAD
       totalPrice < 0
+=======
+      totalPrice < 0 ||
+      !['delivery', 'pickup'].includes(orderType) ||
+      [buildingName, meetingPoint, classInfo, deliveryNote].some(
+        (value) =>
+          value !== undefined &&
+          value !== null &&
+          (typeof value !== 'string' || value.length > 500)
+      )
+>>>>>>> 8466e8d987e5d2648f68fd3799c0a99c630dbd0a
     ) {
       return res.status(400).json({
         error: 'Items harus berisi minimal satu menu dan totalPrice harus berupa angka non-negatif.',
@@ -48,6 +72,14 @@ const createOrder = async (req, res, next) => {
         canteenId,
         items: JSON.stringify(items),
         totalPrice,
+<<<<<<< HEAD
+=======
+        orderType,
+        buildingName: orderType === 'delivery' ? buildingName?.trim() || null : null,
+        meetingPoint: orderType === 'delivery' ? meetingPoint?.trim() || null : null,
+        classInfo: orderType === 'delivery' ? classInfo?.trim() || null : null,
+        deliveryNote: deliveryNote?.trim() || null,
+>>>>>>> 8466e8d987e5d2648f68fd3799c0a99c630dbd0a
       },
     });
 
