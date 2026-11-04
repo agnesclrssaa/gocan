@@ -1,0 +1,744 @@
+/* =========================
+MAIN LAYOUT
+========================= */
+
+.gocan-auth-page {
+min-height: 100vh;
+display: grid;
+grid-template-columns: 55% 45%;
+background: #0755b5;
+font-family: 'Baloo 2', sans-serif;
+color: #20243a;
+overflow: hidden;
+}
+
+/* =========================
+LEFT PANEL
+========================= */
+
+.gocan-auth-visual {
+  position: relative;
+  overflow: hidden;
+  background-color: #ffffff;
+  background-image: radial-gradient(
+    circle 200px at 100% 100%,
+    #eaf0fa 99%,
+    transparent 100%
+  );
+}
+
+/* Dekorasi lingkaran krem kiri atas */
+
+.gocan-auth-visual::before {
+content: '';
+position: absolute;
+width: 400px;
+height: 400px;
+border-radius: 50%;
+background: #fff4d9;
+left: -215px;
+top: -195px;
+z-index: 0;
+}
+
+.gocan-auth-visual {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Logo */
+
+.gocan-auth-logo {
+position: absolute;
+z-index: 6;
+left: 65px;
+top: 38px;
+width: 175px;
+height: 100px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.gocan-auth-logo img {
+max-width: 100%;
+max-height: 100%;
+object-fit: contain;
+}
+
+/* Mascot */
+
+.gocan-mascot-wrap {
+position: absolute;
+z-index: 2;
+width: min(410px, 70%);
+aspect-ratio: 1;
+top: 15%;
+left: 50%;
+transform: translateX(-50%);
+display: grid;
+place-items: center;
+margin: 0;
+}
+
+.gocan-mascot-wrap::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  width: 105%;
+  height: 105%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(210, 226, 255, 0.65) 0%,
+    rgba(229, 239, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0) 75%
+  );
+  filter: blur(12px);
+}
+
+.gocan-mascot {
+position: relative;
+z-index: 2;
+width: 88%;
+height: 88%;
+object-fit: contain;
+filter: drop-shadow(0 18px 18px rgba(66,49,36,.13));
+animation: mascotBob 4s ease-in-out infinite;
+}
+
+/* Orbit */
+
+.mascot-orbit {
+position: absolute;
+width: 84%;
+height: 84%;
+border: 3px dashed rgba(33,82,183,.16);
+border-radius: 50%;
+transform: rotate(-18deg);
+}
+
+/* Stars */
+
+.mascot-spark {
+position: absolute;
+z-index: 3;
+width: 23px;
+height: 23px;
+clip-path: polygon(
+50% 0,62% 37%,100% 50%,62% 63%,
+50% 100%,38% 63%,0 50%,38% 37%
+);
+}
+
+.spark-one {
+background: #f7bd00;
+top: 30%;
+left: 8%;
+width: 35px;
+height: 35px;
+}
+
+.spark-two {
+background: #ed2028;
+right: 8%;
+top: 34%;
+width: 25px;
+height: 25px;
+}
+
+.spark-three {
+background: #2152b7;
+left: 15%;
+bottom: 20%;
+width: 22px;
+height: 22px;
+}
+
+/* Left text */
+
+.gocan-visual-copy {
+position: absolute;
+z-index: 3;
+left: 12%;
+bottom: 7%;
+text-align: left;
+max-width: 480px;
+}
+
+.gocan-eyebrow {
+display: inline-block;
+color: #0755b5;
+font-size: 12px;
+font-weight: 800;
+letter-spacing: 3px;
+margin-bottom: 12px;
+}
+
+.gocan-visual-copy h2 {
+font-size: clamp(36px, 4vw, 55px);
+line-height: 1.06;
+font-weight: 800;
+color: #193252;
+margin: 0 0 18px;
+}
+
+.gocan-visual-copy h2 span {
+color: #ed2028;
+}
+
+.gocan-visual-copy p {
+font-size: 16px;
+line-height: 1.6;
+color: #77818f;
+max-width: 390px;
+margin: 0;
+}
+
+/* =========================
+RIGHT PANEL
+========================= */
+
+.gocan-auth-panel {
+position: relative;
+min-height: 100vh;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 90px 9% 65px;
+overflow: hidden;
+
+background-color: #0755b5;
+
+background-image:
+radial-gradient(circle at 72% 19%, rgba(255,255,255,.55) 0 7px, transparent 8px),
+radial-gradient(circle at 82% 28%, rgba(255,255,255,.18) 0 8px, transparent 9px),
+radial-gradient(circle at 65% 36%, rgba(255,255,255,.18) 0 8px, transparent 9px);
+}
+
+/* Dekorasi merah dan kuning */
+
+.gocan-auth-panel::before {
+content: '';
+position: absolute;
+top: -75px;
+right: -65px;
+width: 180px;
+height: 180px;
+border-radius: 50%;
+background: #ed2028;
+}
+
+.gocan-auth-panel::after {
+content: '';
+position: absolute;
+bottom: -95px;
+right: 45px;
+width: 155px;
+height: 155px;
+border-radius: 50%;
+background: #ffc107;
+}
+
+/* Back link */
+
+.auth-back-link {
+  position: absolute;
+  top: 35px;
+  left: 45px;
+  z-index: 5;
+  font-size: 15px;
+  color: white;
+}
+
+/* Login card - transparent */
+
+.gocan-auth-card {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 535px);
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 55px;
+}
+
+/* =========================
+HEADING
+========================= */
+
+.auth-heading {
+margin-bottom: 25px;
+}
+
+.auth-wordmark {
+font-size: 40px;
+font-weight: 800;
+color: #fff;
+line-height: 1;
+}
+
+.auth-wordmark span {
+color: #ffc107;
+}
+
+.auth-heading h1 {
+font-size: 46px;
+font-weight: 800;
+color: #fff;
+margin: 20px 0 4px;
+}
+
+.auth-heading p {
+font-size: 15px;
+color: #dce8ff;
+margin: 0;
+}
+
+/* =========================
+LOGIN FORM
+========================= */
+
+.gocan-auth-form {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.gocan-auth-form > label {
+font-size: 14px;
+font-weight: 700;
+color: #fff;
+margin-top: 8px;
+}
+
+.gocan-auth-form input:not([type=checkbox]) {
+width: 100%;
+height: 65px;
+box-sizing: border-box;
+border: 2px solid rgba(255,255,255,.2);
+border-radius: 15px;
+background: #084b98;
+padding: 0 20px;
+font: 500 15px 'Baloo 2', sans-serif;
+color: #fff;
+outline: none;
+}
+
+.gocan-auth-form input::placeholder {
+color: #9eb6d9;
+}
+
+.gocan-auth-form input:focus {
+border-color: #ffc107;
+box-shadow: 0 0 0 3px rgba(255,193,7,.12);
+}
+
+/* Password */
+
+.auth-password-field {
+position: relative;
+}
+
+.auth-password-field input {
+padding-right: 75px !important;
+}
+
+.auth-password-field button {
+position: absolute;
+right: 18px;
+top: 50%;
+transform: translateY(-50%);
+border: 0;
+background: none;
+color: #ffc107;
+font-weight: 700;
+cursor: pointer;
+font-family: 'Baloo 2', sans-serif;
+}
+
+/* Remember me */
+
+.auth-options {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin: 7px 0 15px;
+font-size: 13px;
+}
+
+.auth-checkbox {
+display: flex;
+align-items: center;
+gap: 7px;
+color: #dce8ff;
+}
+
+.auth-checkbox input {
+accent-color: #ffc107;
+}
+
+.auth-text-button {
+border: 0;
+background: none;
+color: #ffc107;
+font-weight: 700;
+cursor: pointer;
+font-family: 'Baloo 2', sans-serif;
+}
+
+/* Login button */
+
+.auth-submit {
+height: 65px;
+border: 0;
+border-radius: 15px;
+background: #ffc107;
+color: #17304f;
+font: 800 18px 'Baloo 2', sans-serif;
+cursor: pointer;
+box-shadow: none;
+}
+
+.auth-submit:hover {
+background: #f0b500;
+}
+
+.auth-submit:disabled {
+opacity: .65;
+cursor: wait;
+}
+
+/* Register */
+
+.auth-switch {
+text-align: center;
+color: #dce8ff;
+font-size: 14px;
+margin: 28px 0 12px;
+}
+
+.auth-switch a {
+color: #ffc107;
+font-weight: 800;
+text-decoration: none;
+}
+
+.auth-footer {
+text-align: center;
+color: rgba(255,255,255,.45);
+font-size: 12px;
+margin-top: 45px;
+}
+
+/* Error */
+
+.auth-error {
+padding: 11px 13px;
+border-radius: 11px;
+font-size: 13px;
+margin-bottom: 15px;
+color: #b42318;
+background: #fff1f0;
+border: 1px solid #ffd4d1;
+}
+
+/* Register role options */
+
+.auth-role-options {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 8px;
+}
+
+.auth-role-options button {
+min-height: 42px;
+border: 1.5px solid #e7e5e1;
+border-radius: 11px;
+background: #fff;
+color: #737787;
+font-weight: 700;
+cursor: pointer;
+}
+
+.auth-role-options button.selected {
+border-color: #2152b7;
+background: #edf3ff;
+color: #2152b7;
+}
+
+.auth-note {
+padding: 10px 12px;
+border-radius: 10px;
+background: #fff8e6;
+border: 1px solid #f6df9b;
+color: #80621a;
+font-size: 12px;
+}
+
+/* =========================
+ANIMATION
+========================= */
+
+@keyframes mascotBob {
+0%, 100% {
+transform: translateY(0);
+}
+
+50% {
+transform: translateY(-10px);
+}
+}
+
+/* =========================
+   ANIMATION
+========================= */
+
+/* Maskot bergerak naik turun */
+.gocan-mascot {
+  animation: mascotFloat 4s ease-in-out infinite;
+}
+
+@keyframes mascotFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* Orbit berputar */
+.mascot-spark {
+  animation: sparkFloat 3s ease-in-out infinite;
+}
+
+.spark-one {
+  animation-delay: 0s;
+}
+
+.spark-two {
+  animation-delay: 0.7s;
+}
+
+.spark-three {
+  animation-delay: 1.3s;
+}
+
+@keyframes sparkFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(-9px) scale(1.15);
+    opacity: 0.75;
+  }
+}
+
+/* Bintang bergerak */
+.mascot-spark {
+  animation: sparkFloat 3s ease-in-out infinite;
+}
+
+.spark-two {
+  animation-delay: .7s;
+}
+
+.spark-three {
+  animation-delay: 1.3s;
+}
+
+@keyframes sparkFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-9px) scale(1.15);
+    opacity: .7;
+  }
+}
+
+
+@keyframes decorationFloat {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(8px, 10px);
+  }
+}
+
+/* Animasi logo */
+.gocan-auth-logo {
+  animation: logoAppear 1s ease both;
+}
+
+@keyframes logoAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animasi tulisan */
+.gocan-visual-copy {
+  animation: textAppear 1s ease .3s both;
+}
+
+@keyframes textAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 850px) {
+  .gocan-auth-page {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .gocan-auth-visual {
+    min-height: 620px;
+    padding: 95px 25px 180px;
+    overflow: hidden;
+  }
+
+  .gocan-auth-logo {
+    left: 25px;
+    top: 20px;
+    width: 130px;
+  }
+
+  .gocan-mascot-wrap {
+    width: 300px;
+    max-width: 70%;
+    top: 12%;
+  }
+
+  .gocan-visual-copy {
+    left: 30px;
+    bottom: 35px;
+  }
+
+  .gocan-auth-panel {
+    min-height: 680px;
+    padding: 110px 30px 60px;
+  }
+
+  .auth-back-link {
+    top: 40px;
+    left: 30px;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .gocan-auth-visual {
+    min-height: 540px;
+  }
+
+  .gocan-mascot-wrap {
+    width: 230px;
+    top: 13%;
+  }
+
+  .gocan-visual-copy h2 {
+    font-size: 36px;
+  }
+
+  .gocan-auth-panel {
+    min-height: 620px;
+    padding: 100px 22px 45px;
+  }
+
+  .gocan-auth-card {
+    width: 100%;
+  }
+
+  .auth-heading h1 {
+    font-size: 38px;
+  }
+
+  .gocan-auth-form input:not([type=checkbox]) {
+    height: 56px;
+  }
+
+  .auth-submit {
+    height: 58px;
+  }
+}
+
+/* Compact Login & Register */
+.gocan-auth-card {
+  margin-top: 0;
+}
+
+.auth-wordmark {
+  font-size: 32px;
+}
+
+.auth-heading {
+  margin-bottom: 16px;
+}
+
+.auth-heading h1 {
+  font-size: 36px;
+  margin: 12px 0 3px;
+}
+
+.auth-heading p {
+  font-size: 13px;
+}
+
+.gocan-auth-form {
+  gap: 7px;
+}
+
+.gocan-auth-form > label {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.gocan-auth-form input:not([type="checkbox"]) {
+  height: 52px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+
+.auth-submit {
+  height: 54px;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
+.auth-switch {
+  font-size: 13px;
+  margin: 18px 0 8px;
+}
+
+.auth-footer {
+  font-size: 11px;
+  margin-top: 20px;
+}
+
+.auth-role-options button {
+  min-height: 38px;
+  font-size: 13px;
+}

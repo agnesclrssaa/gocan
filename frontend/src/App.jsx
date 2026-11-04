@@ -1,9 +1,12 @@
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
 // Intro Loading Screen
 import IntroLoadingScreen from './components/common/IntroLoadingScreen';
+import SplashScreen from './components/common/SplashScreen';
+import WelcomeScreen from './components/common/WelcomeScreen';
+import { useState } from 'react';
 
 // Layouts
 import CanteenLayout from './layouts/CanteenLayout';
@@ -51,6 +54,36 @@ const roleHome = {
   admin: '/admin-portal',
 };
 
+function PublicEntryFlow() {
+  const [screen, setScreen] = useState('splash');
+  const navigate = useNavigate();
+
+  const finishSplash = () => {
+    setScreen('welcome');
+  };
+
+  const startOrdering = () => {
+    navigate('/login');
+  };
+
+  if (screen === 'splash') {
+    return (
+      <SplashScreen
+        onComplete={finishSplash}
+        onSkip={finishSplash}
+      />
+    );
+  }
+
+  if (screen === 'welcome') {
+    return (
+      <WelcomeScreen onStart={startOrdering} />
+    );
+  }
+
+  return null;
+}
+
 function RoleLanding() {
   const { user, profile, loading, authError, refreshProfile, signOut } = useAuth();
 
@@ -66,7 +99,7 @@ function RoleLanding() {
   }
 
   // Jika pengunjung publik belum login
-  if (!user) return <IntroLoadingScreen />;
+  if (!user) return <PublicEntryFlow />;
 
   // Jika user login tetapi profil masih dalam antrean muat
   if (!profile) {

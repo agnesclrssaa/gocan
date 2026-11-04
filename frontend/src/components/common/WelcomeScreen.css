@@ -1,0 +1,312 @@
+.welcome-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #faf7f1;
+  font-family: 'Baloo 2', sans-serif;
+}
+
+/* CONTENT ANIMATION */
+
+.welcome-content {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  padding: 40px 20px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(28px);
+  animation: homeContentIn .9s .15s
+    cubic-bezier(.16,1,.3,1) forwards;
+}
+
+.welcome-brand {
+  margin-bottom: 20px;
+}
+
+.welcome-brand h2 {
+  font-size: 68px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.welcome-brand h2 span:first-child {
+  color: #2152b7;
+}
+
+.welcome-brand h2 span:last-child {
+  color: #ed2028;
+}
+
+.welcome-brand p {
+  margin-top: 12px;
+  color: #ed2028;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 4px;
+}
+
+.welcome-content h1 {
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(46px, 6vw, 72px);
+  font-weight: 900;
+  line-height: 1.05;
+  margin: 20px 0 25px;
+}
+
+.welcome-blue {
+  color: #2152b7;
+}
+
+.welcome-red {
+  color: #ed2028;
+}
+
+.welcome-description {
+  color: #77736d;
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 28px;
+}
+
+.welcome-button {
+  padding: 14px 32px;
+  border: none;
+  border-radius: 22px;
+  background: #2152b7;
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.welcome-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px rgba(33,82,183,.2);
+}
+
+/* ANIMATED STARS */
+
+.home-star {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  z-index: 1;
+
+  clip-path: polygon(
+    50% 0,61% 38%,100% 50%,61% 62%,
+    50% 100%,39% 62%,0 50%,39% 38%
+  );
+
+  opacity: 0;
+
+  animation:
+    homeStarIn .8s cubic-bezier(.16,1,.3,1) forwards,
+    homeStarFloat 3.5s ease-in-out 1.2s infinite;
+}
+
+/* Large Stars */
+
+.hs1 {
+  left: 12%;
+  top: 25%;
+  width: 30px;
+  height: 30px;
+  background: #f7bd00;
+  animation-delay: .35s,1.2s;
+}
+
+.hs2 {
+  right: 13%;
+  top: 28%;
+  width: 27px;
+  height: 27px;
+  background: #2152b7;
+  animation-delay: .5s,1.5s;
+}
+
+.hs3 {
+  right: 18%;
+  bottom: 20%;
+  width: 32px;
+  height: 32px;
+  background: #ed2028;
+  animation-delay: .7s,1.8s;
+}
+
+/* Small Stars */
+
+.hs4 {
+  left: 23%;
+  top: 16%;
+  width: 15px;
+  height: 15px;
+  background: #ed2028;
+  animation-delay: .8s,2s;
+}
+
+.hs5 {
+  left: 10%;
+  bottom: 27%;
+  width: 19px;
+  height: 19px;
+  background: #2152b7;
+  animation-delay: 1s,2.2s;
+}
+
+.hs6 {
+  right: 27%;
+  top: 17%;
+  width: 17px;
+  height: 17px;
+  background: #f7bd00;
+  animation-delay: 1.1s,1.7s;
+}
+
+.hs7 {
+  right: 9%;
+  bottom: 32%;
+  width: 16px;
+  height: 16px;
+  background: #f7bd00;
+  animation-delay: 1.25s,2.4s;
+}
+
+.hs8 {
+  left: 31%;
+  bottom: 16%;
+  width: 12px;
+  height: 12px;
+  background: #2152b7;
+  animation-delay: 1.4s,2.1s;
+}
+
+/* ANIMATED DOTS */
+
+.home-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0;
+
+  animation:
+    homeDotIn .6s ease forwards,
+    homeDotPulse 2.8s ease-in-out 1s infinite;
+}
+
+.hd1 {
+  left: 18%;
+  top: 40%;
+  background: #ed2028;
+  animation-delay: .9s,1.2s;
+}
+
+.hd2 {
+  right: 23%;
+  top: 39%;
+  background: #f7bd00;
+  animation-delay: 1.05s,1.6s;
+}
+
+.hd3 {
+  left: 27%;
+  bottom: 29%;
+  background: #f7bd00;
+  animation-delay: 1.2s,1.9s;
+}
+
+.hd4 {
+  right: 11%;
+  top: 51%;
+  background: #2152b7;
+  animation-delay: 1.35s,2.2s;
+}
+
+/* KEYFRAMES FROM REFERENCE ZIP */
+
+@keyframes homeContentIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes homeStarIn {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(-30deg);
+  }
+
+  to {
+    opacity: .78;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes homeStarFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0) scale(.94);
+  }
+
+  50% {
+    transform: translateY(-9px) rotate(10deg) scale(1.08);
+  }
+}
+
+@keyframes homeDotIn {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+
+  to {
+    opacity: .62;
+    transform: scale(1);
+  }
+}
+
+@keyframes homeDotPulse {
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 600px) {
+  .welcome-brand h2 {
+    font-size: 48px;
+  }
+
+  .welcome-brand p {
+    font-size: 10px;
+    letter-spacing: 3px;
+  }
+
+  .welcome-content h1 {
+    font-size: 48px;
+  }
+
+  .welcome-description {
+    font-size: 15px;
+  }
+
+  .welcome-button {
+    font-size: 16px;
+    padding: 14px 30px;
+  }
+}
