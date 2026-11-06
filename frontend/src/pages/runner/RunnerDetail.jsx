@@ -306,7 +306,7 @@ export default function RunnerDetail() {
               <p className="text-xs text-slate-500 text-center mb-3">
                 {currentStep === 1 && 'Geser tombol jika Anda sudah sampai di kantin'}
                 {currentStep === 2 && 'Klik setelah menerima makanan dari staf stan'}
-                {currentStep === 3 && 'Minta 4-digit PIN dari mahasiswa penerima'}
+                {currentStep === 3 && 'Minta 4-digit PIN dari Customer penerima'}
                 {currentStep === 4 && 'Pesanan selesai diserahkan!'}
               </p>
 

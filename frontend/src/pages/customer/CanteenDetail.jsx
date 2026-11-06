@@ -4,7 +4,6 @@ import { ArrowLeft, MapPin, Star, AlertCircle } from 'lucide-react';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 import MenuCard from '../../components/customer/MenuCard';
-import FloatingCart from '../../components/customer/FloatingCart';
 
 export const CanteenDetail = () => {
   const { canteenId } = useParams();
@@ -187,7 +186,6 @@ export const CanteenDetail = () => {
         </div>
       </main>
 
-      <FloatingCart />
     </div>
   );
 };

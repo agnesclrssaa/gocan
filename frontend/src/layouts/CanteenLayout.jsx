@@ -232,7 +232,7 @@ export default function CanteenLayout() {
           >
             <span className="flex items-center gap-2">
               <ExternalLink className="w-3.5 h-3.5" />
-              Lihat Tampilan Mahasiswa
+              Lihat Tampilan Customer
             </span>
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>

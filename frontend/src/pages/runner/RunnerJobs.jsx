@@ -38,7 +38,7 @@ export default function RunnerJobs() {
     },
     {
       id: 'JOB-103',
-      canteen: 'Stan 05 - Kopi & Toast Mahasiswa',
+      canteen: 'Stan 05 - Kopi & Toast Customer',
       pickupPoint: 'Kantin Dinoyo Stan 05',
       dropoffPoint: 'Gedung B Lantai 1 (Lobi Dosen)',
       fee: 'Rp 4.000',

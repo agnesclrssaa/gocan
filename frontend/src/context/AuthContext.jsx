@@ -1,5 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { api, AUTH_TOKEN_KEY } from '../lib/api';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { api, API_AUTH_ERROR_EVENT, AUTH_TOKEN_KEY } from '../lib/api';
 
 const AuthContext = createContext({});
 
@@ -18,10 +26,25 @@ const normalizeProfile = (user) => {
 };
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+  const [apiNotice, setApiNotice] = useState(null);
+  const unauthorizedHandledRef = useRef(false);
+  const forbiddenNoticeTimeoutRef = useRef(null);
+  const apiNoticeTimeoutRef = useRef(null);
+
+  const showApiNotice = useCallback((message) => {
+    window.clearTimeout(apiNoticeTimeoutRef.current);
+    setApiNotice({ id: Date.now(), message });
+    apiNoticeTimeoutRef.current = window.setTimeout(() => {
+      setApiNotice(null);
+      apiNoticeTimeoutRef.current = null;
+    }, 6000);
+  }, []);
 
   const applySession = useCallback((session) => {
     if (!session?.token || !session.user) {
@@ -29,6 +52,9 @@ export const AuthProvider = ({ children }) => {
     }
 
     localStorage.setItem(AUTH_TOKEN_KEY, session.token);
+    unauthorizedHandledRef.current = false;
+    window.clearTimeout(apiNoticeTimeoutRef.current);
+    setApiNotice(null);
     setUser(session.user);
     setProfile(normalizeProfile(session.user));
     setAuthError(null);
@@ -89,11 +115,11 @@ export const AuthProvider = ({ children }) => {
       return currentProfile;
     } catch (error) {
       if (error.status === 401) {
-        localStorage.removeItem(AUTH_TOKEN_KEY);
         setUser(null);
         setProfile(null);
+      } else {
+        setAuthError(error.message || 'Gagal memuat profil pengguna.');
       }
-      setAuthError(error.message || 'Gagal memuat profil pengguna.');
       return null;
     } finally {
       setLoading(false);
@@ -104,6 +130,50 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     return fetchProfile();
   }, [fetchProfile]);
+
+  useEffect(() => {
+    const handleApiAuthError = (event) => {
+      if (event.detail?.status === 401) {
+        if (unauthorizedHandledRef.current) return;
+        unauthorizedHandledRef.current = true;
+
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        setUser(null);
+        setProfile(null);
+        setAuthError(null);
+        showApiNotice('Sesi login kamu telah berakhir. Silakan login kembali.');
+
+        if (location.pathname !== '/login' && location.pathname !== '/register') {
+          const from = `${location.pathname}${location.search}${location.hash}`;
+          navigate('/login', {
+            replace: true,
+            state: { from },
+          });
+        }
+        return;
+      }
+
+      if (event.detail?.status === 403) {
+        if (forbiddenNoticeTimeoutRef.current) return;
+
+        showApiNotice('Maaf, kamu tidak memiliki akses untuk menggunakan fitur ini.');
+        forbiddenNoticeTimeoutRef.current = window.setTimeout(() => {
+          forbiddenNoticeTimeoutRef.current = null;
+        }, 6000);
+      }
+    };
+
+    window.addEventListener(API_AUTH_ERROR_EVENT, handleApiAuthError);
+    return () => window.removeEventListener(API_AUTH_ERROR_EVENT, handleApiAuthError);
+  }, [location, navigate, showApiNotice]);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(apiNoticeTimeoutRef.current);
+      window.clearTimeout(forbiddenNoticeTimeoutRef.current);
+    },
+    []
+  );
 
   useEffect(() => {
     let active = true;
@@ -122,13 +192,12 @@ export const AuthProvider = ({ children }) => {
           setAuthError(null);
         }
       } catch (error) {
-        if (error.status === 401) {
-          localStorage.removeItem(AUTH_TOKEN_KEY);
-        }
         if (active) {
           setUser(null);
           setProfile(null);
-          setAuthError(error.message || 'Gagal memulihkan sesi pengguna.');
+          if (error.status !== 401) {
+            setAuthError(error.message || 'Gagal memulihkan sesi pengguna.');
+          }
         }
       } finally {
         if (active) setLoading(false);
@@ -143,6 +212,9 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = useCallback(async () => {
     localStorage.removeItem(AUTH_TOKEN_KEY);
+    unauthorizedHandledRef.current = false;
+    window.clearTimeout(apiNoticeTimeoutRef.current);
+    setApiNotice(null);
     setUser(null);
     setProfile(null);
     setAuthError(null);
@@ -157,6 +229,8 @@ export const AuthProvider = ({ children }) => {
         profile,
         loading,
         authError,
+        apiNotice,
+        dismissApiNotice: () => setApiNotice(null),
         register,
         login,
         signUp: register,

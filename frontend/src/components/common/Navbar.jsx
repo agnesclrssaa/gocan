@@ -1,18 +1,81 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, LogOut, User, Store, Bike, ShieldCheck } from 'lucide-react';
+import {
+  ShoppingBag,
+  LogOut,
+  Store,
+  Bike,
+  ShieldCheck,
+  MapPin,
+  ChevronDown,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import BrandLogo from './BrandLogo';
+
+const DELIVERY_LOCATION_KEY = 'gocan-delivery-location';
+const DEFAULT_DELIVERY_LOCATION = 'Gedung Benedictus, Lt. 3';
 
 export const Navbar = () => {
   const { user, profile, signOut } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
+  const [deliveryLocation, setDeliveryLocation] = useState(() => {
+    try {
+      return localStorage.getItem(DELIVERY_LOCATION_KEY) || DEFAULT_DELIVERY_LOCATION;
+    } catch (error) {
+      console.error('Gagal membaca lokasi pengantaran dari localStorage:', error);
+      return DEFAULT_DELIVERY_LOCATION;
+    }
+  });
+  const [locationInput, setLocationInput] = useState(deliveryLocation);
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const locationPickerRef = useRef(null);
 
   const handleLogout = async () => {
     await signOut();
     navigate('/login', { replace: true });
+  };
+
+  useEffect(() => {
+    if (!isLocationOpen) return undefined;
+
+    const handleOutsideClick = (event) => {
+      if (!locationPickerRef.current?.contains(event.target)) {
+        setIsLocationOpen(false);
+      }
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsLocationOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isLocationOpen]);
+
+  const handleSaveLocation = (event) => {
+    event.preventDefault();
+    const nextLocation = locationInput.trim();
+    if (!nextLocation) {
+      setLocationError('Masukkan lokasi pengantaran terlebih dahulu.');
+      return;
+    }
+
+    try {
+      localStorage.setItem(DELIVERY_LOCATION_KEY, nextLocation);
+      setDeliveryLocation(nextLocation);
+      setLocationError('');
+      setIsLocationOpen(false);
+    } catch (error) {
+      console.error('Gagal menyimpan lokasi pengantaran ke localStorage:', error);
+      setLocationError('Lokasi gagal disimpan. Silakan coba lagi.');
+    }
   };
 
   const isHomeActive = location.pathname === '/';
@@ -57,8 +120,12 @@ export const Navbar = () => {
           </Link>
 
           <Link
-            to="/canteen/canteen-pak-brazil"
-            className="px-6 py-2 rounded-full text-sm font-semibold bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50 transition"
+            to={profile?.role === 'customer' ? '/canteens' : '/canteen/canteen-pak-brazil'}
+            className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
+              profile?.role === 'customer' && location.pathname === '/canteens'
+                ? 'bg-[#0A2E6E] text-white shadow-xs'
+                : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50'
+            }`}
           >
             Kantin
           </Link>
@@ -66,34 +133,98 @@ export const Navbar = () => {
 
         {/* Right Section: Delivery Location & Cart & User Menu */}
         <div className="flex items-center gap-2.5">
-          {/* Location Badge (Matching gocan-customer-home.png) */}
-          <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80"
-              alt="Avatar"
-              className="w-5 h-5 rounded-full object-cover"
-            />
-            <span className="text-slate-500 font-medium">Kirim ke:</span>
-            <strong className="text-[#0A2E6E] font-bold">Gedung Benedictus, Lt. 3</strong>
+          <div className="relative" ref={locationPickerRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setLocationInput(deliveryLocation);
+                setLocationError('');
+                setIsLocationOpen((isOpen) => !isOpen);
+              }}
+              className="flex max-w-[42vw] sm:max-w-64 items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs hover:bg-blue-50 hover:border-blue-200 transition"
+              aria-expanded={isLocationOpen}
+              aria-controls="delivery-location-popover"
+              aria-label={`Ubah lokasi pengantaran. Lokasi saat ini: ${deliveryLocation}`}
+            >
+              <MapPin className="h-4 w-4 shrink-0 text-[#0A2E6E]" />
+              <span className="hidden sm:inline text-slate-500 font-medium">Kirim ke:</span>
+              <strong className="hidden sm:block truncate text-[#0A2E6E] font-bold">
+                {deliveryLocation}
+              </strong>
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+            </button>
+
+            {isLocationOpen && (
+              <div
+                id="delivery-location-popover"
+                className="absolute right-0 top-full z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-bold text-[#0A2E6E]">
+                    Pilih Lokasi Pengantaran
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setIsLocationOpen(false)}
+                    className="rounded-full px-2.5 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    aria-label="Tutup pilihan lokasi"
+                  >
+                    Tutup
+                  </button>
+                </div>
+                <form onSubmit={handleSaveLocation}>
+                  <label
+                    htmlFor="delivery-location-input"
+                    className="mb-1.5 block text-xs font-medium text-slate-600"
+                  >
+                    Lokasi pengantaran
+                  </label>
+                  <input
+                    id="delivery-location-input"
+                    type="text"
+                    value={locationInput}
+                    onChange={(event) => {
+                      setLocationInput(event.target.value);
+                      setLocationError('');
+                    }}
+                    placeholder="Masukkan lokasi"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#0A2E6E] focus:ring-2 focus:ring-blue-100"
+                  />
+                  {locationError && (
+                    <p className="mt-2 text-xs text-red-600" role="alert">
+                      {locationError}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    className="mt-3 w-full rounded-xl bg-[#0A2E6E] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-900"
+                  >
+                    Simpan Lokasi
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
 
-          {/* Cart Button */}
-          <Link
-            to="/cart"
-            className={`relative flex items-center justify-center h-10 w-10 rounded-full border transition ${
-              isCartActive
-                ? 'bg-[#0A2E6E] text-white border-[#0A2E6E]'
-                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-            }`}
-            aria-label="Keranjang Belanja"
-          >
-            <ShoppingBag className="h-4.5 w-4.5" />
-            {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#DC2626] text-[10px] font-extrabold text-white shadow-xs animate-in zoom-in-75">
-                {totalItems}
-              </span>
-            )}
-          </Link>
+          {/* Customer cart access is rendered as a fixed floating button outside the navbar. */}
+          {profile?.role !== 'customer' && (
+            <Link
+              to="/cart"
+              className={`relative flex items-center justify-center h-10 w-10 rounded-full border transition ${
+                isCartActive
+                  ? 'bg-[#0A2E6E] text-white border-[#0A2E6E]'
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+              aria-label="Keranjang Belanja"
+            >
+              <ShoppingBag className="h-4.5 w-4.5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#DC2626] text-[10px] font-extrabold text-white shadow-xs animate-in zoom-in-75">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* User Profile / Portal / Logout Section */}
           {user ? (

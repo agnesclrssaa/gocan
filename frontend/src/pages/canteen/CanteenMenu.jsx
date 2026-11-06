@@ -47,7 +47,7 @@ export default function CanteenMenu() {
         <div>
           <h1 className="text-2xl font-black text-slate-900">Katalog Menu Stan</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Ubah ketersediaan stok menu agar mahasiswa tahu menu yang sedang siap saji.
+            Ubah ketersediaan stok menu agar Customer tahu menu yang sedang siap saji.
           </p>
         </div>
         <button className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow flex items-center gap-2 self-start">

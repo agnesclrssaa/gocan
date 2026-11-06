@@ -296,7 +296,7 @@ export default function AdminFinance() {
                     <span className="text-[10px] text-slate-400">Kemarin</span>
                   </div>
                   <p className="text-[10px] text-slate-400 mt-0.5">
-                    Ringkasan review yang perlu ditinjau ulang beserta rating terbaru dari mahasiswa.
+                    Ringkasan review yang perlu ditinjau ulang beserta rating terbaru dari Customer.
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-50 text-[#0A2E6E]">

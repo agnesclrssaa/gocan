@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 
 const CartContext = createContext({});
 
@@ -51,6 +51,22 @@ export const CartProvider = ({ children }) => {
       return null;
     }
   });
+  const [cartNotificationPhase, setCartNotificationPhase] = useState('hidden');
+  const cartNotificationTimeout = useRef(null);
+
+  const showCartNotification = () => {
+    window.clearTimeout(cartNotificationTimeout.current);
+    setCartNotificationPhase('visible');
+    cartNotificationTimeout.current = window.setTimeout(() => {
+      setCartNotificationPhase('leaving');
+      cartNotificationTimeout.current = window.setTimeout(() => {
+        setCartNotificationPhase('hidden');
+        cartNotificationTimeout.current = null;
+      }, 300);
+    }, 2200);
+  };
+
+  useEffect(() => () => window.clearTimeout(cartNotificationTimeout.current), []);
 
   // 3. Sinkronisasi aman ke LocalStorage
   useEffect(() => {
@@ -112,6 +128,7 @@ export const CartProvider = ({ children }) => {
       } else {
         setCurrentCanteen({ id: effectiveCanteenId, name: 'Kantin Terpilih' });
       }
+      showCartNotification();
       return true;
     }
 
@@ -151,6 +168,7 @@ export const CartProvider = ({ children }) => {
       ];
     });
 
+    showCartNotification();
     return true;
   };
 
@@ -254,6 +272,7 @@ export const CartProvider = ({ children }) => {
     totalFoodPrice,
     totalAmount: totalFoodPrice, // Alias kompatibilitas
     totalItems,
+    cartNotificationPhase,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

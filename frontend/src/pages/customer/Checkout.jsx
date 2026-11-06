@@ -1,19 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
-  Truck,
-  Store,
   QrCode,
   AlertCircle,
-  Building2,
-  Navigation,
-  DoorOpen,
-  MessageSquare,
-  Sparkles,
-  ShieldCheck,
-  Calendar,
-  Clock,
   CheckCircle2,
   CreditCard,
   Banknote,
@@ -23,20 +12,6 @@ import { useCart } from '../../context/CartContext';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 
-const CAMPUS_BUILDING_PRESETS = [
-  'Gedung Benedictus (Rektorat & Pascasarjana)',
-  'Gedung Agustinus (Fakultas Teknik & Vokasi)',
-  'Gedung Fransiskus (Fakultas Bisnis)',
-  'Gedung Perpustakaan Dinoyo',
-];
-
-const MEETING_POINT_PRESETS = [
-  'Lobby Depan Lift Lt. 3',
-  'Lobby Utama Lt. 1',
-  'Area Dropzone Mobil',
-  'Tangga Sayap Timur',
-];
-
 const getDestinationFloor = (location) => {
   const floorMatch = location.match(/(?:lantai|lt\.?)\s*(\d+)/i);
   return floorMatch ? Number(floorMatch[1]) : 1;
@@ -44,7 +19,7 @@ const getDestinationFloor = (location) => {
 
 export const Checkout = () => {
   const { user } = useAuth();
-  const { cartItems, currentCanteen, totalFoodPrice, totalItems, clearCart } = useCart();
+  const { cartItems, currentCanteen, totalFoodPrice, clearCart } = useCart();
   const navigate = useNavigate();
 
   const [isOrderSubmitted, setIsOrderSubmitted] = useState(false);
@@ -79,7 +54,7 @@ export const Checkout = () => {
   }, [cartItems.length, isOrderSubmitted, navigate]);
 
   if (cartItems.length === 0 && !isOrderSubmitted) {
-    return (
+    return ( 
       <div className="min-h-screen bg-[#F0F4F9] flex items-center justify-center p-4">
         <div className="flex items-center gap-3 text-sm text-slate-500 font-medium">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0A2E6E] border-t-transparent" />
@@ -447,7 +422,7 @@ export const Checkout = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Ongkos Kirim</span>
+                  <span>Ongkir Flat Mahasiswa</span>
                   <span className="font-semibold text-slate-800">
                     {deliveryFee === 0 ? 'Rp 0' : `Rp ${deliveryFee.toLocaleString('id-ID')}`}
                   </span>

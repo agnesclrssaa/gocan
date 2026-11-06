@@ -42,7 +42,7 @@ export default function MenuPreview() {
                 Best Seller Kampus 🔥
               </h1>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-500">
-                Intip beberapa menu favorit mahasiswa. Masuk atau daftar untuk melihat menu lengkap dan mulai memesan.
+                Intip beberapa menu favorit Customer. Masuk atau daftar untuk melihat menu lengkap dan mulai memesan.
               </p>
             </div>
             <Link

@@ -111,7 +111,7 @@ export default function RunnerOrders() {
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Pilih orderan delivery terdekat untuk diantar dari stan kantin ke ruang kelas mahasiswa.
+              Pilih orderan delivery terdekat untuk diantar dari stan kantin ke ruang kelas Customer.
             </p>
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function RunnerOrders() {
             <Compass className="w-10 h-10 text-slate-600 mx-auto" />
             <h4 className="text-base font-bold text-white">Tidak ada orderan di zona {activeFilter}</h4>
             <p className="text-xs text-slate-500">
-              Semua orderan di zona ini telah diambil oleh rekan kurir mahasiswa lainnya.
+              Semua orderan di zona ini telah diambil oleh rekan kurir Customer lainnya.
             </p>
           </div>
         )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Check, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 const MenuCard = ({ menu, canteen }) => {
@@ -8,7 +8,6 @@ const MenuCard = ({ menu, canteen }) => {
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [addedSuccess, setAddedSuccess] = useState(false);
 
   const fallbackImage =
     'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
@@ -20,12 +19,9 @@ const MenuCard = ({ menu, canteen }) => {
     const success = addToCart(menu, quantity, notes, canteen);
 
     if (success) {
-      setAddedSuccess(true);
       setShowNotesModal(false);
       setNotes('');
       setQuantity(1);
-
-      setTimeout(() => setAddedSuccess(false), 1200);
     }
   };
 
@@ -95,28 +91,16 @@ const MenuCard = ({ menu, canteen }) => {
               <button
                 type="button"
                 onClick={() => setShowNotesModal(true)}
-                className={`
+                className="
                   flex items-center gap-2 rounded-2xl
                   px-5 py-3 text-base font-extrabold text-white
                   transition-all duration-200
                   hover:scale-105 active:scale-95
-                  ${addedSuccess
-                    ? 'bg-emerald-600'
-                    : 'bg-[#0A3B91] hover:bg-[#082D70]'
-                  }
-                `}
+                  bg-[#0A3B91] hover:bg-[#082D70]
+                "
               >
-                {addedSuccess ? (
-                  <>
-                    <Check size={19} />
-                    Ditambahkan
-                  </>
-                ) : (
-                  <>
-                    <Plus size={20} strokeWidth={3} />
-                    Tambah
-                  </>
-                )}
+                <Plus size={20} strokeWidth={3} />
+                Tambah
               </button>
             ) : (
               <button

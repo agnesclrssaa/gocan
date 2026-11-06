@@ -127,7 +127,7 @@ export default function RunnerDashboard() {
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
-                Dompet Runner Mahasiswa UKWMS
+                Dompet Runner Customer UKWMS
               </span>
             </div>
 

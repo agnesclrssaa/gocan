@@ -12,7 +12,6 @@ import {
 
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
-import FloatingCart from '../../components/customer/FloatingCart';
 import MenuCard from '../../components/customer/MenuCard';
 
 const categoryAliases = {
@@ -1084,8 +1083,6 @@ export const Home = () => {
         </div>
 
       </main>
-
-      <FloatingCart />
 
     </div>
   );

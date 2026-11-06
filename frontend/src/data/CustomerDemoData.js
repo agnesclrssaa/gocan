@@ -22,7 +22,7 @@ export const demoCanteens = [
     id: 'demo-kantin-pak-budi',
     name: 'Kantin Pak Budi',
     location: 'Gedung B, UKWMS Dinoyo',
-    description: 'Menu favorit mahasiswa dengan harga ramah di kantong.',
+    description: 'Menu favorit Customer dengan harga ramah di kantong.',
     imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80',
     rating: '4.8',
     isOpen: true,

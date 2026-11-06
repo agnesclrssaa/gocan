@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import FloatingCart from './components/customer/FloatingCart';
+import { AlertCircle, X } from 'lucide-react';
 
 // Intro Loading Screen
 import IntroLoadingScreen from './components/common/IntroLoadingScreen';
@@ -14,6 +16,7 @@ import AdminLayout from './layouts/AdminLayout';
 
 // Customer Pages
 import Home from './pages/customer/Home';
+import Canteens from './pages/customer/Canteens';
 import CanteenDetail from './pages/customer/CanteenDetail';
 import Cart from './pages/customer/Cart';
 import Checkout from './pages/customer/Checkout';
@@ -202,6 +205,31 @@ function Unauthorized() {
   );
 }
 
+function ApiNotice() {
+  const { apiNotice, dismissApiNotice } = useAuth();
+
+  if (!apiNotice) return null;
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed right-4 top-4 z-[100] flex w-[min(24rem,calc(100vw-2rem))] items-start gap-3 rounded-2xl border border-blue-200 bg-white p-4 text-sm text-slate-800 shadow-xl"
+    >
+      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#0A2E6E]" />
+      <p className="flex-1">{apiNotice.message}</p>
+      <button
+        type="button"
+        onClick={dismissApiNotice}
+        aria-label="Tutup notifikasi"
+        className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 export function App() {
   return (
     <BrowserRouter>
@@ -218,6 +246,7 @@ export function App() {
 
             {/* Customer Routes */}
             <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
+              <Route path="/canteens" element={<Canteens />} />
               <Route path="/canteen/:canteenId" element={<CanteenDetail />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
@@ -271,6 +300,8 @@ export function App() {
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <FloatingCart />
+          <ApiNotice />
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

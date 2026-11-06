@@ -256,7 +256,7 @@ export default function Register() {
             <div className="auth-role-options">
 
               {[
-                { id: 'customer', label: 'Mahasiswa' },
+                { id: 'customer', label: 'Customer' },
                 { id: 'runner', label: 'Runner' },
                 { id: 'canteen', label: 'Mitra Stan' },
               ].map((option) => (

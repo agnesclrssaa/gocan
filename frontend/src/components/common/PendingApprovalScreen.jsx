@@ -78,7 +78,7 @@ export default function PendingApprovalScreen({ profile, onRefresh, onLogout }) 
           <div className="space-y-1">
             <p className="font-bold">Keamanan & Kebijakan Kampus</p>
             <p className="text-blue-800/90 leading-relaxed">
-              Untuk melindungi transaksi mahasiswa dan menjaga kualitas layanan, akses fitur operasional
+              Untuk melindungi transaksi Customer dan menjaga kualitas layanan, akses fitur operasional
               (manajemen menu, pesanan, dan pendapatan) hanya diberikan kepada mitra yang telah diverifikasi oleh tim kampus.
             </p>
           </div>
@@ -108,4 +108,3 @@ export default function PendingApprovalScreen({ profile, onRefresh, onLogout }) 
     </div>
   );
 }
-
