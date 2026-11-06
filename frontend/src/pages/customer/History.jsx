@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ShoppingBag } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
@@ -75,11 +76,12 @@ export const History = () => {
 
     try {
       const data = await api.get('/orders');
-      setOrders(data);
+      setOrders(Array.isArray(data) ? data : []);
       setError(null);
     } catch (requestError) {
       console.error('Gagal mengambil riwayat pesanan:', requestError);
-      setError(requestError.message || 'Gagal memuat riwayat pesanan.');
+      setOrders([]);
+      setError('Riwayat pesanan belum dapat dimuat. Silakan coba kembali nanti.');
     } finally {
       setLoading(false);
     }
@@ -124,9 +126,18 @@ export const History = () => {
           ) : activeOrders.length > 0 ? (
             activeOrders.map((order) => <OrderCard key={order.id} order={order} />)
           ) : (
-            <p className="rounded-2xl bg-white p-5 text-sm text-slate-500">
-              Belum ada pesanan yang sedang berjalan.
-            </p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+              <ShoppingBag className="mx-auto mb-2 h-12 w-12 text-slate-300" />
+              <p className="text-sm font-semibold text-slate-600">
+                Belum ada pesanan yang sedang berjalan.
+              </p>
+              <Link
+                to="/"
+                className="mt-4 inline-flex rounded-full bg-[#DC2626] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-700"
+              >
+                Mulai Pesan Makanan
+              </Link>
+            </div>
           )}
         </section>
 
@@ -139,9 +150,18 @@ export const History = () => {
           ) : pastOrders.length > 0 ? (
             pastOrders.map((order) => <OrderCard key={order.id} order={order} />)
           ) : (
-            <p className="rounded-2xl bg-white p-5 text-sm text-slate-500">
-              Pesanan selesai atau dibatalkan akan muncul di sini.
-            </p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+              <ShoppingBag className="mx-auto mb-2 h-12 w-12 text-slate-300" />
+              <p className="text-sm font-semibold text-slate-600">
+                Belum ada riwayat pesanan
+              </p>
+              <Link
+                to="/"
+                className="mt-4 inline-flex rounded-full bg-[#DC2626] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-700"
+              >
+                Mulai Pesan Makanan
+              </Link>
+            </div>
           )}
         </section>
       </main>

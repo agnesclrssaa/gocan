@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Bike, Check, Download, RefreshCw, Search, Store, Users, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AlertCircle, Bike, Download, RefreshCw, Search, Store, Users } from 'lucide-react';
 import { api } from '../../lib/api';
 
 const roleLabels = {
@@ -19,9 +20,7 @@ const statusLabels = {
 export default function AdminManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
 
@@ -62,22 +61,6 @@ export default function AdminManagement() {
       return matchesRole && matchesSearch;
     });
   }, [users, roleFilter, search]);
-
-  const updateApproval = async (user, approvalStatus) => {
-    try {
-      setSavingId(user.id);
-      setError('');
-      const { user: updatedUser } = await api.patch(`/admin/users/${user.id}/approval`, { approvalStatus });
-      setUsers((current) => current.map((item) => item.id === updatedUser.id
-        ? { ...item, approvalStatus: updatedUser.approvalStatus }
-        : item));
-      setNotice(`${user.name} ${approvalStatus === 'approved' ? 'disetujui' : 'ditolak'}.`);
-    } catch (updateError) {
-      setError(updateError.message || 'Gagal mengubah status pendaftaran.');
-    } finally {
-      setSavingId(null);
-    }
-  };
 
   const exportCsv = () => {
     const rows = [
@@ -126,8 +109,6 @@ export default function AdminManagement() {
       </header>
 
       {error && <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><AlertCircle className="h-4 w-4" />{error}</div>}
-      {notice && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</div>}
-
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
         {[
           { label: 'Total akun', value: users.length, icon: Users },
@@ -197,27 +178,10 @@ export default function AdminManagement() {
                     </span>
                   </td>
                   <td className="px-5 py-3.5 text-right">
-                    {user.role === 'runner' && user.approvalStatus !== 'approved' ? (
-                      <div className="inline-flex gap-2">
-                        <button
-                          type="button"
-                          disabled={savingId === user.id}
-                          onClick={() => updateApproval(user, 'approved')}
-                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                        >
-                          <Check className="h-3.5 w-3.5" /> Setujui
-                        </button>
-                        {user.approvalStatus === 'pending' && (
-                          <button
-                            type="button"
-                            disabled={savingId === user.id}
-                            onClick={() => updateApproval(user, 'rejected')}
-                            className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                          >
-                            <X className="h-3.5 w-3.5" /> Tolak
-                          </button>
-                        )}
-                      </div>
+                    {user.role === 'runner' ? (
+                      <Link to="/admin-portal/runners" className="text-xs font-bold text-blue-700 hover:underline">
+                        Tinjau profil
+                      </Link>
                     ) : <span className="text-xs text-slate-400">—</span>}
                   </td>
                 </tr>

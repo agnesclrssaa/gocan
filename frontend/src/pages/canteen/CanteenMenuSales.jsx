@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../lib/api';
-import { Plus, CheckCircle, X, Search } from 'lucide-react';
+import { Plus, CheckCircle, X, Search, Upload, Image as ImageIcon, LoaderCircle } from 'lucide-react';
 
 const defaultImage = 'https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=600&q=80';
 const formatPrice = (price) => `Rp ${Number(price || 0).toLocaleString('id-ID')}`;
@@ -17,6 +17,8 @@ export default function CanteenMenuSales() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [savingMenu, setSavingMenu] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
   const [orders, setOrders] = useState([]);
   const [today] = useState(() => startOfDay(new Date()));
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -28,6 +30,10 @@ export default function CanteenMenuSales() {
     isAvailable: true,
     image: defaultImage,
   });
+
+  useEffect(() => () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+  }, [imagePreview]);
 
   const menuItems = canteen?.menus || [];
   const fetchOrders = useCallback(async () => {
@@ -82,8 +88,46 @@ export default function CanteenMenuSales() {
     await updateStoreStatus();
   };
 
+  const handleImageChange = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setActionError('Pilih foto berformat JPEG, PNG, atau WebP.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setActionError('Ukuran foto maksimal 5 MB.');
+      return;
+    }
+
+    setActionError(null);
+    setImagePreview(URL.createObjectURL(file));
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const result = await api.post('/upload', formData);
+      if (!result.success || !result.url) {
+        throw new Error(result.message || 'Server tidak mengembalikan URL foto.');
+      }
+
+      setMenuForm((current) => ({ ...current, image: api.assetUrl(result.url) }));
+      setImagePreview(null);
+    } catch (error) {
+      setImagePreview(null);
+      setActionError(`Gagal mengunggah foto: ${error.message}`);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSaveMenu = async (event) => {
     event.preventDefault();
+    if (uploadingImage) return;
+
     const numericPrice = Number(menuForm.price.replace(/[^\d]/g, ''));
     if (!Number.isSafeInteger(numericPrice) || numericPrice < 1) {
       setActionError('Harga menu harus berupa angka yang lebih besar dari nol.');
@@ -127,6 +171,7 @@ export default function CanteenMenuSales() {
       isAvailable: true,
       image: defaultImage,
     });
+    setImagePreview(null);
     setActionError(null);
     setShowAddModal(true);
   };
@@ -140,6 +185,7 @@ export default function CanteenMenuSales() {
       isAvailable: item.isAvailable,
       image: item.imageUrl || defaultImage,
     });
+    setImagePreview(null);
     setActionError(null);
     setShowAddModal(true);
   };
@@ -365,14 +411,51 @@ export default function CanteenMenuSales() {
                   </select>
                 </label>
               </div>
-              <label className="block font-bold text-slate-700">
-                URL Foto Menu:
-                <input type="url" value={menuForm.image} onChange={(event) => setMenuForm({ ...menuForm, image: event.target.value })} placeholder="https://..." className="mt-1 w-full rounded-lg border border-slate-200 p-2.5 font-normal" />
-              </label>
+              <div className="space-y-2">
+                <span className="block font-bold text-slate-700">Foto Menu:</span>
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-700 transition hover:border-blue-500 hover:bg-blue-50">
+                  {uploadingImage ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  {uploadingImage ? 'Mengunggah foto...' : 'Pilih foto (JPEG, PNG, WebP; maks. 5 MB)'}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageChange}
+                    disabled={uploadingImage || savingMenu}
+                    className="sr-only"
+                  />
+                </label>
+                {(imagePreview || menuForm.image) && (
+                  <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-2">
+                    <img
+                      src={imagePreview || menuForm.image}
+                      alt="Pratinjau foto menu"
+                      className="h-16 w-16 rounded-md object-cover"
+                    />
+                    <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                      <ImageIcon className="h-3.5 w-3.5" />
+                      Pratinjau foto menu
+                    </span>
+                  </div>
+                )}
+                <label className="block font-normal text-slate-500">
+                  Atau masukkan URL foto:
+                  <input
+                    type="url"
+                    value={menuForm.image}
+                    onChange={(event) => setMenuForm({ ...menuForm, image: event.target.value })}
+                    placeholder="https://..."
+                    className="mt-1 w-full rounded-lg border border-slate-200 p-2.5 text-xs text-slate-700"
+                  />
+                </label>
+              </div>
               {actionError && <p role="alert" className="text-xs text-rose-700">{actionError}</p>}
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setShowAddModal(false)} className="rounded-lg px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
-                <button type="submit" disabled={savingMenu} className="rounded-lg bg-[#0A2E6E] px-4 py-2 text-xs font-bold text-white hover:bg-[#082457] disabled:opacity-60">
+                <button type="submit" disabled={savingMenu || uploadingImage} className="rounded-lg bg-[#0A2E6E] px-4 py-2 text-xs font-bold text-white hover:bg-[#082457] disabled:opacity-60">
                   {savingMenu ? 'Menyimpan...' : 'Simpan Menu'}
                 </button>
               </div>

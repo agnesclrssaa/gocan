@@ -10,7 +10,6 @@ import { useState } from 'react';
 
 // Layouts
 import CanteenLayout from './layouts/CanteenLayout';
-import RunnerLayout from './layouts/RunnerLayout';
 import AdminLayout from './layouts/AdminLayout';
 
 // Customer Pages
@@ -36,6 +35,8 @@ import CanteenMenuSales from './pages/canteen/CanteenMenuSales';
 import RunnerDashboard from './pages/runner/RunnerDashboard';
 import RunnerOrders from './pages/runner/RunnerOrders';
 import RunnerDetail from './pages/runner/RunnerDetail';
+import RunnerPortal from './pages/runner/RunnerPortal';
+import RunnerProfile from './pages/runner/RunnerProfile';
 import CourierDashboard from './pages/CourierDashboard';
 
 // Super Admin Pages
@@ -43,6 +44,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCampus from './pages/admin/AdminCampus';
 import AdminFinance from './pages/admin/AdminFinance';
 import AdminManagement from './pages/admin/AdminManagement';
+import AdminRunners from './pages/admin/AdminRunners';
 import ProtectedRoute from './routes/ProtectedRoute';
 
 const roleHome = {
@@ -240,12 +242,13 @@ export function App() {
             </Route>
 
             {/* Runner Portal Routes (Terproteksi Role & Approval) */}
-            <Route element={<ProtectedRoute allowedRoles={['runner']} requireApproval={true} />}>
-              <Route path="/runner-portal" element={<RunnerLayout />}>
+            <Route element={<ProtectedRoute allowedRoles={['runner']} requireApproval={false} />}>
+              <Route path="/runner-portal" element={<RunnerPortal />}>
                 <Route index element={<RunnerDashboard />} />
                 <Route path="orders" element={<RunnerOrders />} />
                 <Route path="jobs" element={<RunnerOrders />} />
                 <Route path="detail" element={<RunnerDetail />} />
+                <Route path="profile" element={<RunnerProfile />} />
               </Route>
             </Route>
 
@@ -261,6 +264,7 @@ export function App() {
                 <Route path="campus" element={<AdminCampus />} />
                 <Route path="finance" element={<AdminFinance />} />
                 <Route path="management" element={<AdminManagement />} />
+                <Route path="runners" element={<AdminRunners />} />
               </Route>
             </Route>
 

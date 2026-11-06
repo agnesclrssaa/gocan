@@ -56,8 +56,8 @@ export default function CanteenDashboard() {
   const todayRevenue = activeTodayOrders.reduce((total, order) => total + (Number(order.totalPrice) || 0), 0);
   const todayPendingOrders = todayOrders.filter((order) => order.status === 'pending').length;
   const completedTodayOrders = todayOrders.filter((order) => order.status === 'completed').length;
-  const deliveryTodayOrders = todayOrders.filter((order) => order.orderType === 'delivery').length;
-  const pickupTodayOrders = todayOrders.filter((order) => order.orderType === 'pickup').length;
+  const deliveryTodayOrders = todayOrders.filter((order) => (order.fulfillmentType || order.orderType) === 'delivery').length;
+  const pickupTodayOrders = todayOrders.filter((order) => (order.fulfillmentType || order.orderType) === 'pickup').length;
 
   const trendData = (() => {
     const count = periodFilter;

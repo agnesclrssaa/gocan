@@ -18,12 +18,19 @@ process.on('uncaughtException', (error) => {
 
 const cors = require('cors');
 const express = require('express');
+const path = require('path');
 const prisma = require('./src/lib/prisma');
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const healthRoutes = require('./routes/health.routes');
 const menuRoutes = require('./routes/menuRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const canteenOrderRoutes = require('./routes/canteenOrderRoutes');
+const ratingRoutes = require('./routes/rating.routes');
+const userRoutes = require('./routes/user.routes');
+const paymentRoutes = require('./routes/payment.routes');
+const runnerRoutes = require('./routes/runner.routes');
+const uploadRoutes = require('./routes/upload.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -51,6 +58,7 @@ app.use(
   })
 );
 app.use(express.json({ limit: '1mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use((_req, res, next) => {
   if (!databaseReady) {
@@ -61,8 +69,15 @@ app.use((_req, res, next) => {
 
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/menu', menuRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/runner', runnerRoutes);
 app.use('/api/canteens', menuRoutes);
+app.use('/api/canteen', canteenOrderRoutes);
+app.use('/api/canteens', ratingRoutes);
 app.use('/api/orders', orderRoutes);
 
 app.use((_req, res) => {

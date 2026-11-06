@@ -19,14 +19,16 @@ import {
   Star,
   Check
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function RunnerDashboard() {
   const { isOnline, setIsOnline } = useOutletContext();
+  const { profile } = useAuth();
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('185000');
   const [withdrawSuccess, setWithdrawSuccess] = useState(null);
   const [walletBalance, setWalletBalance] = useState(185000);
-  const [payoutMethod, setPayoutMethod] = useState('gopay');
+  const [withdrawError, setWithdrawError] = useState('');
 
   // Daily stats
   const todayEarnings = 52500; // 15 trips * 3500
@@ -97,9 +99,14 @@ export default function RunnerDashboard() {
   const handleWithdraw = (e) => {
     e.preventDefault();
     const amountNum = parseInt(withdrawAmount, 10);
+    if (!profile?.bankName || !profile?.accountNumber || !profile?.accountHolderName) {
+      setWithdrawError('Lengkapi data rekening pencairan pada profil Runner terlebih dahulu.');
+      return;
+    }
     if (amountNum > 0 && amountNum <= walletBalance) {
       setWalletBalance((prev) => prev - amountNum);
-      setWithdrawSuccess(`Pencairan dana Rp ${amountNum.toLocaleString('id-ID')} berhasil diproses ke ${payoutMethod.toUpperCase()}!`);
+      setWithdrawError('');
+      setWithdrawSuccess(`Pencairan dana Rp ${amountNum.toLocaleString('id-ID')} diajukan ke ${profile.bankName}.`);
       setTimeout(() => {
         setWithdrawSuccess(null);
         setShowWithdrawModal(false);
@@ -397,28 +404,19 @@ export default function RunnerDashboard() {
                   />
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-300 mb-1.5">Pilih Rekening / E-Wallet Tujuan:</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { id: 'gopay', label: 'GoPay (0812-3344-****)' },
-                      { id: 'dana', label: 'DANA (0812-3344-****)' },
-                      { id: 'bca', label: 'BCA (088192****)' },
-                      { id: 'mandiri', label: 'Mandiri (14200****)' }
-                    ].map((m) => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setPayoutMethod(m.id)}
-                        className={`p-2.5 rounded-xl border text-left transition ${payoutMethod === m.id
-                            ? 'border-emerald-500 bg-emerald-500/15 text-white font-bold'
-                            : 'border-white/10 bg-slate-900/60 text-slate-400 hover:bg-slate-900'
-                          }`}
-                      >
-                        <span className="block text-xs">{m.label}</span>
-                      </button>
-                    ))}
+                <div className="rounded-xl border border-white/10 bg-slate-900/70 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-bold text-slate-300">Rekening pencairan:</span>
+                    <Link to="/runner-portal/profile" className="font-bold text-emerald-300 hover:underline">Ubah</Link>
                   </div>
+                  {profile?.bankName && profile?.accountNumber ? (
+                    <p className="mt-1 text-slate-100">
+                      {profile.bankName} • {profile.accountNumber} • {profile.accountHolderName}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-amber-300">Data rekening belum lengkap.</p>
+                  )}
+                  {withdrawError && <p role="alert" className="mt-2 text-rose-300">{withdrawError}</p>}
                 </div>
 
                 <div className="pt-2 flex items-center justify-end gap-2">

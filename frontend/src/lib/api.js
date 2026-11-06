@@ -17,7 +17,9 @@ client.interceptors.response.use(
   (response) => response,
   (requestError) => {
     const error = new Error(
-      requestError.response?.data?.error || 'Permintaan ke server gagal.'
+      requestError.response?.data?.error ||
+        requestError.response?.data?.message ||
+        'Permintaan ke server gagal.'
     );
     error.cause = requestError;
     if (requestError.response) {
@@ -29,9 +31,14 @@ client.interceptors.response.use(
 
 export const api = {
   get: async (path) => (await client.get(path)).data,
+  getBlob: async (path) => (await client.get(path, { responseType: 'blob' })).data,
   post: async (path, body) => (await client.post(path, body)).data,
   patch: async (path, body) => (await client.patch(path, body)).data,
   delete: async (path) => (await client.delete(path)).data,
+  assetUrl: (path) => new URL(
+    path,
+    new URL(API_BASE_URL, window.location.origin)
+  ).toString(),
 };
 
 export const AUTH_TOKEN_KEY = TOKEN_KEY;

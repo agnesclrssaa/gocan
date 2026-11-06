@@ -20,7 +20,7 @@ import {
 export default function RunnerLayout() {
   const [isOnline, setIsOnline] = useState(true);
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -46,7 +46,7 @@ export default function RunnerLayout() {
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-md shadow-emerald-500/20">
                 <img
                   src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
-                  alt="Budi Santoso"
+                  alt={profile?.name || 'Campus Runner'}
                   className="w-full h-full object-cover rounded-full"
                 />
               </div>
@@ -58,9 +58,9 @@ export default function RunnerLayout() {
 
             <div>
               <div className="flex items-center gap-1.5">
-                <h2 className="text-sm sm:text-base font-black text-white leading-tight">Budi Santoso</h2>
+                <h2 className="text-sm sm:text-base font-black text-white leading-tight">{profile?.name || 'Campus Runner'}</h2>
                 <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  NRP 51022
+                  NRP {profile?.nrp || 'Runner'}
                 </span>
               </div>
               <p className="text-[11px] font-medium text-slate-400">UKWMS Dinoyo • Runner</p>
@@ -123,6 +123,13 @@ export default function RunnerLayout() {
 
           {/* Back to Customer Web & Logout */}
           <div className="flex items-center gap-2">
+            <Link
+              to="/runner-portal/profile"
+              className="flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-white/5 hover:text-emerald-300"
+            >
+              <User className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Profil</span>
+            </Link>
             <Link
               to="/"
               className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-300 transition px-3 py-1.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10"

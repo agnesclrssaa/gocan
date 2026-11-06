@@ -6,14 +6,13 @@ const AuthContext = createContext({});
 const normalizeProfile = (user) => {
   if (!user) return null;
 
+  const rawApprovalStatus = String(user.approval_status ?? user.approvalStatus ?? '').toLowerCase();
   const approvalStatus =
     user.role === 'customer' || user.role === 'admin'
       ? 'approved'
-      : (user.approval_status ?? user.approvalStatus) === 'approved'
-        ? 'approved'
-        : (user.approval_status ?? user.approvalStatus) === 'rejected'
-          ? 'rejected'
-          : 'pending';
+      : ['approved', 'rejected'].includes(rawApprovalStatus)
+        ? rawApprovalStatus
+        : 'pending';
 
   return { ...user, approval_status: approvalStatus };
 };
@@ -38,11 +37,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = useCallback(
-    async ({ name, email, password, role }) => {
+    async ({ name, email, password, role, ...runnerProfile }) => {
       setLoading(true);
       setAuthError(null);
       try {
-        const session = await api.post('/auth/register', { name, email, password, role });
+        const session = await api.post('/auth/register', {
+          name,
+          email,
+          password,
+          role,
+          ...(role === 'runner' ? runnerProfile : {}),
+        });
         applySession(session);
         return session;
       } finally {

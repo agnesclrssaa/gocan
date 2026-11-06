@@ -7,8 +7,7 @@ import {
   SlidersHorizontal,
   Star,
   X,
-  Utensils,
-  Store,
+  PackageX,
 } from 'lucide-react';
 
 import { api } from '../../lib/api';
@@ -16,15 +15,35 @@ import Navbar from '../../components/common/Navbar';
 import FloatingCart from '../../components/customer/FloatingCart';
 import MenuCard from '../../components/customer/MenuCard';
 
+const categoryAliases = {
+  Snack: ['snack', 'cemilan', 'camilan'],
+  Cemilan: ['cemilan', 'camilan', 'snack'],
+  Minuman: ['minuman', 'drink'],
+  Dessert: ['dessert', 'penutup'],
+  'Makanan Berat': ['makanan berat', 'main course'],
+  Healthy: ['healthy', 'sehat'],
+  Kopi: ['kopi', 'coffee'],
+};
+
+const matchesMenuCategory = (menu, category) => {
+  if (category === 'Semua') return true;
+
+  const menuCategory = menu.category?.toLowerCase().trim();
+  const aliases = categoryAliases[category] || [category.toLowerCase()];
+
+  return aliases.includes(menuCategory);
+};
+
 export const Home = () => {
   const [canteens, setCanteens] = useState([]);
   const [canteenMenus, setCanteenMenus] = useState({});
+  const [bestSellerItems, setBestSellerItems] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Makanan Berat');
+  const [activeCategory, setActiveCategory] = useState('Semua');
 
   // PANEL FILTER
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -97,18 +116,19 @@ export const Home = () => {
     fetchCanteens();
   }, []);
 
-  // ==========================================
-  // 2. ALIAS KATEGORI
-  // ==========================================
+  useEffect(() => {
+    const fetchBestSellers = async () => {
+      try {
+        const data = await api.get('/menu/bestsellers');
+        setBestSellerItems(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Gagal mengambil daftar best seller:', err);
+        setBestSellerItems([]);
+      }
+    };
 
-  const categoryAliases = {
-    Snack: ['snack', 'cemilan', 'camilan'],
-    Minuman: ['minuman', 'drink'],
-    Dessert: ['dessert', 'penutup'],
-    'Makanan Berat': ['makanan berat', 'main course'],
-    Healthy: ['healthy', 'sehat'],
-    Kopi: ['kopi', 'coffee'],
-  };
+    fetchBestSellers();
+  }, []);
 
   // ==========================================
   // 3. RESET FILTER
@@ -125,8 +145,18 @@ export const Home = () => {
     setAppliedCanteen('Semua');
     setAppliedLocation('Semua');
 
-    setActiveCategory('Makanan Berat');
+    setActiveCategory('Semua');
   };
+
+  const selectCategory = (category) => {
+    const filterCategory = category === 'Cemilan' ? 'Snack' : category;
+
+    setActiveCategory(category);
+    setSelectedCategory(filterCategory);
+    setAppliedCategory(filterCategory);
+  };
+
+  const showAllMenus = () => selectCategory('Semua');
 
   // ==========================================
   // 4. TERAPKAN FILTER
@@ -145,24 +175,6 @@ export const Home = () => {
     );
 
     setIsFilterOpen(false);
-  };
-
-  // ==========================================
-  // 5. FUNGSI CEK KATEGORI
-  // ==========================================
-
-  const matchesCategory = (menu, category) => {
-    if (category === 'Semua') return true;
-
-    const menuCategory = menu.category
-      ?.toLowerCase()
-      .trim();
-
-    const aliases = categoryAliases[category] || [
-      category.toLowerCase(),
-    ];
-
-    return aliases.includes(menuCategory);
   };
 
   // ==========================================
@@ -191,17 +203,17 @@ export const Home = () => {
           appliedLocation === 'Semua' ||
           canteen.location?.toLowerCase().includes('dinoyo');
 
-        const matchesCategory =
+        const matchesAppliedCategory =
           appliedCategory === 'Semua' ||
           menus.some((menu) =>
-            matchesCategory(menu, appliedCategory)
+            matchesMenuCategory(menu, appliedCategory)
           );
 
         return (
           matchesSearch &&
           matchesCanteen &&
           matchesLocation &&
-          matchesCategory
+          matchesAppliedCategory
         );
       })
       .sort((a, b) => {
@@ -285,7 +297,7 @@ export const Home = () => {
         menu.canteenName?.toLowerCase().includes(keyword) ||
         menu.description?.toLowerCase().includes(keyword);
 
-      const matchesCategory = matchesCategoryFilter(
+      const matchesCategory = matchesMenuCategory(
         menu,
         appliedCategory
       );
@@ -313,21 +325,6 @@ export const Home = () => {
     appliedCategory,
     appliedSortBy,
   ]);
-
-  // Fungsi khusus untuk filter menu
-  function matchesCategoryFilter(menu, category) {
-    if (category === 'Semua') return true;
-
-    const menuCategory = menu.category
-      ?.toLowerCase()
-      .trim();
-
-    const aliases = categoryAliases[category] || [
-      category.toLowerCase(),
-    ];
-
-    return aliases.includes(menuCategory);
-  }
 
   // ==========================================
   // 8. TOMBOL FILTER BIRU GOCAN
@@ -624,6 +621,7 @@ export const Home = () => {
         <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center gap-2 overflow-x-auto">
 
           {[
+            'Semua',
             'Makanan Berat',
             'Minuman',
             'Cemilan',
@@ -634,25 +632,11 @@ export const Home = () => {
             <button
               key={cat}
               type="button"
-              onClick={() => {
-
-                setActiveCategory(cat);
-
-                const categoryMapping = {
-                  Cemilan: 'Snack',
-                };
-
-                const category =
-                  categoryMapping[cat] || cat;
-
-                setSelectedCategory(category);
-                setAppliedCategory(category);
-
-              }}
-              className={`px-5 py-2 rounded-full text-xs font-bold transition whitespace-nowrap ${
+              onClick={() => selectCategory(cat)}
+              className={`px-5 py-2 rounded-full text-xs font-bold transition-all duration-200 whitespace-nowrap hover:-translate-y-0.5 ${
                 activeCategory === cat
                   ? 'bg-[#DC2626] text-white shadow-sm'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               {cat}
@@ -694,94 +678,64 @@ export const Home = () => {
 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {bestSellerItems
+              .filter((item) =>
+                matchesMenuCategory(item, activeCategory)
+              )
+              .map((item) => (
+                <Link
+                  key={item.id}
+                  to={`/canteen/${item.canteenId}`}
+                  className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:-translate-y-1 hover:border-[#0A2E6E]/40 hover:shadow-lg transition-all duration-300 group"
+                >
+                  <div className="h-44 sm:h-52 w-full overflow-hidden bg-slate-100">
+                    <img
+                      src={item.imageUrl || item.image_url}
+                      alt={item.name}
+                      onError={(event) => {
+                        event.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
+                      }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    />
+                  </div>
 
-            {/* BEST SELLER 1 */}
+                  <div className="p-4">
+                    <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-[#0A2E6E] transition">
+                      {item.name}
+                    </h3>
 
-            <Link
-              to="/canteen/canteen-pak-brazil"
-              className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:-translate-y-1 hover:border-[#0A2E6E]/40 hover:shadow-lg transition-all duration-300 group"
-            >
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm font-extrabold text-[#DC2626]">
+                        Rp {Number(item.price).toLocaleString('id-ID')}
+                      </span>
 
-              <div className="h-44 sm:h-52 w-full overflow-hidden bg-slate-100">
+                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+                        {item.totalSold > 0
+                          ? `Terjual ${item.totalSold}+`
+                          : 'Terjual 0'}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
 
-                <img
-                  src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80"
-                  alt="Kulit Ayam Geprek"
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                />
-
-              </div>
-
-              <div className="p-4">
-
-                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-[#0A2E6E] transition">
-                  Kulit Ayam Geprek Pak Brazil
+            {bestSellerItems.filter((item) =>
+              matchesMenuCategory(item, activeCategory)
+            ).length === 0 && (
+              <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-8 text-center">
+                <PackageX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <h3 className="font-bold text-slate-700 text-sm">
+                  Belum ada best seller untuk kategori ini
                 </h3>
-
-                <div className="flex items-center justify-between mt-1">
-
-                  <span className="text-sm font-extrabold text-[#DC2626]">
-                    Rp 15.000
-                  </span>
-
-                  <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
-
-                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-
-                    <span>4.9 (120+ order)</span>
-
-                  </span>
-
-                </div>
-
+                <button
+                  type="button"
+                  onClick={showAllMenus}
+                  className="mt-4 rounded-full bg-[#DC2626] px-4 py-2 text-xs font-bold text-white transition hover:bg-red-600"
+                >
+                  Tampilkan Semua Menu
+                </button>
               </div>
-
-            </Link>
-
-
-            {/* BEST SELLER 2 */}
-
-            <Link
-              to="/canteen/canteen-pak-brazil"
-              className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:-translate-y-1 hover:border-[#0A2E6E]/40 hover:shadow-lg transition-all duration-300 group"
-            >
-
-              <div className="h-44 sm:h-52 w-full overflow-hidden bg-slate-100">
-
-                <img
-                  src="https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=800&q=80"
-                  alt="Es Thai Tea"
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                />
-
-              </div>
-
-              <div className="p-4">
-
-                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-[#0A2E6E] transition">
-                  Es Thai Tea Anak Kampung
-                </h3>
-
-                <div className="flex items-center justify-between mt-1">
-
-                  <span className="text-sm font-extrabold text-[#DC2626]">
-                    Rp 8.000
-                  </span>
-
-                  <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
-
-                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-
-                    <span>4.8 (300+ order)</span>
-
-                  </span>
-
-                </div>
-
-              </div>
-
-            </Link>
-
+            )}
           </div>
 
         </div>
@@ -899,15 +853,29 @@ export const Home = () => {
 
             <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
 
-              <Utensils className="w-9 h-9 text-slate-300 mx-auto mb-3" />
+              <PackageX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
 
               <h3 className="font-bold text-slate-700 text-sm">
-                Menu tidak ditemukan
+                {appliedCategory !== 'Semua'
+                  ? 'Belum ada menu untuk kategori ini'
+                  : 'Menu tidak ditemukan'}
               </h3>
 
               <p className="text-xs text-slate-400 mt-1">
-                Coba ubah kata pencarian atau filter kamu.
+                {appliedCategory !== 'Semua'
+                  ? 'Pilih kategori lain atau tampilkan semua menu.'
+                  : 'Coba ubah kata pencarian atau filter kamu.'}
               </p>
+
+              {appliedCategory !== 'Semua' && (
+                <button
+                  type="button"
+                  onClick={showAllMenus}
+                  className="mt-4 rounded-full bg-[#DC2626] px-4 py-2 text-xs font-bold text-white transition hover:bg-red-600"
+                >
+                  Tampilkan Semua Menu
+                </button>
+              )}
 
             </div>
 

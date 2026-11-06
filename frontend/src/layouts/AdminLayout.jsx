@@ -8,6 +8,7 @@ import {
   Building2,
   Receipt,
   Database,
+  Bike,
   ExternalLink,
   Menu,
   X,
@@ -71,6 +72,14 @@ export default function AdminLayout() {
       icon: Database,
       badge: overview?.metrics?.pendingApprovals ? `${overview.metrics.pendingApprovals} Pending` : null,
       desc: 'User, stan, kurir, gedung'
+    },
+    {
+      to: '/admin-portal/runners',
+      end: false,
+      label: 'Pendaftaran Runner',
+      icon: Bike,
+      badge: overview?.metrics?.pendingApprovals ? `${overview.metrics.pendingApprovals} Pending` : null,
+      desc: 'Identitas & pencairan dana'
     }
   ];
 

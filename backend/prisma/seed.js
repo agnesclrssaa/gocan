@@ -4,78 +4,93 @@ const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
-
-const canteen = {
-  id: 'canteen-pak-brazil',
-  name: 'Kantin Pak Brazil',
-  description: 'Aneka olahan ayam krispi, mie, dan minuman dingin segar.',
-  location: 'Gedung Benedictus, Lt. 1',
-  imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80',
-  isOpen: true,
-};
-
-const menus = [
-  {
-    id: 'menu-nasi-ayam-geprek-sambal-korek',
-    name: 'Nasi Ayam Geprek Sambal Korek',
-    price: 15000,
-    category: 'Ayam Geprek',
-    description: 'Ayam geprek krispi renyah dengan ulekan cabai rawit.',
-    imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80',
-    isAvailable: true,
-  },
-  {
-    id: 'menu-jus-mangga-brazil',
-    name: 'Jus Mangga Brazil',
-    price: 10000,
-    category: 'Minuman',
-    description: 'Jus mangga kental manis dengan es batu segar.',
-    imageUrl: 'https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=600&q=80',
-    isAvailable: false,
-  },
-  {
-    id: 'menu-indomie-goreng-double-telur',
-    name: 'Indomie Goreng Double Telur',
-    price: 13000,
-    category: 'Indomie',
-    description: 'Indomie goreng lezat disajikan dengan dua butir telur.',
-    imageUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80',
-    isAvailable: true,
-  },
-  {
-    id: 'menu-kulit-ayam-geprek',
-    name: 'Kulit Ayam Geprek Pak Brazil',
-    price: 15000,
-    category: 'Ayam Geprek',
-    description: 'Kulit ayam ekstra renyah berbumbu rempah gurih.',
-    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
-    isAvailable: true,
-  },
+const legacyCanteenId = 'canteen-pak-brazil';
+const legacyMenuIds = [
+  'menu-nasi-ayam-geprek-sambal-korek',
+  'menu-jus-mangga-brazil',
+  'menu-indomie-goreng-double-telur',
+  'menu-kulit-ayam-geprek',
 ];
+async function removeLegacyDemoData() {
+  return prisma.$transaction(async (transaction) => {
+    const deletedMenus = await transaction.menu.deleteMany({
+      where: { id: { in: legacyMenuIds } },
+    });
 
-const testAccounts = [
-  {
-    name: 'GoCan Admin',
-    email: process.env.ADMIN_EMAIL || 'admin@gocan.test',
-    password: process.env.ADMIN_PASSWORD || 'AdminGoCan123!',
-    role: 'admin',
-    canteenId: null,
-  },
-  {
-    name: 'Kantin Pak Brazil',
-    email: 'kantin.pakbrazil@test.com',
-    password: process.env.SEED_CANTEEN_PASSWORD || 'KantinTest123!',
-    role: 'canteen',
-    canteenId: canteen.id,
-  },
-  {
-    name: 'Kurir Budi',
-    email: 'kurir.budi@test.com',
-    password: process.env.SEED_COURIER_PASSWORD || 'KurirTest123!',
-    role: 'courier',
-    canteenId: null,
-  },
-];
+    const canteen = await transaction.canteen.findUnique({
+      where: { id: legacyCanteenId },
+      select: { _count: { select: { orders: true, menus: true } } },
+    });
+    let deletedCanteens = 0;
+    let archivedCanteens = 0;
+    if (canteen && canteen._count.orders === 0 && canteen._count.menus === 0) {
+      const deleted = await transaction.canteen.deleteMany({
+        where: { id: legacyCanteenId },
+      });
+      deletedCanteens = deleted.count;
+    } else if (canteen && canteen._count.orders > 0 && canteen._count.menus === 0) {
+      const archived = await transaction.canteen.updateMany({
+        where: { id: legacyCanteenId },
+        data: { isOpen: false },
+      });
+      archivedCanteens = archived.count;
+    }
+
+    const deletedUnusedAccounts = await transaction.user.deleteMany({
+      where: {
+        email: { in: ['admin@gocan.test', 'kurir.budi@test.com'] },
+        orders: { none: {} },
+        courierOrders: { none: {} },
+      },
+    });
+    let deletedCanteenAccounts = 0;
+    if (deletedCanteens > 0 || (canteen && canteen._count.menus === 0)) {
+      const deleted = await transaction.user.deleteMany({
+        where: {
+          email: 'kantin.pakbrazil@test.com',
+          orders: { none: {} },
+          courierOrders: { none: {} },
+        },
+      });
+      deletedCanteenAccounts = deleted.count;
+    }
+
+    return {
+      menus: deletedMenus.count,
+      canteens: deletedCanteens,
+      archivedCanteens,
+      accounts: deletedUnusedAccounts.count + deletedCanteenAccounts,
+    };
+  });
+}
+
+async function seedAdmin() {
+  const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
+  if (!ADMIN_EMAIL && !ADMIN_PASSWORD) return false;
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    throw new Error('ADMIN_EMAIL dan ADMIN_PASSWORD harus diatur bersama-sama.');
+  }
+
+  const password = await bcrypt.hash(ADMIN_PASSWORD, 12);
+  await prisma.user.upsert({
+    where: { email: ADMIN_EMAIL },
+    update: {
+      name: 'GoCan Admin',
+      password,
+      role: 'admin',
+      canteenId: null,
+      approvalStatus: 'APPROVED',
+    },
+    create: {
+      name: 'GoCan Admin',
+      email: ADMIN_EMAIL,
+      password,
+      role: 'admin',
+      approvalStatus: 'APPROVED',
+    },
+  });
+  return true;
+}
 
 async function main() {
   if (
@@ -85,51 +100,22 @@ async function main() {
     throw new Error('ADMIN_EMAIL dan ADMIN_PASSWORD wajib diatur sebelum menjalankan seed di production.');
   }
 
-  await prisma.canteen.upsert({
-    where: { id: canteen.id },
-    update: canteen,
-    create: canteen,
-  });
+  const cleanup = await removeLegacyDemoData();
+  const seededAdmin = await seedAdmin();
 
-  for (const menu of menus) {
-    await prisma.menu.upsert({
-      where: { id: menu.id },
-      update: { ...menu, canteenId: canteen.id },
-      create: { ...menu, canteenId: canteen.id },
-    });
-  }
-
-  for (const account of testAccounts) {
-    const hashedPassword = await bcrypt.hash(account.password, 12);
-    await prisma.user.upsert({
-      where: { email: account.email },
-      update: {
-        name: account.name,
-        password: hashedPassword,
-        role: account.role,
-        canteenId: account.canteenId,
-        approvalStatus: 'approved',
-      },
-      create: {
-        name: account.name,
-        email: account.email,
-        password: hashedPassword,
-        role: account.role,
-        canteenId: account.canteenId,
-        approvalStatus: 'approved',
-      },
-    });
-  }
-
-  console.log(`Seeded ${menus.length} menus and ${testAccounts.length} test accounts.`);
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`Development admin account: ${process.env.ADMIN_EMAIL || 'admin@gocan.test'}`);
+  console.log(
+    `Removed legacy demo data: ${cleanup.menus} menus, ${cleanup.canteens} canteens, ${cleanup.archivedCanteens} archived canteens, ${cleanup.accounts} accounts.`
+  );
+  if (seededAdmin) {
+    console.log(`Seeded admin account: ${process.env.ADMIN_EMAIL}`);
+  } else {
+    console.log('No admin account seeded; set ADMIN_EMAIL and ADMIN_PASSWORD to create one.');
   }
 }
 
 main()
   .catch((error) => {
-    console.error('Gagal mengisi data kantin dan menu:', error);
+    console.error('Gagal menyesuaikan data seed GoCan:', error);
     process.exitCode = 1;
   })
   .finally(async () => {

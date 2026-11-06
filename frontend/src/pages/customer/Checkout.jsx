@@ -37,6 +37,11 @@ const MEETING_POINT_PRESETS = [
   'Tangga Sayap Timur',
 ];
 
+const getDestinationFloor = (location) => {
+  const floorMatch = location.match(/(?:lantai|lt\.?)\s*(\d+)/i);
+  return floorMatch ? Number(floorMatch[1]) : 1;
+};
+
 export const Checkout = () => {
   const { user } = useAuth();
   const { cartItems, currentCanteen, totalFoodPrice, totalItems, clearCart } = useCart();
@@ -60,10 +65,12 @@ export const Checkout = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fee calculation matching mockup
-  const deliveryFee = orderType === 'delivery' ? 3000 : 0;
-  const platformFee = orderType === 'delivery' ? 1150 : 0;
-  const grandTotal = totalFoodPrice + deliveryFee + platformFee;
+  const destinationFloor = getDestinationFloor(meetingPoint);
+  const deliveryFee = orderType === 'delivery'
+    ? 3000 + (Math.max(0, destinationFloor - 1) * 1000)
+    : 0;
+  const serviceFee = 1000;
+  const totalAmount = totalFoodPrice + deliveryFee + serviceFee;
 
   useEffect(() => {
     if (cartItems.length === 0 && !isOrderSubmitted) {
@@ -104,10 +111,13 @@ export const Checkout = () => {
 
       const { order } = await api.post('/orders', {
         items: cartItems,
-        totalPrice: grandTotal,
+        totalPrice: totalAmount,
         canteenId: currentCanteen?.id || cartItems[0]?.canteen_id,
-        orderType,
+        orderType: 'IMMEDIATE',
+        fulfillmentType: orderType,
+        paymentMethod: paymentMethod === 'cash' ? 'CASH' : 'QRIS',
         buildingName: orderType === 'delivery' ? building.trim() : null,
+        destinationFloor: orderType === 'delivery' ? destinationFloor : null,
         meetingPoint: orderType === 'delivery' ? meetingPoint.trim() : null,
         classInfo: orderType === 'delivery' ? classInfo.trim() : null,
         deliveryNote: orderType === 'delivery' ? additionalNote.trim() : pickupNote.trim(),
@@ -437,24 +447,22 @@ export const Checkout = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Ongkir Flat Mahasiswa</span>
+                  <span>Ongkos Kirim</span>
                   <span className="font-semibold text-slate-800">
                     {deliveryFee === 0 ? 'Rp 0' : `Rp ${deliveryFee.toLocaleString('id-ID')}`}
                   </span>
                 </div>
-                {orderType === 'delivery' && (
-                  <div className="flex justify-between items-center">
-                    <span>Komisi Delivery (Rp 3.500)</span>
-                    <span className="font-semibold text-slate-800">
-                      Rp {platformFee.toLocaleString('id-ID')}
-                    </span>
-                  </div>
-                )}
+                <div className="flex justify-between items-center">
+                  <span>Biaya Layanan Aplikasi</span>
+                  <span className="font-semibold text-slate-800">
+                    Rp {serviceFee.toLocaleString('id-ID')}
+                  </span>
+                </div>
 
                 <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
                   <span className="text-sm font-bold text-slate-800">Total Pembayaran</span>
                   <span className="text-xl font-bold text-[#DC2626]">
-                    Rp {grandTotal.toLocaleString('id-ID')}
+                    Rp {totalAmount.toLocaleString('id-ID')}
                   </span>
                 </div>
               </div>

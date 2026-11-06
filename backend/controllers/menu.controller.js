@@ -48,7 +48,7 @@ const getMyCanteen = async (req, res, next) => {
     }
 
     const menus = await prisma.menu.findMany({
-      where: { canteenId: canteen.id },
+      where: { canteenId: canteen.id, isDeleted: false },
       orderBy: { name: 'asc' },
     });
     return res.json({ ...canteen, menus });
@@ -79,12 +79,12 @@ const updateMyCanteen = async (req, res, next) => {
 };
 
 const validateMenu = (body) => {
-  const price = Number(body?.price);
+  const netPrice = Number(body?.netPrice ?? body?.price);
   if (
     typeof body?.name !== 'string' ||
     !body.name.trim() ||
-    !Number.isSafeInteger(price) ||
-    price < 1 ||
+    !Number.isSafeInteger(netPrice) ||
+    netPrice < 1 ||
     (body.category !== undefined && body.category !== null && typeof body.category !== 'string') ||
     (body.description !== undefined && body.description !== null && typeof body.description !== 'string') ||
     (body.imageUrl !== undefined && typeof body.imageUrl !== 'string') ||
@@ -93,10 +93,14 @@ const validateMenu = (body) => {
     return null;
   }
 
+  const onlinePrice = Math.ceil((netPrice * 1.05) / 500) * 500;
   const imageUrl = body.imageUrl?.trim() || 'https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=600&q=80';
   return {
     name: body.name.trim(),
-    price,
+    price: onlinePrice,
+    netPrice,
+    onlinePrice,
+    commissionRate: 0.05,
     category: body.category?.trim() || null,
     description: body.description?.trim() || null,
     imageUrl,
@@ -138,7 +142,12 @@ const updateMenu = async (req, res, next) => {
     }
 
     const existingMenu = await prisma.menu.findFirst({
-      where: { id: req.params.menuId, canteenId: canteen.id },
+      where: {
+        id: req.params.id || req.params.menuId,
+        canteenId: canteen.id,
+        isDeleted: false,
+        isActive: true,
+      },
       select: { id: true },
     });
     if (!existingMenu) {
@@ -154,18 +163,60 @@ const updateMenu = async (req, res, next) => {
 
 const deleteMenu = async (req, res, next) => {
   try {
-    const canteen = await getCanteenForUser(req.auth.userId);
-    if (!canteen) {
-      return res.status(403).json({ error: 'Akun ini belum terhubung ke kantin.' });
+    const menuId = req.params.id || req.params.menuId;
+    if (typeof menuId !== 'string' || !menuId.trim()) {
+      return res.status(404).json({
+        success: false,
+        code: 'MENU_NOT_FOUND',
+        message: 'Menu tidak ditemukan.',
+      });
     }
 
-    const result = await prisma.menu.deleteMany({
-      where: { id: req.params.menuId, canteenId: canteen.id },
+    const menu = await prisma.menu.findUnique({
+      where: { id: menuId },
+      select: { id: true, canteenId: true, isDeleted: true },
     });
-    if (result.count === 0) {
-      return res.status(404).json({ error: 'Menu tidak ditemukan di kantin ini.' });
+    if (!menu || menu.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        code: 'MENU_NOT_FOUND',
+        message: 'Menu tidak ditemukan.',
+      });
     }
-    return res.status(204).end();
+
+    if (req.auth.role === 'canteen') {
+      const user = await prisma.user.findUnique({
+        where: { id: req.auth.userId },
+        select: { canteenId: true },
+      });
+      if (!user?.canteenId || user.canteenId !== menu.canteenId) {
+        return res.status(403).json({
+          success: false,
+          code: 'FORBIDDEN_ACCESS',
+          message: 'Anda tidak memiliki hak akses untuk menghapus menu stan lain.',
+        });
+      }
+    }
+
+    const result = await prisma.menu.updateMany({
+      where: {
+        id: menu.id,
+        canteenId: menu.canteenId,
+        isDeleted: false,
+      },
+      data: { isDeleted: true, isActive: false, isAvailable: false, deletedAt: new Date() },
+    });
+    if (result.count !== 1) {
+      return res.status(404).json({
+        success: false,
+        code: 'MENU_NOT_FOUND',
+        message: 'Menu tidak ditemukan.',
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Menu berhasil dihapus dari daftar jualan kantin.',
+    });
   } catch (error) {
     return next(error);
   }
@@ -194,7 +245,7 @@ const listCanteenMenus = async (req, res, next) => {
     }
 
     const menus = await prisma.menu.findMany({
-      where: { canteenId: canteen.id },
+      where: { canteenId: canteen.id, isDeleted: false, isActive: true },
       orderBy: { name: 'asc' },
     });
     return res.json(menus);
@@ -203,9 +254,76 @@ const listCanteenMenus = async (req, res, next) => {
   }
 };
 
+const listBestSellers = async (_req, res, next) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { status: { in: ['completed', 'COMPLETED'] } },
+      select: { id: true, items: true },
+    });
+    const salesByMenuId = new Map();
+
+    for (const order of orders) {
+      let items;
+      try {
+        items = JSON.parse(order.items);
+      } catch (error) {
+        console.warn(`Melewati item pesanan ${order.id} dengan format JSON tidak valid:`, error);
+        continue;
+      }
+
+      if (!Array.isArray(items)) continue;
+
+      for (const item of items) {
+        if (!item || typeof item.id !== 'string') continue;
+        const quantity = Number(item.quantity ?? 1);
+        if (!Number.isSafeInteger(quantity) || quantity <= 0) continue;
+
+        salesByMenuId.set(
+          item.id,
+          (salesByMenuId.get(item.id) || 0) + quantity
+        );
+      }
+    }
+
+    if (salesByMenuId.size === 0) {
+      const menus = await prisma.menu.findMany({
+        where: { isAvailable: true, isDeleted: false, isActive: true },
+        include: { canteen: { select: { name: true } } },
+        orderBy: { name: 'asc' },
+        take: 6,
+      });
+      return res.json(
+        menus.map((menu) => ({ ...menu, canteenName: menu.canteen.name, totalSold: 0 }))
+      );
+    }
+
+    const menus = await prisma.menu.findMany({
+      where: {
+        id: { in: [...salesByMenuId.keys()] },
+        isDeleted: false,
+        isActive: true,
+      },
+      include: { canteen: { select: { name: true } } },
+    });
+    const bestSellers = menus
+      .map((menu) => ({
+        ...menu,
+        canteenName: menu.canteen.name,
+        totalSold: salesByMenuId.get(menu.id),
+      }))
+      .sort((a, b) => b.totalSold - a.totalSold || a.name.localeCompare(b.name))
+      .slice(0, 6);
+
+    return res.json(bestSellers);
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
   listCanteens,
   listCanteenMenus,
+  listBestSellers,
   getMyCanteen,
   updateMyCanteen,
   createMenu,

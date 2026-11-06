@@ -1,19 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../lib/api';
-import { CheckCircle2, Clock3, RefreshCw, Utensils, X } from 'lucide-react';
+import { CheckCircle2, Clock3, FileText, RefreshCw, Utensils, X } from 'lucide-react';
 
 const statusTabs = [
   { id: 'baru', label: 'Baru', statuses: ['pending'] },
   { id: 'dimasak', label: 'Dimasak', statuses: ['cooking'] },
   { id: 'siap', label: 'Siap Diambil', statuses: ['ready', 'delivering'] },
-  { id: 'selesai', label: 'Selesai', statuses: ['completed', 'cancelled'] },
+  { id: 'selesai', label: 'Selesai', statuses: ['completed'] },
+  { id: 'dibatalkan', label: 'Dibatalkan', statuses: ['cancelled'] },
 ];
 
 const getDisplayStatus = (status) => {
   if (status === 'pending') return 'baru';
   if (status === 'cooking') return 'dimasak';
   if (status === 'ready' || status === 'delivering') return 'siap';
-  if (status === 'completed' || status === 'cancelled') return 'selesai';
+  if (status === 'completed') return 'selesai';
+  if (status === 'cancelled') return 'dibatalkan';
   return 'lainnya';
 };
 
@@ -175,13 +177,48 @@ export default function CanteenOrders() {
                 <p className="font-black text-blue-700">
                   Rp {Number(order.totalPrice || 0).toLocaleString('id-ID')}
                 </p>
-                <p className="mt-1 text-xs font-semibold capitalize text-slate-500">{order.status}</p>
+                {order.status === 'cancelled' ? (
+                  <span className="mt-1 inline-flex rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">
+                    Dibatalkan Pembeli
+                  </span>
+                ) : (
+                  <p className="mt-1 text-xs font-semibold capitalize text-slate-500">{order.status}</p>
+                )}
               </div>
             </div>
 
             <div className="rounded-xl border border-slate-200/60 bg-white/70 p-3 text-sm text-slate-700">
               {getItemSummary(order.items) || 'Detail item belum tersedia'}
             </div>
+
+            {order.status === 'cancelled' && (
+              <div className="rounded-xl border border-red-200 bg-red-50/70 p-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-red-500" />
+                  <h4 className="text-sm font-bold text-red-800">Informasi Pembatalan</h4>
+                </div>
+                <dl className="mt-3 space-y-3 text-sm">
+                  <div>
+                    <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      Alasan Pembatalan
+                    </dt>
+                    <dd className="mt-1 text-slate-800">
+                      {order.cancelReason || 'Alasan tidak tersedia'}
+                    </dd>
+                  </div>
+                  {order.cancelNote && (
+                    <div>
+                      <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                        Catatan Pembatalan
+                      </dt>
+                      <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                        {order.cancelNote}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
 
             <div className="flex justify-end border-t border-slate-100 pt-3">
               {order.status === 'pending' && (

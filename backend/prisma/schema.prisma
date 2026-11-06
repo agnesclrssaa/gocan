@@ -8,65 +8,135 @@ datasource db {
 }
 
 model User {
-  id             Int      @id @default(autoincrement())
-  name           String
-  email          String   @unique
-  password       String
-  role           String   @default("customer")
-  approvalStatus String   @default("pending") @map("approval_status")
-  canteenId      String?
-  canteen        Canteen? @relation(fields: [canteenId], references: [id], onDelete: SetNull)
-  orders         Order[]
-  courierOrders  Order[]  @relation("CourierOrders")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  name              String
+  email             String   @unique
+  password          String
+  role              String   @default("customer")
+  approvalStatus    String   @default("PENDING") @map("approval_status")
+  rejectionReason   String?  @map("rejection_reason")
+  nrp               String?
+  phoneNumber       String?  @map("phone_number")
+  avatarUrl         String?  @map("avatar_url")
+  defaultBuilding   String?  @map("default_building")
+  defaultRoom       String?  @map("default_room")
+  ktmUrl            String?  @map("ktm_url")
+  bankName          String?  @map("bank_name")
+  accountNumber     String?  @map("account_number")
+  accountHolderName String?  @map("account_holder_name")
+  canteenId         String?
+  canteen           Canteen? @relation(fields: [canteenId], references: [id], onDelete: SetNull)
+  orders            Order[]
+  ratings           Rating[]
+  courierOrders     Order[]  @relation("CourierOrders")
+  customerOrders    Order[]  @relation("OrderCustomer")
+  runnerOrders      Order[]  @relation("OrderRunner")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([role, approvalStatus, createdAt])
 }
 
 model Order {
-  id           Int      @id @default(autoincrement())
-  userId       Int
-  canteenId    String   @default("canteen-pak-brazil")
-  items        String
-  totalPrice   Float
-  orderType    String   @default("delivery") @map("order_type")
-  buildingName String?  @map("building_name")
-  meetingPoint String?  @map("meeting_point")
-  classInfo    String?  @map("class_info")
-  deliveryNote String?  @map("delivery_note")
-  status       String   @default("pending")
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  canteen      Canteen  @relation(fields: [canteenId], references: [id], onDelete: Restrict)
-  courierId    Int?
-  courier      User?    @relation("CourierOrders", fields: [courierId], references: [id], onDelete: SetNull)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                  Int       @id @default(autoincrement())
+  userId              Int
+  customerId          Int?      @map("customer_id")
+  canteenId           String    @default("canteen-pak-brazil")
+  runnerId            Int?      @map("runner_id")
+  items               String
+  totalPrice          Float
+  subtotal            Float     @default(0)
+  deliveryFee         Float     @default(0) @map("delivery_fee")
+  serviceFee          Float     @default(1000) @map("service_fee")
+  deliveryDiscount    Float     @default(0) @map("delivery_discount")
+  foodDiscount        Float     @default(0) @map("food_discount")
+  totalAmount         Float     @default(0) @map("total_amount")
+  canteenEarnings     Float     @default(0) @map("canteen_earnings")
+  runnerEarnings      Float     @default(0) @map("runner_earnings")
+  platformRevenue     Float     @default(0) @map("platform_revenue")
+  orderType           String    @default("IMMEDIATE") @map("order_type")
+  fulfillmentType     String    @default("delivery") @map("fulfillment_type")
+  scheduledTime       DateTime? @map("scheduled_time")
+  paymentMethod       String    @default("QRIS") @map("payment_method")
+  paymentStatus       String    @default("PENDING") @map("payment_status")
+  paymentReference    String?   @unique @map("payment_reference")
+  qrisPayload         String?   @map("qris_payload")
+  qrisExpiresAt       DateTime? @map("qris_expires_at")
+  pickupQrCode        String?   @unique @map("pickup_qr_code")
+  isPickupVerified    Boolean   @default(false) @map("is_pickup_verified")
+  buildingName        String?   @map("building_name")
+  destinationBuilding String?   @map("destination_building")
+  destinationFloor    Int?      @map("destination_floor")
+  destinationRoom     String?   @map("destination_room")
+  meetingPoint        String?   @map("meeting_point")
+  classInfo           String?   @map("class_info")
+  deliveryNote        String?   @map("delivery_note")
+  status              String    @default("pending")
+  cancelReason        String?   @map("cancel_reason")
+  cancelNote          String?   @map("cancel_note")
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer            User?     @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  canteen             Canteen   @relation(fields: [canteenId], references: [id], onDelete: Restrict)
+  rating              Rating?
+  courierId           Int?
+  courier             User?     @relation("CourierOrders", fields: [courierId], references: [id], onDelete: SetNull)
+  runner              User?     @relation("OrderRunner", fields: [runnerId], references: [id], onDelete: SetNull)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([userId, createdAt])
   @@index([canteenId, status])
 }
 
 model Canteen {
-  id          String  @id
-  name        String
-  description String
-  location    String?
-  imageUrl    String?
-  isOpen      Boolean @default(true)
-  users       User[]
-  orders      Order[]
-  menus       Menu[]
+  id           String   @id
+  name         String
+  description  String
+  location     String?
+  building     String   @default("")
+  floor        Int      @default(1)
+  imageUrl     String?
+  isOpen       Boolean  @default(true)
+  avgRating    Float    @default(0) @map("avg_rating")
+  totalReviews Int      @default(0) @map("total_reviews")
+  users        User[]
+  orders       Order[]
+  menus        Menu[]
+  ratings      Rating[]
+}
+
+model Rating {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  canteenId  String   @map("canteen_id")
+  orderId    Int      @unique @map("order_id")
+  stars      Int
+  reviewText String?  @map("review_text")
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  canteen    Canteen  @relation(fields: [canteenId], references: [id], onDelete: Cascade)
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([canteenId, createdAt])
 }
 
 model Menu {
-  id          String  @id
-  name        String
-  price       Int
-  canteenId   String
-  imageUrl    String
-  category    String?
-  description String?
-  isAvailable Boolean @default(true)
-  canteen     Canteen @relation(fields: [canteenId], references: [id], onDelete: Cascade)
+  id             String    @id
+  name           String
+  price          Int
+  netPrice       Float     @default(0) @map("net_price")
+  onlinePrice    Float     @default(0) @map("online_price")
+  commissionRate Float     @default(0.05) @map("commission_rate")
+  canteenId      String
+  imageUrl       String
+  category       String?
+  description    String?
+  isAvailable    Boolean   @default(true)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  isActive       Boolean   @default(true) @map("is_active")
+  deletedAt      DateTime? @map("deleted_at")
+  canteen        Canteen   @relation(fields: [canteenId], references: [id], onDelete: Cascade)
 
   @@index([canteenId, name])
+  @@index([canteenId, isActive, isDeleted])
 }

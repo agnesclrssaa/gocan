@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate, useOutletContext } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
   Compass,
   MapPin,
@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Navigation
 } from 'lucide-react';
+import { api } from '../../lib/api';
 
 export default function RunnerOrders() {
   const { isOnline } = useOutletContext();
@@ -24,88 +25,62 @@ export default function RunnerOrders() {
   const [activeFilter, setActiveFilter] = useState('Semua');
   const [takenJobId, setTakenJobId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [ordersError, setOrdersError] = useState('');
 
-  // Available delivery orders matching mockups
-  const [orders, setOrders] = useState([
-    {
-      id: '#Gocan-91024',
-      fee: 'Rp 3.500',
-      from: 'Kantin Pak Brazil (Stan 04)',
-      fromFloor: 'Area Kantin Utama Dinoyo',
-      to: 'Gedung A Lt. 3 (Ruang 302)',
-      toDetail: 'Fakultas Teknik • Pemesan: David Wijaya',
-      distance: '180m',
-      category: 'Gedung A',
-      schedule: 'Langsung Antar',
-      items: '1x Ayam Geprek, 1x Es Teh Jumbo',
-      isHot: true
-    },
-    {
-      id: '#Gocan-91220',
-      fee: 'Rp 3.500',
-      from: 'Kantin Dinoyo (Soto Lamongan)',
-      fromFloor: 'Stan 02 Area Kantin',
-      to: 'Gedung Benedictus Lt. 4 (Ruang 4.01)',
-      toDetail: 'Fakultas Bisnis • Pemesan: Anastasya',
-      distance: '95m',
-      category: 'Benedictus',
-      schedule: 'Langsung Antar',
-      items: '2x Soto Ayam Madura',
-      isHot: false
-    },
-    {
-      id: '#Gocan-91318',
-      fee: 'Rp 3.500',
-      from: 'Kedai Kopi Teman',
-      fromFloor: 'Area Parkir Depan Kantin',
-      to: 'Lab Komputer Gedung B Lt. 2',
-      toDetail: 'Informatika • Pemesan: Raka Pratama',
-      distance: '240m',
-      category: 'Gedung B',
-      schedule: '12:00 WIB (10 Mnt Lagi)',
-      items: '2x Es Kopi Susu Aren',
-      isHot: false
-    },
-    {
-      id: '#Gocan-91401',
-      fee: 'Rp 3.500',
-      from: 'Kantin Sego Sambel Dinoyo',
-      fromFloor: 'Stan 09 Farmasi',
-      to: 'Perpustakaan Pusat Lt. 2',
-      toDetail: 'Area Belajar • Pemesan: Clarissa',
-      distance: '120m',
-      category: 'Perpustakaan',
-      schedule: 'Langsung Antar',
-      items: '1x Sego Sambel Kulit, 1x Air Mineral',
-      isHot: true
-    },
-    {
-      id: '#Gocan-91455',
-      fee: 'Rp 3.500',
-      from: 'Kantin Dapur Bu Siti',
-      fromFloor: 'Stan 01 Dinoyo',
-      to: 'Ruang Dosen Gedung Farmasi Lt. 2',
-      toDetail: 'Fakultas Farmasi • Pemesan: Bpk. Antonius',
-      distance: '310m',
-      category: 'Farmasi',
-      schedule: 'Langsung Antar',
-      items: '1x Nasi Gudeg Telur',
-      isHot: false
+  const loadOrders = useCallback(async () => {
+    setLoadingOrders(true);
+    setOrdersError('');
+    try {
+      setOrders(await api.get('/runner/available-orders'));
+    } catch (error) {
+      setOrdersError(error.message || 'Gagal memuat pesanan yang tersedia.');
+    } finally {
+      setLoadingOrders(false);
     }
-  ]);
+  }, []);
 
-  const handleTakeJob = (order) => {
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  const handleTakeJob = async (order) => {
     setTakenJobId(order.id);
-    setToastMessage(`Order ${order.id} berhasil diambil! Mengalihkan ke halaman proses antar...`);
-    setTimeout(() => {
-      navigate('/runner-portal/detail', { state: { order } });
-    }, 1500);
+    setOrdersError('');
+    try {
+      const { order: acceptedOrder } = await api.post('/runner/accept-order', { orderId: order.id });
+      setToastMessage(`Pesanan #${order.id} berhasil diambil. Silakan lanjutkan proses pengantaran.`);
+      window.setTimeout(() => {
+        navigate('/runner-portal/detail', { state: { order: acceptedOrder } });
+      }, 700);
+    } catch (error) {
+      setOrdersError(error.message || 'Pesanan tidak dapat diambil.');
+      setTakenJobId(null);
+      await loadOrders();
+    }
   };
 
-  const filteredOrders = orders.filter((o) => {
-    if (activeFilter === 'Semua') return true;
-    return o.category === activeFilter;
-  });
+  const categories = useMemo(
+    () => ['Semua', ...new Set(orders.map((order) => order.buildingName || 'Kampus'))],
+    [orders]
+  );
+  const filteredOrders = orders
+    .filter((order) => activeFilter === 'Semua' || (order.buildingName || 'Kampus') === activeFilter)
+    .map((order) => ({
+      ...order,
+      displayId: `#GoCan-${order.id}`,
+      fee: 'Rp 3.500',
+      from: order.canteen?.name || 'Kantin GoCan',
+      fromFloor: order.canteen?.location || 'Kampus UKWMS',
+      to: [order.buildingName, order.meetingPoint].filter(Boolean).join(' - ') || 'Lokasi pemesan',
+      toDetail: [order.classInfo, order.user?.name ? `Pemesan: ${order.user.name}` : ''].filter(Boolean).join(' • '),
+      distance: '—',
+      category: order.buildingName || 'Kampus',
+      schedule: 'Langsung Antar',
+      displayItems: order.items.map((item) => `${item.quantity || 1}x ${item.name || 'Menu'}`).join(', '),
+      isHot: true,
+    }));
 
   return (
     <div className="space-y-6">
@@ -152,7 +127,7 @@ export default function RunnerOrders() {
 
       {/* Building Filter Pills (Antigravity Floating Switcher) */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 glass-card-dark p-2 rounded-2xl border border-white/10 max-w-full">
-        {['Semua', 'Gedung A', 'Benedictus', 'Gedung B', 'Perpustakaan', 'Farmasi'].map((zone) => (
+        {categories.map((zone) => (
           <button
             key={zone}
             onClick={() => setActiveFilter(zone)}
@@ -173,6 +148,17 @@ export default function RunnerOrders() {
 
       {/* Stacked Floating Order Cards */}
       <div className="space-y-4">
+        {ordersError && (
+          <div role="alert" className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-sm text-rose-200">
+            <span className="flex items-center gap-2"><AlertCircle className="h-4 w-4 shrink-0" />{ordersError}</span>
+            <button type="button" onClick={loadOrders} className="shrink-0 font-bold underline">Coba lagi</button>
+          </div>
+        )}
+        {loadingOrders && (
+          <div role="status" className="rounded-2xl border border-white/10 bg-slate-900/70 p-8 text-center text-sm text-slate-300">
+            Memuat pesanan tersedia...
+          </div>
+        )}
         {filteredOrders.map((order, index) => (
           <div
             key={order.id}
@@ -184,7 +170,7 @@ export default function RunnerOrders() {
             {/* Top Row: Order ID, Distance, Schedule, Fee */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
               <div className="flex items-center gap-2.5">
-                <span className="text-base font-black text-white">{order.id}</span>
+                <span className="text-base font-black text-white">{order.displayId}</span>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                   <Navigation className="w-3 h-3" />
                   {order.distance}
@@ -194,7 +180,7 @@ export default function RunnerOrders() {
                 </span>
                 {order.isHot && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    🔥 Siap Diambil
+                    <CheckCircle className="mr-1 inline h-3 w-3" />Siap Diambil
                   </span>
                 )}
               </div>
@@ -246,7 +232,7 @@ export default function RunnerOrders() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 relative z-10">
               <div className="text-xs text-slate-400">
                 <span className="font-semibold text-slate-300">Menu: </span>
-                <span>{order.items}</span>
+                <span>{order.displayItems}</span>
               </div>
 
               <button
