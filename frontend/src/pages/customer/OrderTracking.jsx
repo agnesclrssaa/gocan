@@ -103,7 +103,7 @@ export const OrderTracking = () => {
       <div className="min-h-screen bg-[#F0F4F9]">
         <Navbar />
         <div className="flex flex-col items-center justify-center pt-32">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0A2E6E] border-t-transparent" />
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#2152B7] border-t-transparent" />
           <p className="mt-4 text-sm font-semibold text-slate-500">Memuat status pesanan...</p>
         </div>
       </div>
@@ -118,7 +118,7 @@ export const OrderTracking = () => {
           <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error || 'Pesanan tidak ditemukan.'}
           </p>
-          <Link to="/history" className="text-sm font-bold text-[#0A2E6E] hover:underline">
+          <Link to="/history" className="text-sm font-bold text-[#2152B7] hover:underline">
             Kembali ke pesanan saya
           </Link>
         </main>
@@ -141,8 +141,8 @@ export const OrderTracking = () => {
           </p>
         )}
 
-        <header className="rounded-3xl bg-[#0A2E6E] p-6 text-white shadow-lg sm:p-8">
-          <p className="text-xs font-bold uppercase tracking-wider text-blue-200">
+        <header className="customer-card rounded-3xl bg-[#2152B7] p-6 text-white shadow-lg sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-wider text-white/90">
             ID PESANAN #{order.id}
           </p>
           <h1 className="mt-2 text-2xl font-extrabold">
@@ -152,13 +152,13 @@ export const OrderTracking = () => {
                 ? 'Pesanan dibatalkan'
                 : 'Pantau pesanan Anda'}
           </h1>
-          <p className="mt-1 text-sm text-blue-100">
+          <p className="mt-1 text-sm text-white/90">
             {canteen?.name || 'Kantin'} · {(order.fulfillmentType || order.orderType) === 'pickup' ? 'Ambil sendiri' : 'Diantar'}
           </p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-5">
-          <section className="space-y-5 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm lg:col-span-3">
+          <section className="customer-card space-y-5 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm lg:col-span-3">
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
                 Status pesanan
@@ -169,7 +169,7 @@ export const OrderTracking = () => {
             </div>
 
             {status === 'cancelled' ? (
-              <div className="space-y-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-slate-700">
+              <div className="customer-card space-y-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-slate-700">
                 <p>Pesanan ini telah dibatalkan.</p>
                 {order.cancelReason && (
                   <div>
@@ -231,7 +231,7 @@ export const OrderTracking = () => {
           </section>
 
           <aside className="space-y-5 lg:col-span-2">
-            <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+            <section className="customer-card rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Informasi pesanan
               </h2>
@@ -293,7 +293,7 @@ export const OrderTracking = () => {
                 </button>
               )}
             </section>
-            <Link to="/history" className="block text-center text-sm font-bold text-[#0A2E6E] hover:underline">
+            <Link to="/history" className="block text-center text-sm font-bold text-[#2152B7] hover:underline">
               Kembali ke pesanan saya
             </Link>
           </aside>
@@ -311,7 +311,7 @@ export const OrderTracking = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="cancel-order-title"
-            className="my-auto w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
+            className="customer-card my-auto w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
           >
             <header className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -338,7 +338,7 @@ export const OrderTracking = () => {
                 Pilih alasan pembatalan
               </legend>
               {CANCEL_REASONS.map((reason) => (
-                <label key={reason} className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm text-slate-700 transition hover:border-red-200 hover:bg-red-50/50">
+                <label key={reason} className="customer-card flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm text-slate-700">
                   <input
                     type="radio"
                     name="cancelReason"

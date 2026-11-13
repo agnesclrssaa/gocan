@@ -91,7 +91,7 @@ export default function CanteenOrders() {
         </div>
       )}
 
-      <header className="bg-white border border-slate-200 flex flex-col justify-between gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5">
+      <header className="merchant-card-glow bg-white border border-slate-200 flex flex-col justify-between gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500 text-slate-950">
             <Utensils className="h-6 w-6" />
@@ -112,7 +112,7 @@ export default function CanteenOrders() {
         </button>
       </header>
 
-      <nav aria-label="Filter status pesanan" className="bg-white border border-slate-200 flex gap-1.5 overflow-x-auto rounded-xl p-2">
+      <nav aria-label="Filter status pesanan" className="merchant-card-glow bg-white border border-slate-200 flex gap-1.5 overflow-x-auto rounded-xl p-2">
         {statusTabs.map((tab) => {
           const count = orders.filter((order) => tab.statuses.includes(order.status)).length;
           return (
@@ -152,7 +152,7 @@ export default function CanteenOrders() {
         </div>
 
         {loadingOrders && (
-          <div role="status" className="bg-white border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-500">
+          <div role="status" className="merchant-card-glow bg-white border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-500">
             Memuat pesanan kantin...
           </div>
         )}
@@ -161,7 +161,7 @@ export default function CanteenOrders() {
           <article
             key={order.id}
             data-testid="canteen-order-card"
-            className="space-y-4 rounded-xl border border-slate-200 bg-white p-5"
+            className="merchant-card-glow space-y-4 rounded-xl border border-slate-200 bg-white p-5"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -187,12 +187,12 @@ export default function CanteenOrders() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200/60 bg-white/70 p-3 text-sm text-slate-700">
+            <div className="merchant-card-glow rounded-xl border border-slate-200/60 bg-white p-3 text-sm text-slate-700">
               {getItemSummary(order.items) || 'Detail item belum tersedia'}
             </div>
 
             {order.status === 'cancelled' && (
-              <div className="rounded-xl border border-red-200 bg-red-50/70 p-4">
+              <div className="merchant-card-glow rounded-xl border border-red-200 bg-white p-4">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-red-500" />
                   <h4 className="text-sm font-bold text-red-800">Informasi Pembatalan</h4>
@@ -249,7 +249,7 @@ export default function CanteenOrders() {
         ))}
 
         {!loadingOrders && !ordersError && filteredOrders.length === 0 && (
-          <div className="bg-white border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-500">
+          <div className="merchant-card-glow bg-white border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-500">
             Tidak ada pesanan pada status ini.
           </div>
         )}

@@ -1,0 +1,190 @@
+.merchant-sidebar-decor {
+  z-index: 0;
+}
+
+.merchant-decor-red,
+.merchant-decor-yellow,
+.merchant-decor-blue,
+.merchant-decor-cream {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.merchant-decor-red {
+  width: 190px;
+  height: 190px;
+  top: -125px;
+  left: auto;
+  right: -105px;
+  bottom: auto;
+  background: #ED2028;
+  opacity: 0.8;
+  animation: merchantFloat 7s ease-in-out infinite;
+}
+
+.merchant-decor-yellow {
+  width: 75px;
+  height: 75px;
+  top: 27%;
+  right: -35px;
+  border-radius: 34% 45% 35% 48%;
+  background: #F7BD00;
+  opacity: 0.8;
+  transform: rotate(20deg);
+  animation: merchantFloat 5s ease-in-out infinite;
+}
+
+.merchant-decor-blue {
+  width: 190px;
+  height: 190px;
+  right: -125px;
+  bottom: 12%;
+  background: #2152B7;
+  opacity: 0.7;
+  animation: merchantFloat 8s ease-in-out infinite reverse;
+}
+
+.merchant-decor-cream {
+  width: 120px;
+  height: 120px;
+  left: -85px;
+  bottom: 16%;
+  background: #EEE7D9;
+  opacity: 0.75;
+}
+
+.merchant-decor-arc {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.merchant-arc-top {
+  top: -120px;
+  right: -100px;
+  border: 2px solid rgba(247, 189, 0, 0.25);
+}
+
+.merchant-arc-bottom {
+  bottom: -125px;
+  left: -115px;
+  border: 2px solid rgba(237, 32, 40, 0.3);
+}
+
+.merchant-star {
+  position: absolute;
+  z-index: 2;
+  width: 17px;
+  height: 17px;
+  clip-path: polygon(
+    50% 0%, 61% 38%, 100% 50%,
+    61% 62%, 50% 100%, 39% 62%,
+    0% 50%, 39% 38%
+  );
+  animation: merchantStarFloat 4s ease-in-out infinite;
+}
+
+.merchant-star.star-yellow {
+  background: #F7BD00;
+}
+
+.merchant-star.star-red {
+  background: #ED2028;
+}
+
+.merchant-star.star-blue {
+  background: #8CBDF5;
+}
+
+.merchant-sidebar-decor .star-one {
+  top: 18%;
+  left: 15%;
+}
+
+.merchant-sidebar-decor .star-two {
+  top: 39%;
+  right: 13%;
+  animation-delay: 0.8s;
+}
+
+.merchant-sidebar-decor .star-three {
+  top: 58%;
+  left: 10%;
+  animation-delay: 1.2s;
+}
+
+.merchant-sidebar-decor .star-four {
+  bottom: 25%;
+  right: 22%;
+  animation-delay: 0.5s;
+}
+
+.merchant-sidebar-decor .star-five {
+  bottom: 12%;
+  left: 38%;
+  animation-delay: 1.5s;
+}
+
+.merchant-dot {
+  position: absolute;
+  z-index: 2;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.merchant-dot.dot-yellow {
+  background: #F7BD00;
+}
+
+.merchant-dot.dot-red {
+  background: #ED2028;
+}
+
+.merchant-dot.dot-blue {
+  background: #8CBDF5;
+}
+
+.merchant-sidebar-decor .dot-one {
+  top: 30%;
+  left: 35%;
+}
+
+.merchant-sidebar-decor .dot-two {
+  top: 48%;
+  right: 20%;
+}
+
+.merchant-sidebar-decor .dot-three {
+  bottom: 32%;
+  left: 25%;
+}
+
+@keyframes merchantFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes merchantStarFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-7px) rotate(15deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .merchant-sidebar-decor * {
+    animation: none !important;
+  }
+}

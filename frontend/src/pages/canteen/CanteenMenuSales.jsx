@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../lib/api';
-import { Plus, CheckCircle, X, Search, Upload, Image as ImageIcon, LoaderCircle } from 'lucide-react';
+import { Plus, CheckCircle, X, Search, Upload, Image as ImageIcon, LoaderCircle, Trash2 } from 'lucide-react';
 
 const defaultImage = 'https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=600&q=80';
+const menuCategories = ['Makanan Berat', 'Minuman', 'Cemilan', 'Healthy', 'Kopi'];
 const formatPrice = (price) => `Rp ${Number(price || 0).toLocaleString('id-ID')}`;
 
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -16,6 +17,7 @@ export default function CanteenMenuSales() {
   const [actionError, setActionError] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [deletingMenuId, setDeletingMenuId] = useState(null);
   const [savingMenu, setSavingMenu] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
@@ -26,7 +28,7 @@ export default function CanteenMenuSales() {
   const [menuForm, setMenuForm] = useState({
     name: '',
     price: '',
-    category: 'Makanan Utama',
+    category: 'Makanan Berat',
     isAvailable: true,
     image: defaultImage,
   });
@@ -81,6 +83,25 @@ export default function CanteenMenuSales() {
       { isAvailable: !item.isAvailable },
       `Stok "${item.name}" diubah menjadi: ${item.isAvailable ? 'Habis' : 'Tersedia'}`
     );
+  };
+
+  const handleDeleteMenu = async (item) => {
+    const confirmed = window.confirm(
+      `Apakah kamu yakin ingin menghapus menu "${item.name}"?`
+    );
+    if (!confirmed || deletingMenuId !== null) return;
+
+    setDeletingMenuId(item.id);
+    setActionError(null);
+    try {
+      await api.delete(`/canteens/mine/menus/${item.id}`);
+      await refreshCanteen();
+      triggerToast(`Menu "${item.name}" berhasil dihapus.`);
+    } catch (error) {
+      setActionError(`Gagal menghapus menu: ${error.message}`);
+    } finally {
+      setDeletingMenuId(null);
+    }
   };
 
   const handleToggleStoreStatus = async () => {
@@ -167,7 +188,7 @@ export default function CanteenMenuSales() {
     setMenuForm({
       name: '',
       price: '',
-      category: 'Makanan Utama',
+      category: 'Makanan Berat',
       isAvailable: true,
       image: defaultImage,
     });
@@ -181,7 +202,7 @@ export default function CanteenMenuSales() {
     setMenuForm({
       name: item.name,
       price: String(item.price),
-      category: item.category || 'Makanan Utama',
+      category: item.category || 'Makanan Berat',
       isAvailable: item.isAvailable,
       image: item.imageUrl || defaultImage,
     });
@@ -242,7 +263,7 @@ export default function CanteenMenuSales() {
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <section className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6 lg:col-span-2">
+        <section className="merchant-card-glow flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6 lg:col-span-2">
           <div>
             <h2 className="text-sm font-bold uppercase tracking-tight text-slate-900">Perkembangan Penjualan Minggu Ini</h2>
             <p className="mt-1 text-xs text-slate-500">Total nilai pesanan harian berdasarkan transaksi kantin.</p>
@@ -274,7 +295,7 @@ export default function CanteenMenuSales() {
           )}
         </section>
 
-        <section className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6">
+        <section className="merchant-card-glow flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6">
           <div>
             <h2 className="text-sm font-bold uppercase tracking-tight text-slate-900">Kontrol Stok & Status</h2>
             <p className="mt-1 text-xs text-slate-500">Atur penerimaan pesanan dan ketersediaan menu.</p>
@@ -297,7 +318,7 @@ export default function CanteenMenuSales() {
             <div className="mt-6 border-t border-slate-100 pt-5">
               <span className="mb-3 block text-xs font-bold text-slate-800">Menu Perlu Tindakan</span>
               {unavailableMenu ? (
-                <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <div className="merchant-card-glow flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-3">
                   <img src={unavailableMenu.imageUrl || defaultImage} alt={unavailableMenu.name} className="h-12 w-12 rounded-lg object-cover" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
@@ -325,7 +346,7 @@ export default function CanteenMenuSales() {
         </section>
       </div>
 
-      <section className="space-y-6 rounded-xl border border-slate-200 bg-white p-6">
+      <section className="merchant-card-glow space-y-6 rounded-xl border border-slate-200 bg-white p-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-base font-bold uppercase tracking-tight text-slate-900">Daftar Menu ({menuItems.length})</h2>
@@ -348,13 +369,13 @@ export default function CanteenMenuSales() {
         </div>
 
         {menuItems.length === 0 ? (
-          <p className="rounded-xl bg-slate-50 p-8 text-center text-sm text-slate-500">Belum ada menu. Tambahkan menu pertama kantin Anda.</p>
+          <p className="merchant-card-glow rounded-xl border p-8 text-center text-sm text-slate-500">Belum ada menu. Tambahkan menu pertama kantin Anda.</p>
         ) : filteredItems.length === 0 ? (
-          <p className="rounded-xl bg-slate-50 p-8 text-center text-sm text-slate-500">Tidak ada menu yang cocok dengan pencarian.</p>
+          <p className="merchant-card-glow rounded-xl border p-8 text-center text-sm text-slate-500">Tidak ada menu yang cocok dengan pencarian.</p>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredItems.map((item) => (
-              <article key={item.id} className="overflow-hidden rounded-xl border border-slate-200">
+              <article key={item.id} className="merchant-card-glow overflow-hidden rounded-xl border border-slate-200">
                 <div className="h-48 w-full bg-slate-100">
                   <img src={item.imageUrl || defaultImage} alt={item.name} className="h-full w-full object-cover" />
                 </div>
@@ -367,13 +388,38 @@ export default function CanteenMenuSales() {
                   </div>
                   <p className="text-sm font-bold text-slate-800">{formatPrice(item.price)}</p>
                   <p className="text-xs text-slate-500">{item.category || 'Tanpa kategori'}</p>
-                  <div className="flex items-center gap-2 pt-1 text-xs">
-                    <button type="button" onClick={() => toggleAvailability(item)} className="font-bold text-[#0A2E6E] hover:underline">
+                  <div className="flex w-full items-center justify-between pt-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleAvailability(item)}
+                      className="text-xs font-medium text-[#2152B7] hover:text-[#163D8F]"
+                    >
                       Ubah Stok
                     </button>
-                    <span className="text-slate-300">•</span>
-                    <button type="button" onClick={() => openEditModal(item)} className="text-slate-500 hover:text-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(item)}
+                      className="text-xs font-medium text-slate-500 hover:text-slate-800"
+                    >
                       Edit Info
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMenu(item)}
+                      disabled={deletingMenuId !== null}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 disabled:opacity-50"
+                    >
+                      {deletingMenuId === item.id ? (
+                        <>
+                          <LoaderCircle className="h-3 w-3 animate-spin" />
+                          Menghapus...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="h-3 w-3" />
+                          Hapus
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -385,7 +431,7 @@ export default function CanteenMenuSales() {
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+          <div className="merchant-card-glow w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-sm font-bold text-slate-900">{editingItem ? 'Edit Informasi Menu' : 'Tambah Menu Baru'}</h2>
               <button type="button" onClick={() => setShowAddModal(false)} aria-label="Tutup form" className="rounded-lg p-1 text-slate-400 hover:text-slate-700">
@@ -405,9 +451,7 @@ export default function CanteenMenuSales() {
                 <label className="block font-bold text-slate-700">
                   Kategori:
                   <select value={menuForm.category} onChange={(event) => setMenuForm({ ...menuForm, category: event.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2.5 font-normal">
-                    <option value="Minuman Segar">Minuman Segar</option>
-                    <option value="Makanan Utama">Makanan Utama</option>
-                    <option value="Camilan">Camilan</option>
+                    {menuCategories.map((category) => <option key={category} value={category}>{category}</option>)}
                   </select>
                 </label>
               </div>

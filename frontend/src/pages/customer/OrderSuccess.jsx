@@ -10,7 +10,7 @@ export default function OrderSuccess() {
       <Navbar />
       <main className="mx-auto flex max-w-2xl flex-col items-center px-4 py-16 text-center">
         <CheckCircle2 className="h-16 w-16 text-emerald-600" aria-hidden="true" />
-        <h1 className="mt-5 text-3xl font-extrabold text-[#0A2E6E]">Pesanan Berhasil</h1>
+        <h1 className="mt-5 text-3xl font-extrabold text-[#2152B7]">Pesanan Berhasil</h1>
         <p className="mt-3 text-sm text-slate-600">
           Pesanan Anda sudah tersimpan. Terima kasih telah menggunakan GoCan.
         </p>
@@ -20,7 +20,7 @@ export default function OrderSuccess() {
         <div className="mt-7">
           <Link
             to="/"
-            className="rounded-xl bg-[#0A2E6E] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#082252]"
+            className="rounded-xl bg-[#2152B7] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#2152B7]"
           >
             Kembali ke Beranda
           </Link>

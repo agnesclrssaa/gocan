@@ -57,7 +57,7 @@ export const Checkout = () => {
     return ( 
       <div className="min-h-screen bg-[#F0F4F9] flex items-center justify-center p-4">
         <div className="flex items-center gap-3 text-sm text-slate-500 font-medium">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0A2E6E] border-t-transparent" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#2152B7] border-t-transparent" />
           <span>Mengalihkan ke keranjang...</span>
         </div>
       </div>
@@ -138,7 +138,7 @@ export const Checkout = () => {
           {/* Left Column (8 cols): Options & Form */}
           <div className="lg:col-span-8 space-y-5">
             {/* 1. MODE PENGAMBILAN */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
+            <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
               <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-4">
                 MODE PENGAMBILAN
               </h2>
@@ -146,14 +146,14 @@ export const Checkout = () => {
                 <button
                   type="button"
                   onClick={() => setOrderType('delivery')}
-                  className={`rounded-2xl p-4 text-center transition cursor-pointer ${
+                  className={`customer-card rounded-2xl p-4 text-center transition cursor-pointer ${
                     orderType === 'delivery'
-                      ? 'bg-[#0A2E6E] text-white shadow-md'
+                      ? 'bg-[#2152B7] text-white shadow-md'
                       : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   <p className="font-bold text-base">Delivery</p>
-                  <p className={`text-xs mt-0.5 ${orderType === 'delivery' ? 'text-blue-100' : 'text-slate-500'}`}>
+                  <p className={`text-xs mt-0.5 ${orderType === 'delivery' ? 'text-white/90' : 'text-slate-500'}`}>
                     Diantar ke titik temu
                   </p>
                 </button>
@@ -161,14 +161,14 @@ export const Checkout = () => {
                 <button
                   type="button"
                   onClick={() => setOrderType('pickup')}
-                  className={`rounded-2xl p-4 text-center transition cursor-pointer ${
+                  className={`customer-card rounded-2xl p-4 text-center transition cursor-pointer ${
                     orderType === 'pickup'
-                      ? 'bg-[#0A2E6E] text-white shadow-md'
+                      ? 'bg-[#2152B7] text-white shadow-md'
                       : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   <p className="font-bold text-base">Pickup</p>
-                  <p className={`text-xs mt-0.5 ${orderType === 'pickup' ? 'text-blue-100' : 'text-slate-500'}`}>
+                  <p className={`text-xs mt-0.5 ${orderType === 'pickup' ? 'text-white/90' : 'text-slate-500'}`}>
                     Ambil sendiri
                   </p>
                 </button>
@@ -176,7 +176,7 @@ export const Checkout = () => {
             </div>
 
             {/* 2. JADWAL PESANAN */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
               <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                 JADWAL PESANAN
               </h2>
@@ -184,14 +184,14 @@ export const Checkout = () => {
                 <button
                   type="button"
                   onClick={() => setScheduleType('now')}
-                  className={`rounded-2xl p-4 text-center transition cursor-pointer ${
+                  className={`customer-card rounded-2xl p-4 text-center transition cursor-pointer ${
                     scheduleType === 'now'
-                      ? 'bg-[#0A2E6E] text-white shadow-md'
+                      ? 'bg-[#2152B7] text-white shadow-md'
                       : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   <p className="font-bold text-sm">Pesan Sekarang</p>
-                  <p className={`text-xs mt-0.5 ${scheduleType === 'now' ? 'text-blue-100' : 'text-slate-500'}`}>
+                  <p className={`text-xs mt-0.5 ${scheduleType === 'now' ? 'text-white/90' : 'text-slate-500'}`}>
                     Diproses langsung
                   </p>
                 </button>
@@ -199,14 +199,14 @@ export const Checkout = () => {
                 <button
                   type="button"
                   onClick={() => setScheduleType('scheduled')}
-                  className={`rounded-2xl p-4 text-center transition cursor-pointer ${
+                  className={`customer-card rounded-2xl p-4 text-center transition cursor-pointer ${
                     scheduleType === 'scheduled'
-                      ? 'bg-[#0A2E6E] text-white shadow-md'
+                      ? 'bg-[#2152B7] text-white shadow-md'
                       : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   <p className="font-bold text-sm">Pesan Terjadwal</p>
-                  <p className={`text-xs mt-0.5 ${scheduleType === 'scheduled' ? 'text-blue-100' : 'text-slate-500'}`}>
+                  <p className={`text-xs mt-0.5 ${scheduleType === 'scheduled' ? 'text-white/90' : 'text-slate-500'}`}>
                     Pilih tanggal & waktu
                   </p>
                 </button>
@@ -214,18 +214,18 @@ export const Checkout = () => {
 
               {scheduleType === 'scheduled' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
                     <p className="text-xs text-slate-500">Tanggal Terjadwal</p>
                     <p className="text-sm font-bold text-slate-800 mt-1">Kamis, 21 Februari 2024</p>
                   </div>
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
                     <p className="text-xs text-slate-500">Waktu Pengantaran</p>
-                    <p className="text-sm font-bold text-[#0A2E6E] mt-1">12:15 WIB · Saat Istirahat</p>
+                    <p className="text-sm font-bold text-[#2152B7] mt-1">12:15 WIB · Saat Istirahat</p>
                   </div>
                 </div>
               )}
 
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-500">
+              <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-500">
                 <span className="font-bold text-slate-700 uppercase tracking-wide block mb-1">
                   CATATAN SCHEDULED ORDER
                 </span>
@@ -235,12 +235,12 @@ export const Checkout = () => {
 
             {/* 3. INFORMASI PENGIRIMAN */}
             {orderType === 'delivery' ? (
-              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
                 <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                   INFORMASI PENGIRIMAN
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
                     <label className="text-xs text-slate-500 block mb-1">Gedung Tujuan</label>
                     <input
                       type="text"
@@ -250,7 +250,7 @@ export const Checkout = () => {
                     />
                   </div>
 
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
                     <label className="text-xs text-slate-500 block mb-1">Kelas / Ruangan</label>
                     <input
                       type="text"
@@ -260,7 +260,7 @@ export const Checkout = () => {
                     />
                   </div>
 
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
                     <label className="text-xs text-slate-500 block mb-1">Titik Temu</label>
                     <input
                       type="text"
@@ -270,9 +270,9 @@ export const Checkout = () => {
                     />
                   </div>
 
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
                     <p className="text-xs text-slate-500 mb-1">Status Jadwal</p>
-                    <p className="text-sm font-bold text-[#0A2E6E]">Terjadwal · Kamis, 21 Feb 2024 · 12:15 WIB</p>
+                    <p className="text-sm font-bold text-[#2152B7]">Terjadwal · Kamis, 21 Feb 2024 · 12:15 WIB</p>
                   </div>
                 </div>
 
@@ -283,16 +283,16 @@ export const Checkout = () => {
                     value={additionalNote}
                     onChange={(e) => setAdditionalNote(e.target.value)}
                     placeholder="Contoh: Titipkan di meja lobby depan satpam jika belum keluar kelas..."
-                    className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-medium border border-slate-200 outline-none focus:border-[#0A2E6E]"
+                    className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-medium border border-slate-200 outline-none focus:border-[#2152B7]"
                   />
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
                 <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                   INFORMASI PENGAMBILAN (PICKUP)
                 </h2>
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
                   <p className="text-xs text-slate-500">Kantin Tujuan</p>
                   <p className="text-base font-bold text-slate-800 mt-1">{currentCanteen?.name || 'Kantin Pak Brazil'}</p>
                   <p className="text-xs text-slate-500 mt-0.5">Area Foodcourt Utama Kampus UKWMS Dinoyo</p>
@@ -305,19 +305,19 @@ export const Checkout = () => {
                     value={pickupNote}
                     onChange={(e) => setPickupNote(e.target.value)}
                     placeholder="Contoh: Sambal dipisah ya bu..."
-                    className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-medium border border-slate-200 outline-none focus:border-[#0A2E6E]"
+                    className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-medium border border-slate-200 outline-none focus:border-[#2152B7]"
                   />
                 </div>
               </div>
             )}
 
             {/* 4. VERIFIKASI PENGAMBILAN (PICKUP) */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
               <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                 VERIFIKASI PENGAMBILAN (PICKUP)
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3.5 bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                <div className="customer-card flex items-center gap-3.5 bg-slate-50 rounded-2xl p-4 border border-slate-200">
                   <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-slate-200 shrink-0">
                     <QrCode className="w-5 h-5 text-slate-700" />
                   </div>
@@ -327,7 +327,7 @@ export const Checkout = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3.5 bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                <div className="customer-card flex items-center gap-3.5 bg-slate-50 rounded-2xl p-4 border border-slate-200">
                   <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-200 shrink-0">
                     <CreditCard className="w-5 h-5 text-amber-600" />
                   </div>
@@ -338,7 +338,7 @@ export const Checkout = () => {
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-500">
+              <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-500">
                 <span className="font-bold text-slate-700 uppercase tracking-wide block mb-1">
                   CATATAN PICKUP
                 </span>
@@ -349,16 +349,16 @@ export const Checkout = () => {
             </div>
 
             {/* 5. METODE PEMBAYARAN */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
               <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                 METODE PEMBAYARAN
               </h2>
 
               <div
                 onClick={() => setPaymentMethod('gocan_pay')}
-                className={`flex items-center justify-between p-4 rounded-2xl border transition cursor-pointer ${
+                className={`customer-card flex items-center justify-between p-4 rounded-2xl border transition cursor-pointer ${
                   paymentMethod === 'gocan_pay'
-                    ? 'border-[#0A2E6E] ring-1 ring-[#0A2E6E] bg-white'
+                    ? 'border-[#2152B7] ring-1 ring-[#2152B7] bg-white'
                     : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
                 }`}
               >
@@ -372,7 +372,7 @@ export const Checkout = () => {
                   </div>
                 </div>
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  paymentMethod === 'gocan_pay' ? 'text-[#0A2E6E]' : 'text-slate-300'
+                  paymentMethod === 'gocan_pay' ? 'text-[#2152B7]' : 'text-slate-300'
                 }`}>
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
@@ -380,9 +380,9 @@ export const Checkout = () => {
 
               <div
                 onClick={() => setPaymentMethod('cash')}
-                className={`flex items-center justify-between p-4 rounded-2xl border transition cursor-pointer ${
+                className={`customer-card flex items-center justify-between p-4 rounded-2xl border transition cursor-pointer ${
                   paymentMethod === 'cash'
-                    ? 'border-[#0A2E6E] ring-1 ring-[#0A2E6E] bg-white'
+                    ? 'border-[#2152B7] ring-1 ring-[#2152B7] bg-white'
                     : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
                 }`}
               >
@@ -398,7 +398,7 @@ export const Checkout = () => {
                   </div>
                 </div>
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  paymentMethod === 'cash' ? 'text-[#0A2E6E]' : 'text-slate-300'
+                  paymentMethod === 'cash' ? 'text-[#2152B7]' : 'text-slate-300'
                 }`}>
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
@@ -409,7 +409,7 @@ export const Checkout = () => {
           {/* Right Column (4 cols): Summary & CTA */}
           <div className="lg:col-span-4 space-y-5">
             {/* RINGKASAN PESANAN */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
               <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                 RINGKASAN PESANAN
               </h2>
@@ -444,7 +444,7 @@ export const Checkout = () => {
             </div>
 
             {/* APABILA PILIH PICKUP */}
-            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm">
+            <div className="customer-card bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm">
               <p className="text-[11px] font-bold text-[#DC2626] uppercase tracking-wide mb-3">
                 APABILA PILIH PICKUP (AMBIL SENDIRI):
               </p>

@@ -81,16 +81,18 @@ export const Navbar = () => {
   const isHomeActive = location.pathname === '/';
   const isHistoryActive = location.pathname === '/history';
   const isCartActive = location.pathname === '/cart';
+  const isCustomer = profile?.role === 'customer';
 
   return (
     <header className="px-3 sm:px-6 pt-3 sm:pt-4 sticky top-0 z-40 bg-[#F0F4F9]/90 backdrop-blur-md font-sans">
-      <div className="max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 shadow-xs px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+      <div className={`${profile?.role === 'customer' ? 'customer-card' : ''} max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 shadow-xs px-4 sm:px-6 py-3 flex items-center justify-between gap-4`}>
         {/* Brand Logo GoCan */}
         <Link to="/" className="flex items-center gap-2.5 group">
           <BrandLogo className="h-10 w-10 rounded-2xl transition group-hover:scale-105" />
           <div className="flex items-center gap-1.5">
-            <span className="text-xl font-extrabold tracking-tight text-[#0A2E6E]">
-              Go<span className="text-[#DC2626]">Can</span>
+            <span className={`text-xl font-extrabold tracking-tight ${isCustomer ? '' : 'text-[#0A2E6E]'}`}>
+              <span className={isCustomer ? 'text-[#ED2028]' : ''}>Go</span>
+              <span className={isCustomer ? 'text-[#2152B7]' : 'text-[#DC2626]'}>Can</span>
             </span>
           </div>
         </Link>
@@ -101,7 +103,7 @@ export const Navbar = () => {
             to="/"
             className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
               isHomeActive
-                ? 'bg-[#0A2E6E] text-white shadow-xs'
+                ? `${isCustomer ? 'bg-[#2152B7]' : 'bg-[#0A2E6E]'} text-white shadow-xs`
                 : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50'
             }`}
           >
@@ -112,7 +114,7 @@ export const Navbar = () => {
             to="/history"
             className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
               isHistoryActive
-                ? 'bg-[#0A2E6E] text-white shadow-xs'
+                ? `${isCustomer ? 'bg-[#2152B7]' : 'bg-[#0A2E6E]'} text-white shadow-xs`
                 : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50'
             }`}
           >
@@ -123,7 +125,7 @@ export const Navbar = () => {
             to={profile?.role === 'customer' ? '/canteens' : '/canteen/canteen-pak-brazil'}
             className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
               profile?.role === 'customer' && location.pathname === '/canteens'
-                ? 'bg-[#0A2E6E] text-white shadow-xs'
+                ? `${isCustomer ? 'bg-[#2152B7]' : 'bg-[#0A2E6E]'} text-white shadow-xs`
                 : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50'
             }`}
           >
@@ -141,26 +143,28 @@ export const Navbar = () => {
                 setLocationError('');
                 setIsLocationOpen((isOpen) => !isOpen);
               }}
-              className="flex max-w-[42vw] sm:max-w-64 items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs hover:bg-blue-50 hover:border-blue-200 transition"
+              className={`group flex max-w-[42vw] sm:max-w-64 items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs transition ${
+                isCustomer ? 'hover:bg-[#2152B7] hover:border-[#2152B7] hover:text-white' : 'hover:bg-blue-50 hover:border-blue-200'
+              }`}
               aria-expanded={isLocationOpen}
               aria-controls="delivery-location-popover"
               aria-label={`Ubah lokasi pengantaran. Lokasi saat ini: ${deliveryLocation}`}
             >
-              <MapPin className="h-4 w-4 shrink-0 text-[#0A2E6E]" />
-              <span className="hidden sm:inline text-slate-500 font-medium">Kirim ke:</span>
-              <strong className="hidden sm:block truncate text-[#0A2E6E] font-bold">
+              <MapPin className={`h-4 w-4 shrink-0 ${isCustomer ? 'text-[#2152B7] group-hover:text-white' : 'text-[#0A2E6E]'}`} />
+              <span className={`hidden sm:inline font-medium ${isCustomer ? 'text-slate-500 group-hover:text-white' : 'text-slate-500'}`}>Kirim ke:</span>
+              <strong className={`hidden sm:block truncate font-bold ${isCustomer ? 'text-[#2152B7] group-hover:text-white' : 'text-[#0A2E6E]'}`}>
                 {deliveryLocation}
               </strong>
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+              <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isCustomer ? 'text-slate-500 group-hover:text-white' : 'text-slate-500'}`} />
             </button>
 
             {isLocationOpen && (
               <div
                 id="delivery-location-popover"
-                className="absolute right-0 top-full z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
+                className={`${profile?.role === 'customer' ? 'customer-card' : ''} absolute right-0 top-full z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl`}
               >
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <h2 className="text-sm font-bold text-[#0A2E6E]">
+                  <h2 className={`text-sm font-bold ${isCustomer ? 'text-[#2152B7]' : 'text-[#0A2E6E]'}`}>
                     Pilih Lokasi Pengantaran
                   </h2>
                   <button
@@ -188,7 +192,9 @@ export const Navbar = () => {
                       setLocationError('');
                     }}
                     placeholder="Masukkan lokasi"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#0A2E6E] focus:ring-2 focus:ring-blue-100"
+                    className={`w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 ${
+                      isCustomer ? 'focus:border-[#2152B7] focus:ring-2 focus:ring-[#2152B7]/30' : 'focus:border-[#0A2E6E] focus:ring-2 focus:ring-blue-100'
+                    }`}
                   />
                   {locationError && (
                     <p className="mt-2 text-xs text-red-600" role="alert">
@@ -197,7 +203,9 @@ export const Navbar = () => {
                   )}
                   <button
                     type="submit"
-                    className="mt-3 w-full rounded-xl bg-[#0A2E6E] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-900"
+                    className={`mt-3 w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition ${
+                      isCustomer ? 'bg-[#2152B7] hover:bg-[#2152B7]' : 'bg-[#0A2E6E] hover:bg-blue-900'
+                    }`}
                   >
                     Simpan Lokasi
                   </button>
@@ -212,7 +220,7 @@ export const Navbar = () => {
               to="/cart"
               className={`relative flex items-center justify-center h-10 w-10 rounded-full border transition ${
                 isCartActive
-                  ? 'bg-[#0A2E6E] text-white border-[#0A2E6E]'
+                  ? `${isCustomer ? 'bg-[#2152B7] border-[#2152B7]' : 'bg-[#0A2E6E] border-[#0A2E6E]'} text-white`
                   : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
               aria-label="Keranjang Belanja"
@@ -286,7 +294,9 @@ export const Navbar = () => {
             <div className="flex items-center gap-2 pl-1.5 border-l border-slate-200">
               <Link
                 to="/login"
-                className="text-xs font-bold text-[#0A2E6E] hover:bg-blue-50 px-3 py-1.5 rounded-xl transition"
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition ${
+                  isCustomer ? 'text-[#2152B7] hover:bg-[#2152B7] hover:text-white' : 'text-[#0A2E6E] hover:bg-blue-50'
+                }`}
               >
                 Masuk
               </Link>

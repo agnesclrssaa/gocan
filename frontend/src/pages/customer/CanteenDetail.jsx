@@ -54,7 +54,7 @@ export const CanteenDetail = () => {
   }, [menus, activeCategory]);
 
   return (
-    <div className="min-h-screen bg-[#F0F4F9] text-slate-800 font-sans selection:bg-[#0A2E6E] selection:text-white pb-32">
+    <div className="min-h-screen bg-[#F0F4F9] text-slate-800 font-sans selection:bg-[#2152B7] selection:text-white pb-32">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6">
@@ -66,13 +66,13 @@ export const CanteenDetail = () => {
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[#0A2E6E] tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#2152B7] tracking-tight">
             Detail Kantin
           </h1>
         </div>
 
         {loading && (
-          <p className="rounded-2xl border border-slate-200 bg-white p-5 text-sm font-medium text-slate-600">
+          <p className="customer-card rounded-2xl border border-slate-200 bg-white p-5 text-sm font-medium text-slate-600">
             Memuat kantin dan menu...
           </p>
         )}
@@ -85,7 +85,7 @@ export const CanteenDetail = () => {
 
         {/* CANTEEN HERO CARD (Matching gocan-canteen-detail.png) */}
         {canteen && (
-          <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          <div className="customer-card bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
             {/* Left Image: Canteen Dining */}
             <div className="md:col-span-5 h-56 sm:h-64 rounded-2xl overflow-hidden bg-slate-100">
               <img
@@ -98,7 +98,7 @@ export const CanteenDetail = () => {
             {/* Right Information */}
             <div className="md:col-span-7 space-y-3">
               <div className="flex items-center gap-2.5">
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0A2E6E]">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#2152B7]">
                   {canteen.name}
                 </h2>
                 <span className={`px-2.5 py-0.5 rounded-md text-xs font-bold border ${
@@ -153,7 +153,7 @@ export const CanteenDetail = () => {
         {/* DAFTAR MENU SECTION */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-extrabold text-[#0A2E6E] tracking-tight">
+            <h3 className="text-lg font-extrabold text-[#2152B7] tracking-tight">
               Daftar Menu
             </h3>
             <span className="text-xs text-slate-500 font-medium">
@@ -161,14 +161,14 @@ export const CanteenDetail = () => {
             </span>
           </div>
 
-          {/* 2-Column Menu Grid (Matching gocan-canteen-detail.png) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Menu grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredMenus.map((menu) => (
               <MenuCard key={menu.id} menu={menu} canteen={canteen} />
             ))}
           </div>
           {filteredMenus.length === 0 && (
-            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-10 text-center">
+            <div className="customer-card rounded-2xl border border-slate-200 bg-white px-5 py-10 text-center">
               <p className="font-bold text-slate-700">
                 {menus.length === 0 ? 'Menu kantin belum tersedia.' : 'Tidak ada menu di kategori ini.'}
               </p>
@@ -176,7 +176,7 @@ export const CanteenDetail = () => {
                 <button
                   type="button"
                   onClick={() => setActiveCategory('Semua')}
-                  className="mt-2 text-sm font-bold text-[#0A2E6E] hover:underline"
+                  className="mt-2 text-sm font-bold text-[#2152B7] hover:underline"
                 >
                   Tampilkan semua menu
                 </button>

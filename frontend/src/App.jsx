@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { AUTH_TOKEN_KEY } from './lib/api';
 import FloatingCart from './components/customer/FloatingCart';
 import { AlertCircle, X } from 'lucide-react';
 
@@ -8,11 +9,12 @@ import { AlertCircle, X } from 'lucide-react';
 import IntroLoadingScreen from './components/common/IntroLoadingScreen';
 import SplashScreen from './components/common/SplashScreen';
 import WelcomeScreen from './components/common/WelcomeScreen';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 // Layouts
 import CanteenLayout from './layouts/CanteenLayout';
 import AdminLayout from './layouts/AdminLayout';
+import CustomerLayout from './layouts/CustomerLayout';
 
 // Customer Pages
 import Home from './pages/customer/Home';
@@ -61,15 +63,26 @@ const roleHome = {
 
 function PublicEntryFlow() {
   const [screen, setScreen] = useState('splash');
-  const navigate = useNavigate();
+  const { user, profile, loading } = useAuth();
 
-  const finishSplash = () => {
+  const finishSplash = useCallback(() => {
     setScreen('welcome');
-  };
+  }, []);
 
-  const startOrdering = () => {
-    navigate('/login');
-  };
+  const startOrdering = useCallback(() => setScreen('auth'), []);
+
+  if (loading && localStorage.getItem(AUTH_TOKEN_KEY)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F0F4F9]">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#2152B7] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (user && screen !== 'auth') {
+    const destination = profile ? roleHome[profile.role] : '/';
+    return <Navigate to={destination || '/unauthorized'} replace />;
+  }
 
   if (screen === 'splash') {
     return (
@@ -86,13 +99,13 @@ function PublicEntryFlow() {
     );
   }
 
-  return null;
+  return <Outlet />;
 }
 
 function RoleLanding() {
   const { user, profile, loading, authError, refreshProfile, signOut } = useAuth();
 
-  if (loading) {
+  if (loading && localStorage.getItem(AUTH_TOKEN_KEY)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F0F4F9]">
         <div className="flex flex-col items-center gap-3 bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
@@ -103,8 +116,8 @@ function RoleLanding() {
     );
   }
 
-  // Jika pengunjung publik belum login
-  if (!user) return <PublicEntryFlow />;
+  // Public users go through the splash and welcome flow before authentication.
+  if (!user) return <Navigate to="/login" replace />;
 
   // Jika user login tetapi profil masih dalam antrean muat
   if (!profile) {
@@ -146,9 +159,9 @@ function RoleLanding() {
   }
 
   // Keep the storefront available at the root URL for customers and canteen partners.
-  if (profile.role === 'customer' || profile.role === 'canteen' || profile.role === 'canteen_staff') {
-    return <Home />;
-  }
+  if (profile.role === 'customer') return <CustomerLayout><Home /></CustomerLayout>;
+
+  if (profile.role === 'canteen' || profile.role === 'canteen_staff') return <Home />;
 
   // Role selain customer dialihkan ke portal masing-masing
   const destination = roleHome[profile.role];
@@ -240,20 +253,24 @@ export function App() {
             <Route path="/landing" element={<IntroLoadingScreen />} />
             <Route path="/intro" element={<IntroLoadingScreen />} />
 
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/menu-preview" element={<MenuPreview />} />
+            <Route element={<PublicEntryFlow />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Route>
+            <Route path="/menu-preview" element={<CustomerLayout><MenuPreview /></CustomerLayout>} />
 
             {/* Customer Routes */}
             <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
-              <Route path="/canteens" element={<Canteens />} />
-              <Route path="/canteen/:canteenId" element={<CanteenDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-success/:orderId" element={<OrderSuccess />} />
-              <Route path="/orders/:orderId" element={<OrderTracking />} />
-              <Route path="/order/:orderId" element={<OrderTracking />} />
-              <Route path="/history" element={<History />} />
+              <Route element={<CustomerLayout />}>
+                <Route path="/canteens" element={<Canteens />} />
+                <Route path="/canteen/:canteenId" element={<CanteenDetail />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+                <Route path="/orders/:orderId" element={<OrderTracking />} />
+                <Route path="/order/:orderId" element={<OrderTracking />} />
+                <Route path="/history" element={<History />} />
+              </Route>
             </Route>
 
             {/* Canteen Portal Routes (Terproteksi Role & Approval) */}

@@ -24,13 +24,13 @@ export const FloatingCart = () => {
         <div
           role="status"
           aria-live="polite"
-          className={`w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-blue-100 bg-white/95 p-3 text-slate-900 shadow-xl shadow-slate-950/15 backdrop-blur-md transition-all duration-300 ease-out motion-reduce:transition-none ${
+          className={`customer-card w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-[#2152B7] bg-white/95 p-3 text-slate-900 shadow-xl shadow-slate-950/15 backdrop-blur-md transition-all duration-300 ease-out motion-reduce:transition-none ${
             isToastVisible && cartNotificationPhase === 'visible'
               ? 'translate-y-0 opacity-100'
               : 'translate-y-3 opacity-0'
           }`}
         >
-          <div className="truncate text-xs font-bold text-[#0A2E6E]">
+          <div className="truncate text-xs font-bold text-[#2152B7]">
             Berhasil ditambahkan ke keranjang
           </div>
           <div className="mt-0.5 truncate text-[11px] text-slate-500">
@@ -42,7 +42,7 @@ export const FloatingCart = () => {
       <Link
         to="/cart"
         aria-label={`Keranjang Belanja, ${totalItems} item`}
-        className="pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full bg-[#0A2E6E] text-white shadow-xl shadow-slate-950/25 transition hover:scale-105 hover:bg-blue-900 active:scale-95 sm:h-16 sm:w-16"
+        className="pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full bg-[#2152B7] text-white shadow-xl shadow-slate-950/25 transition hover:scale-105 hover:bg-[#2152B7] active:scale-95 sm:h-16 sm:w-16"
       >
         <ShoppingBag className="h-6 w-6 sm:h-7 sm:w-7" />
         {totalItems > 0 && (

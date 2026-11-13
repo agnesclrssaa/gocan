@@ -64,3 +64,536 @@
     perspective: 1000px;
   }
 }
+
+.merchant-card-glow {
+  position: relative;
+  isolation: isolate;
+  background: #FFFFFF;
+  border: 1px solid #D6E2F0;
+  box-shadow:
+    0 4px 14px rgba(33, 82, 183, 0.09),
+    0 8px 24px rgba(33, 82, 183, 0.07);
+  transition: box-shadow 0.3s ease;
+}
+
+.merchant-card-glow:hover {
+  box-shadow:
+    0 6px 18px rgba(33, 82, 183, 0.11),
+    0 10px 28px rgba(33, 82, 183, 0.09);
+}
+
+.customer-card {
+  border: 1px solid #D6E2F0;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 4px 14px rgba(33, 82, 183, 0.09),
+    0 8px 24px rgba(33, 82, 183, 0.07);
+  transition: box-shadow 0.3s ease;
+}
+
+.customer-card:hover {
+  border-color: #D6E2F0;
+  box-shadow:
+    0 6px 18px rgba(33, 82, 183, 0.11),
+    0 10px 28px rgba(33, 82, 183, 0.09);
+  transform: none;
+  translate: none;
+}
+
+.customer-card.menu-card-hover {
+  transition:
+    transform 300ms ease-out,
+    border-color 300ms ease-out,
+    box-shadow 300ms ease-out;
+}
+
+.customer-home-backdrop {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.home-decor {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.home-blob {
+  width: clamp(150px, 24vw, 320px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.home-blob-red {
+  background: #F52B33;
+  opacity: 0.24;
+}
+
+.home-blob-blue {
+  background: #2D63D2;
+  opacity: 0.23;
+}
+
+.home-blob-yellow {
+  border-radius: 35% 48% 38% 46%;
+  background: #FFC928;
+  opacity: 0.25;
+}
+
+.home-blob-cream {
+  background: #FFF9E8;
+  opacity: 0.98;
+}
+
+.home-decor-at-3,
+.home-decor-at-6,
+.home-decor-at-12,
+.home-decor-at-16,
+.home-decor-at-20,
+.home-decor-at-24,
+.home-decor-at-29,
+.home-decor-at-32,
+.home-decor-at-36,
+.home-decor-at-40,
+.home-decor-at-44,
+.home-decor-at-47,
+.home-decor-at-51,
+.home-decor-at-53,
+.home-decor-at-57,
+.home-decor-at-61,
+.home-decor-at-64,
+.home-decor-at-68,
+.home-decor-at-71,
+.home-decor-at-74,
+.home-decor-at-77,
+.home-decor-at-82,
+.home-decor-at-85,
+.home-decor-at-88,
+.home-decor-at-90,
+.home-decor-at-93,
+.home-decor-at-96,
+.home-decor-at-97,
+.home-decor-at-98 {
+  top: var(--decor-y);
+}
+
+.home-decor-at-3 { --decor-y: 3%; }
+.home-decor-at-4 { top: 4%; }
+.home-decor-at-6 { --decor-y: 6%; }
+.home-decor-at-8 { top: 8%; }
+.home-decor-at-9 { top: 9%; }
+.home-decor-at-11 { top: 11%; }
+.home-decor-at-12 { --decor-y: 12%; }
+.home-decor-at-14 { top: 14%; }
+.home-decor-at-15 { top: 15%; }
+.home-decor-at-16 { --decor-y: 16%; }
+.home-decor-at-18 { top: 18%; }
+.home-decor-at-20 { --decor-y: 20%; }
+.home-decor-at-22 { top: 22%; }
+.home-decor-at-24 { --decor-y: 24%; }
+.home-decor-at-27 { top: 27%; }
+.home-decor-at-29 { --decor-y: 29%; }
+.home-decor-at-30 { top: 30%; }
+.home-decor-at-32 { --decor-y: 32%; }
+.home-decor-at-34 { top: 34%; }
+.home-decor-at-36 { --decor-y: 36%; }
+.home-decor-at-38 { top: 38%; }
+.home-decor-at-40 { --decor-y: 40%; }
+.home-decor-at-41 { top: 41%; }
+.home-decor-at-44 { --decor-y: 44%; }
+.home-decor-at-45 { top: 45%; }
+.home-decor-at-47 { --decor-y: 47%; }
+.home-decor-at-49 { top: 49%; }
+.home-decor-at-51 { --decor-y: 51%; }
+.home-decor-at-53 { top: 53%; }
+.home-decor-at-56 { top: 56%; }
+.home-decor-at-57 { --decor-y: 57%; }
+.home-decor-at-58 { top: 58%; }
+.home-decor-at-59 { top: 59%; }
+.home-decor-at-61 { --decor-y: 61%; }
+.home-decor-at-64 { --decor-y: 64%; }
+.home-decor-at-66 { top: 66%; }
+.home-decor-at-68 { --decor-y: 68%; }
+.home-decor-at-71 { --decor-y: 71%; }
+.home-decor-at-73 { top: 73%; }
+.home-decor-at-74 { --decor-y: 74%; }
+.home-decor-at-76 { top: 76%; }
+.home-decor-at-77 { --decor-y: 77%; }
+.home-decor-at-79 { top: 79%; }
+.home-decor-at-81 { top: 81%; }
+.home-decor-at-82 { --decor-y: 82%; }
+.home-decor-at-84 { top: 84%; }
+.home-decor-at-85 { --decor-y: 85%; }
+.home-decor-at-88 { --decor-y: 88%; }
+.home-decor-at-90 { --decor-y: 90%; }
+.home-decor-at-91 { top: 91%; }
+.home-decor-at-93 { --decor-y: 93%; }
+.home-decor-at-94 { top: 94%; }
+.home-decor-at-96 { --decor-y: 96%; }
+.home-decor-at-97 { --decor-y: 97%; }
+.home-decor-at-98 { --decor-y: 98%; }
+
+.home-blob-red.home-decor-at-3,
+.home-blob-yellow.home-decor-at-29,
+.home-blob-red.home-decor-at-59,
+.home-blob-yellow.home-decor-at-98,
+.home-ring-red.home-decor-at-8,
+.home-ring-yellow.home-decor-at-34,
+.home-ring-red.home-decor-at-49,
+.home-ring-yellow.home-decor-at-79,
+.home-arc-red.home-decor-at-12,
+.home-arc-yellow.home-decor-at-41,
+.home-arc-red.home-decor-at-56,
+.home-arc-yellow.home-decor-at-85,
+.home-star.home-decor-at-6,
+.home-star.home-decor-at-18,
+.home-star.home-decor-at-32,
+.home-star.home-decor-at-47,
+.home-star.home-decor-at-61,
+.home-star.home-decor-at-76,
+.home-star.home-decor-at-90,
+.home-sparkle.home-decor-at-14,
+.home-sparkle.home-decor-at-36,
+.home-sparkle.home-decor-at-58,
+.home-sparkle.home-decor-at-81,
+.home-sparkle.home-decor-at-94,
+.home-dot.home-decor-at-4,
+.home-dot.home-decor-at-16,
+.home-dot.home-decor-at-30,
+.home-dot.home-decor-at-45,
+.home-dot.home-decor-at-57,
+.home-dot.home-decor-at-73,
+.home-dot.home-decor-at-84,
+.home-dot.home-decor-at-97 {
+  left: -7%;
+}
+
+.home-blob-blue.home-decor-at-15,
+.home-blob-cream.home-decor-at-44,
+.home-blob-blue.home-decor-at-74,
+.home-blob-cream.home-decor-at-88,
+.home-ring-blue.home-decor-at-20,
+.home-ring-blue.home-decor-at-64,
+.home-ring-red.home-decor-at-93,
+.home-arc-blue.home-decor-at-27,
+.home-arc-blue.home-decor-at-71,
+.home-star.home-decor-at-11,
+.home-star.home-decor-at-24,
+.home-star.home-decor-at-38,
+.home-star.home-decor-at-53,
+.home-star.home-decor-at-68,
+.home-star.home-decor-at-82,
+.home-star.home-decor-at-96,
+.home-dot.home-decor-at-9,
+.home-dot.home-decor-at-22,
+.home-dot.home-decor-at-40,
+.home-dot.home-decor-at-51,
+.home-dot.home-decor-at-66,
+.home-dot.home-decor-at-77,
+.home-dot.home-decor-at-91 {
+  right: -7%;
+}
+
+.home-blob-red.home-decor-at-3 { width: clamp(190px, 29vw, 370px); }
+.home-blob-blue.home-decor-at-15 { width: clamp(170px, 25vw, 320px); }
+.home-blob-yellow.home-decor-at-29 { width: clamp(155px, 21vw, 270px); }
+.home-blob-cream.home-decor-at-44 { width: clamp(190px, 26vw, 330px); }
+.home-blob-red.home-decor-at-59 { width: clamp(160px, 23vw, 295px); }
+.home-blob-blue.home-decor-at-74 { width: clamp(200px, 28vw, 360px); }
+.home-blob-cream.home-decor-at-88 { width: clamp(165px, 23vw, 290px); }
+.home-blob-yellow.home-decor-at-98 { width: clamp(180px, 25vw, 325px); }
+
+.home-ring {
+  width: clamp(95px, 14vw, 175px);
+  aspect-ratio: 1;
+  border: 9px solid;
+  border-radius: 50%;
+  opacity: 0.19;
+}
+
+.home-ring-red { border-color: #F52B33; }
+.home-ring-blue { border-color: #2D63D2; }
+.home-ring-yellow { border-color: #FFC928; }
+
+.home-ring.home-decor-at-8,
+.home-ring.home-decor-at-34,
+.home-ring.home-decor-at-64,
+.home-ring.home-decor-at-93 {
+  left: 18%;
+}
+
+.home-ring.home-decor-at-20,
+.home-ring.home-decor-at-49,
+.home-ring.home-decor-at-79 {
+  right: 18%;
+}
+
+.home-ring.home-decor-at-8 { width: clamp(72px, 10vw, 128px); }
+.home-ring.home-decor-at-20 { width: clamp(115px, 17vw, 210px); }
+.home-ring.home-decor-at-34 { width: clamp(78px, 11vw, 140px); }
+.home-ring.home-decor-at-49 { width: clamp(130px, 18vw, 225px); }
+.home-ring.home-decor-at-64 { width: clamp(92px, 13vw, 165px); }
+.home-ring.home-decor-at-79 { width: clamp(75px, 11vw, 138px); }
+.home-ring.home-decor-at-93 { width: clamp(122px, 17vw, 215px); }
+
+.home-arc {
+  width: clamp(130px, 20vw, 250px);
+  aspect-ratio: 1;
+  border: 3px solid;
+  border-radius: 50%;
+  opacity: 0.27;
+  animation: homeBackdropArcFloat 8s ease-in-out infinite;
+}
+
+.home-arc::after {
+  position: absolute;
+  inset: 14px;
+  border: inherit;
+  border-radius: inherit;
+  content: "";
+}
+
+.home-arc-red { border-color: #F52B33; }
+.home-arc-blue { border-color: #2D63D2; }
+.home-arc-yellow { border-color: #FFC928; }
+
+.home-arc.home-decor-at-12,
+.home-arc.home-decor-at-41,
+.home-arc.home-decor-at-56 {
+  right: 13%;
+}
+
+.home-arc.home-decor-at-27,
+.home-arc.home-decor-at-71,
+.home-arc.home-decor-at-85 {
+  left: 13%;
+}
+
+.home-star {
+  width: 30px;
+  aspect-ratio: 1;
+  clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 62%, 50% 100%, 39% 62%, 0 50%, 39% 38%);
+  opacity: 0.84;
+  animation: starFloat 3.5s ease-in-out infinite;
+}
+
+.home-star-yellow { background: #FFC928; }
+.home-star-blue { background: #2D63D2; }
+.home-star-red { background: #F52B33; }
+
+.home-star.home-decor-at-6,
+.home-star.home-decor-at-18,
+.home-star.home-decor-at-32,
+.home-star.home-decor-at-47,
+.home-star.home-decor-at-61,
+.home-star.home-decor-at-76,
+.home-star.home-decor-at-90 {
+  left: 26%;
+}
+
+.home-star.home-decor-at-11,
+.home-star.home-decor-at-24,
+.home-star.home-decor-at-38,
+.home-star.home-decor-at-53,
+.home-star.home-decor-at-68,
+.home-star.home-decor-at-82,
+.home-star.home-decor-at-96 {
+  right: 26%;
+}
+
+.home-star.home-decor-at-6,
+.home-star.home-decor-at-24,
+.home-star.home-decor-at-38,
+.home-star.home-decor-at-53,
+.home-star.home-decor-at-68,
+.home-star.home-decor-at-82,
+.home-star.home-decor-at-96 {
+  width: 22px;
+}
+
+.home-star.home-decor-at-11,
+.home-star.home-decor-at-32,
+.home-star.home-decor-at-47,
+.home-star.home-decor-at-61,
+.home-star.home-decor-at-76,
+.home-star.home-decor-at-90 {
+  width: 38px;
+}
+
+.home-sparkle {
+  width: 30px;
+  aspect-ratio: 1;
+  background: currentColor;
+  clip-path: polygon(45% 0, 55% 0, 58% 42%, 100% 45%, 100% 55%, 58% 58%, 55% 100%, 45% 100%, 42% 58%, 0 55%, 0 45%, 42% 42%);
+  opacity: 0.82;
+  animation: homeBackdropSparkle 2.7s ease-in-out infinite;
+}
+
+.home-sparkle-red { color: #F52B33; }
+.home-sparkle-yellow { color: #FFC928; }
+.home-sparkle-blue { color: #2D63D2; }
+
+.home-sparkle.home-decor-at-14,
+.home-sparkle.home-decor-at-58,
+.home-sparkle.home-decor-at-94 {
+  left: 42%;
+}
+
+.home-sparkle.home-decor-at-36,
+.home-sparkle.home-decor-at-81 {
+  right: 42%;
+}
+
+.home-sparkle.home-decor-at-14,
+.home-sparkle.home-decor-at-36,
+.home-sparkle.home-decor-at-81 {
+  width: 18px;
+}
+
+.home-dot {
+  width: 11px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: dotPulse 2.7s ease-in-out infinite;
+}
+
+.home-dot-yellow { background: #FFC928; }
+.home-dot-blue { background: #2D63D2; }
+.home-dot-red { background: #F52B33; }
+
+.home-dot.home-decor-at-4,
+.home-dot.home-decor-at-16,
+.home-dot.home-decor-at-30,
+.home-dot.home-decor-at-45,
+.home-dot.home-decor-at-57,
+.home-dot.home-decor-at-73,
+.home-dot.home-decor-at-84,
+.home-dot.home-decor-at-97 {
+  left: 11%;
+}
+
+.home-dot.home-decor-at-9,
+.home-dot.home-decor-at-22,
+.home-dot.home-decor-at-40,
+.home-dot.home-decor-at-51,
+.home-dot.home-decor-at-66,
+.home-dot.home-decor-at-77,
+.home-dot.home-decor-at-91 {
+  right: 11%;
+}
+
+.home-dot.home-decor-at-4,
+.home-dot.home-decor-at-22,
+.home-dot.home-decor-at-40,
+.home-dot.home-decor-at-57,
+.home-dot.home-decor-at-73,
+.home-dot.home-decor-at-91 {
+  width: 7px;
+}
+
+@keyframes homeBackdropArcFloat {
+  50% {
+    transform: translateY(-8px) rotate(8deg);
+  }
+}
+
+@keyframes homeBackdropSparkle {
+  50% {
+    opacity: 0.42;
+    transform: rotate(45deg) scale(0.82);
+  }
+}
+
+@media (max-width: 640px) {
+  .home-blob {
+    width: clamp(130px, 40vw, 210px);
+  }
+
+  .home-blob-red.home-decor-at-3,
+  .home-blob-yellow.home-decor-at-29,
+  .home-blob-red.home-decor-at-59,
+  .home-blob-yellow.home-decor-at-98,
+  .home-ring-red.home-decor-at-8,
+  .home-ring-yellow.home-decor-at-34,
+  .home-ring-red.home-decor-at-49,
+  .home-ring-yellow.home-decor-at-79,
+  .home-arc-red.home-decor-at-12,
+  .home-arc-yellow.home-decor-at-41,
+  .home-arc-red.home-decor-at-56,
+  .home-arc-yellow.home-decor-at-85,
+  .home-star.home-decor-at-6,
+  .home-star.home-decor-at-18,
+  .home-star.home-decor-at-32,
+  .home-star.home-decor-at-47,
+  .home-star.home-decor-at-61,
+  .home-star.home-decor-at-76,
+  .home-star.home-decor-at-90,
+  .home-sparkle.home-decor-at-14,
+  .home-sparkle.home-decor-at-36,
+  .home-sparkle.home-decor-at-58,
+  .home-sparkle.home-decor-at-81,
+  .home-sparkle.home-decor-at-94,
+  .home-dot.home-decor-at-4,
+  .home-dot.home-decor-at-16,
+  .home-dot.home-decor-at-30,
+  .home-dot.home-decor-at-45,
+  .home-dot.home-decor-at-57,
+  .home-dot.home-decor-at-73,
+  .home-dot.home-decor-at-84,
+  .home-dot.home-decor-at-97 {
+    left: -14%;
+  }
+
+  .home-blob-blue.home-decor-at-15,
+  .home-blob-cream.home-decor-at-44,
+  .home-blob-blue.home-decor-at-74,
+  .home-blob-cream.home-decor-at-88,
+  .home-ring-blue.home-decor-at-20,
+  .home-ring-blue.home-decor-at-64,
+  .home-ring-red.home-decor-at-93,
+  .home-arc-blue.home-decor-at-27,
+  .home-arc-blue.home-decor-at-71,
+  .home-star.home-decor-at-11,
+  .home-star.home-decor-at-24,
+  .home-star.home-decor-at-38,
+  .home-star.home-decor-at-53,
+  .home-star.home-decor-at-68,
+  .home-star.home-decor-at-82,
+  .home-star.home-decor-at-96,
+  .home-dot.home-decor-at-9,
+  .home-dot.home-decor-at-22,
+  .home-dot.home-decor-at-40,
+  .home-dot.home-decor-at-51,
+  .home-dot.home-decor-at-66,
+  .home-dot.home-decor-at-77,
+  .home-dot.home-decor-at-91 {
+    right: -14%;
+  }
+
+  .home-star,
+  .home-sparkle {
+    transform: scale(0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-home-page .home-decor {
+    animation: none;
+  }
+}
+
+@media (hover: hover) {
+  .customer-card.menu-card-hover:hover {
+    border-color: rgb(10 46 110 / 0.3);
+    box-shadow: 0 16px 35px rgba(15, 23, 42, 0.12);
+    transform: translateY(-0.375rem);
+  }
+
+  .customer-card.menu-card-hover:hover img {
+    transform: scale(1.05);
+  }
+}

@@ -8,7 +8,7 @@ export const CanteenCard = ({ canteen }) => {
   return (
     <Link
       to={`/canteen/${canteen.id}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-orange-500/40"
+      className="customer-card group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-orange-500/40"
     >
       {/* Canteen Image */}
       <div className="relative h-44 w-full overflow-hidden bg-gray-100">

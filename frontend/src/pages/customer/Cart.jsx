@@ -30,7 +30,7 @@ export const Cart = () => {
         <div className="flex items-center justify-between mb-6">
           <Link
             to={currentCanteen ? `/canteen/${currentCanteen.id}` : '/'}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-[#0A2E6E] transition"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-[#2152B7] transition"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Kembali ke Menu</span>
@@ -51,8 +51,8 @@ export const Cart = () => {
         </div>
 
         {cartItems.length === 0 ? (
-          <div className="rounded-3xl bg-white p-12 text-center border border-slate-200/80 shadow-sm max-w-lg mx-auto mt-10">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-[#0A2E6E]">
+          <div className="customer-card rounded-3xl bg-white p-12 text-center border border-slate-200/80 shadow-sm max-w-lg mx-auto mt-10">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#2152B7] text-white">
               <ShoppingBag className="h-8 w-8" />
             </div>
             <h2 className="mt-4 text-xl font-bold text-slate-900">Keranjang Masih Kosong</h2>
@@ -61,7 +61,7 @@ export const Cart = () => {
             </p>
             <Link
               to="/"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#0A2E6E] px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-[#071E4A] transition"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#2152B7] px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2152B7] transition"
             >
               <span>Jelajahi Menu</span>
               <ArrowRight className="h-4 w-4 text-white" />
@@ -72,7 +72,7 @@ export const Cart = () => {
             {/* Left Column (7 cols): Selected Menu Preview & Notes */}
             <div className="lg:col-span-7 space-y-5">
               {previewItem && (
-                <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-6 items-center">
+                <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-6 items-center">
                   <img
                     src={previewItem.image_url || fallbackImage}
                     alt={previewItem.name}
@@ -82,7 +82,7 @@ export const Cart = () => {
                     }}
                   />
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-[#0A2E6E]">{previewItem.name}</h2>
+                    <h2 className="text-2xl font-bold text-[#2152B7]">{previewItem.name}</h2>
                     <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                       {previewItem.description || 'Pilihan lezat dan segar untuk menemani jam istirahat kuliahmu di UKWMS.'}
                     </p>
@@ -94,7 +94,7 @@ export const Cart = () => {
               )}
 
               {/* Catatan untuk Penjual (Opsional) */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-2">
+              <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-2">
                 <label className="text-xs font-bold text-slate-700 block">
                   Catatan untuk Penjual (Opsional)
                 </label>
@@ -107,13 +107,13 @@ export const Cart = () => {
                       updateNotes(previewItem.cartItemId, e.target.value);
                     }
                   }}
-                  className="w-full bg-slate-50 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 border border-slate-200 outline-none focus:border-[#0A2E6E]"
+                  className="w-full bg-slate-50 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 border border-slate-200 outline-none focus:border-[#2152B7]"
                 />
               </div>
             </div>
 
             {/* Right Column (5 cols): RINGKASAN KERANJANG */}
-            <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-5">
+            <div className="customer-card lg:col-span-5 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-5">
               <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                 RINGKASAN KERANJANG
               </h2>
@@ -179,7 +179,7 @@ export const Cart = () => {
               {/* Action Button: Deep Navy */}
               <Link
                 to="/checkout"
-                className="w-full bg-[#0A2E6E] hover:bg-[#071E4A] text-white font-bold py-3.5 px-6 rounded-full text-center block shadow-md transition active:scale-98"
+                className="w-full bg-[#2152B7] hover:bg-[#2152B7] text-white font-bold py-3.5 px-6 rounded-full text-center block shadow-md transition active:scale-98"
               >
                 Lanjut ke Pembayaran
               </Link>

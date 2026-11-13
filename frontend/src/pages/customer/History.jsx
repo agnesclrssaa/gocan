@@ -25,14 +25,14 @@ const OrderCard = ({ order }) => {
   const itemCount = items.reduce((total, item) => total + (Number(item.quantity) || 1), 0);
 
   return (
-    <article className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm">
+    <article className="customer-card rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-bold text-slate-900">
               {order.canteen?.name || 'Kantin'}
             </h3>
-            <span className="rounded-md bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-[#0A2E6E]">
+            <span className="rounded-md bg-[#2152B7] px-2.5 py-0.5 text-xs font-bold text-white">
               {ORDER_STATUS_LABELS[order.status] || order.status}
             </span>
           </div>
@@ -46,7 +46,7 @@ const OrderCard = ({ order }) => {
           </span>
           <Link
             to={`/order/${order.id}`}
-            className="text-sm font-bold text-[#0A2E6E] hover:underline"
+            className="text-sm font-bold text-[#2152B7] hover:underline"
           >
             Detail
           </Link>
@@ -122,11 +122,11 @@ export const History = () => {
             Pesanan sedang berjalan
           </h2>
           {loading ? (
-            <p className="rounded-2xl bg-white p-5 text-sm text-slate-500">Memuat pesanan...</p>
+            <p className="customer-card rounded-2xl bg-white p-5 text-sm text-slate-500">Memuat pesanan...</p>
           ) : activeOrders.length > 0 ? (
             activeOrders.map((order) => <OrderCard key={order.id} order={order} />)
           ) : (
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+            <div className="customer-card rounded-2xl border border-slate-200 bg-white p-8 text-center">
               <ShoppingBag className="mx-auto mb-2 h-12 w-12 text-slate-300" />
               <p className="text-sm font-semibold text-slate-600">
                 Belum ada pesanan yang sedang berjalan.
@@ -146,11 +146,11 @@ export const History = () => {
             Riwayat pesanan
           </h2>
           {loading ? (
-            <p className="rounded-2xl bg-white p-5 text-sm text-slate-500">Memuat riwayat...</p>
+            <p className="customer-card rounded-2xl bg-white p-5 text-sm text-slate-500">Memuat riwayat...</p>
           ) : pastOrders.length > 0 ? (
             pastOrders.map((order) => <OrderCard key={order.id} order={order} />)
           ) : (
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+            <div className="customer-card rounded-2xl border border-slate-200 bg-white p-8 text-center">
               <ShoppingBag className="mx-auto mb-2 h-12 w-12 text-slate-300" />
               <p className="text-sm font-semibold text-slate-600">
                 Belum ada riwayat pesanan

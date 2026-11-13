@@ -26,19 +26,19 @@ export default function MenuPreview() {
       <div className="mx-auto max-w-5xl">
         <Link
           to="/landing"
-          className="inline-flex items-center gap-2 text-sm font-bold text-[#0A2E6E] hover:text-[#DC2626]"
+          className="inline-flex items-center gap-2 text-sm font-bold text-[#2152B7] hover:text-[#DC2626]"
         >
           <ArrowLeft className="h-4 w-4" />
           Kembali ke halaman awal
         </Link>
 
-        <section className="mt-8 rounded-3xl border border-white/80 bg-white/90 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-10">
+        <section className="customer-card mt-8 rounded-3xl border border-white/80 bg-white/90 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-10">
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
               <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-extrabold text-amber-800">
                 PILIHAN FAVORIT
               </span>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-[#0A2E6E] sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-[#2152B7] sm:text-4xl">
                 Best Seller Kampus 🔥
               </h1>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-500">
@@ -58,7 +58,7 @@ export default function MenuPreview() {
             {bestSellers.map((item) => (
               <article
                 key={item.name}
-                className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm"
+                className="customer-card overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm"
               >
                 <div className="h-52 overflow-hidden bg-slate-100">
                   <img

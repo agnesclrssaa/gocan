@@ -28,17 +28,14 @@ const MenuCard = ({ menu, canteen }) => {
   return (
     <>
       <article className="
+        customer-card menu-card-hover
         group flex flex-col overflow-hidden
         rounded-[26px] border border-slate-200
         bg-white
         shadow-[0_8px_25px_rgba(15,23,42,0.04)]
-        transition-all duration-300 ease-out
-        hover:-translate-y-1.5
-        hover:border-[#0A2E6E]/30
-        hover:shadow-[0_16px_35px_rgba(15,23,42,0.12)]
       ">
         {/* IMAGE */}
-        <div className="relative h-48 sm:h-52 overflow-hidden bg-slate-100">
+        <div className="relative aspect-[5/4] w-full overflow-hidden bg-slate-100">
           <img
             src={menu.imageUrl || menu.image_url || fallbackImage}
             alt={menu.name}
@@ -64,26 +61,26 @@ const MenuCard = ({ menu, canteen }) => {
         </div>
 
         {/* CONTENT */}
-        <div className="flex flex-1 flex-col justify-between p-5 sm:p-6">
+        <div className="flex flex-1 flex-col justify-between p-4">
 
           <div>
-            <p className="text-sm font-medium text-slate-500">
+            <p className="text-[13px] font-medium text-slate-500">
               {canteen?.name || menu.canteenName || 'Kantin GoCan'}
             </p>
 
-            <h3 className="mt-2 text-xl font-extrabold leading-snug text-slate-800">
+            <h3 className="mt-2 text-sm sm:text-base font-extrabold leading-snug text-slate-800 transition-colors duration-200 group-hover:text-[#2152B7]">
               {menu.name}
             </h3>
 
-            <p className="mt-3 min-h-[48px] text-sm leading-relaxed text-slate-500">
+            <p className="mt-2 min-h-[40px] text-[13px] leading-relaxed text-slate-500">
               {menu.description || `${menu.category || 'Menu'} pilihan dari ${canteen?.name || 'kantin kampus'}.`}
             </p>
           </div>
 
           {/* PRICE AND BUTTON */}
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5">
 
-            <span className="text-xl sm:text-2xl font-extrabold text-[#0A3B91]">
+            <span className="text-[17px] font-extrabold text-[#ED2028]">
               Rp {Number(menu.price).toLocaleString('id-ID')}
             </span>
 
@@ -93,20 +90,20 @@ const MenuCard = ({ menu, canteen }) => {
                 onClick={() => setShowNotesModal(true)}
                 className="
                   flex items-center gap-2 rounded-2xl
-                  px-5 py-3 text-base font-extrabold text-white
+                  px-4 py-2.5 text-sm sm:text-base font-extrabold text-black
                   transition-all duration-200
                   hover:scale-105 active:scale-95
-                  bg-[#0A3B91] hover:bg-[#082D70]
+                  bg-[#F7BD00] hover:bg-[#E5AE00]
                 "
               >
-                <Plus size={20} strokeWidth={3} />
+                <Plus size={16} strokeWidth={3} />
                 Tambah
               </button>
             ) : (
               <button
                 type="button"
                 disabled
-                className="rounded-2xl bg-slate-400 px-5 py-3 text-base font-bold text-white cursor-not-allowed"
+                className="rounded-2xl bg-slate-400 px-4 py-2.5 text-base font-bold text-white cursor-not-allowed"
               >
                 Habis
               </button>
@@ -118,7 +115,7 @@ const MenuCard = ({ menu, canteen }) => {
       {/* ADD TO CART MODAL */}
       {showNotesModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+          <div className="customer-card w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
 
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-extrabold text-slate-900">
@@ -185,14 +182,14 @@ const MenuCard = ({ menu, canteen }) => {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Contoh: Sambal dipisah, tidak pedas..."
-                className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-[#0A3B91]"
+                className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-[#2152B7]"
               />
             </div>
 
             <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
               <span className="text-sm text-slate-500">Subtotal</span>
 
-              <span className="text-lg font-extrabold text-[#0A3B91]">
+              <span className="text-lg font-extrabold text-[#2152B7]">
                 Rp {(Number(menu.price) * quantity).toLocaleString('id-ID')}
               </span>
             </div>
@@ -200,7 +197,7 @@ const MenuCard = ({ menu, canteen }) => {
             <button
               type="button"
               onClick={handleAddToCart}
-              className="mt-5 w-full rounded-xl bg-[#0A3B91] py-3.5 font-bold text-white transition hover:bg-[#082D70]"
+              className="mt-5 w-full rounded-xl bg-[#2152B7] py-3.5 font-bold text-white transition hover:bg-[#2152B7]"
             >
               Masukkan ke Keranjang
             </button>

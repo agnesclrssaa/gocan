@@ -13,6 +13,8 @@ import {
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 import MenuCard from '../../components/customer/MenuCard';
+import './Home.css';
+import './Home.css';
 
 const categoryAliases = {
   Snack: ['snack', 'cemilan', 'camilan'],
@@ -337,8 +339,8 @@ export const Home = () => {
         onClick={onClick}
         className={`px-3 py-2 rounded-lg border text-xs font-semibold transition whitespace-nowrap ${
           active
-            ? 'bg-[#0A2E6E] text-white border-[#0A2E6E]'
-            : 'bg-slate-100 text-slate-700 border-transparent hover:bg-blue-50 hover:text-[#0A2E6E]'
+            ? 'bg-[#2152B7] text-white border-[#2152B7]'
+            : 'bg-slate-100 text-slate-700 border-transparent hover:bg-[#2152B7] hover:text-white'
         }`}
       >
         {label}
@@ -351,17 +353,16 @@ export const Home = () => {
   // ==========================================
 
   return (
-    <div className="min-h-screen bg-[#F0F4F9] text-slate-800 font-sans selection:bg-[#0A2E6E] selection:text-white pb-28">
-
+    <div className="customer-home-page relative isolate min-h-screen bg-[#F0F4F9] text-slate-800 font-sans selection:bg-[#2152B7] selection:text-white pb-28">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6">
+      <main className="relative z-[1] max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6">
 
         {/* ================================== */}
         {/* 1. SEARCH BAR */}
         {/* ================================== */}
 
-        <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center justify-between gap-3">
+        <div className="customer-card bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center justify-between gap-3">
 
           <div className="flex items-center gap-3 flex-1 min-w-0">
 
@@ -382,7 +383,7 @@ export const Home = () => {
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className={`p-2.5 rounded-xl transition ${
               isFilterOpen
-                ? 'bg-[#0A2E6E] text-white'
+                ? 'bg-[#2152B7] text-white'
                 : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
             }`}
           >
@@ -402,7 +403,7 @@ export const Home = () => {
 
         {isFilterOpen && (
 
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-5 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="customer-card bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-5 animate-in fade-in slide-in-from-top-2 duration-200">
 
             {/* HEADER */}
 
@@ -563,7 +564,7 @@ export const Home = () => {
               <button
                 type="button"
                 onClick={applyFilters}
-                className="px-5 py-2 rounded-lg text-xs font-bold text-white bg-[#0A2E6E] hover:bg-[#08265B] transition"
+                className="px-5 py-2 rounded-lg text-xs font-bold text-white bg-[#2152B7] hover:bg-[#2152B7] transition"
               >
                 Terapkan Filter
               </button>
@@ -579,9 +580,9 @@ export const Home = () => {
         {/* 3. PROMO BANNER */}
         {/* ================================== */}
 
-        <div className="bg-[#0A2E6E] text-white rounded-2xl md:rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="customer-card promo-banner text-white rounded-2xl md:rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
 
-          <div className="space-y-3 max-w-lg z-10">
+          <div className="promo-banner-copy space-y-3 max-w-lg z-10">
 
             <span className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-amber-400 text-slate-950">
               PROMO UTS
@@ -591,7 +592,7 @@ export const Home = () => {
               Diskon 35% Semua Kantin
             </h1>
 
-            <p className="text-xs sm:text-sm text-blue-100 font-medium">
+            <p className="text-xs sm:text-sm text-white/90 font-medium">
               Pakai kode:{' '}
               <strong className="text-white underline">
                 LAPERUTS
@@ -600,14 +601,30 @@ export const Home = () => {
 
           </div>
 
-          <div className="w-48 sm:w-64 h-36 rounded-2xl overflow-hidden shrink-0 shadow-lg border-2 border-white/20">
-
+          <div className="promo-banner-art">
             <img
-              src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80"
-              alt="Promo Dish"
-              className="w-full h-full object-cover"
+              src="/assets/promo-food.png"
+              alt="Makanan dan minuman promo"
+              className="promo-food-image"
             />
+          </div>
 
+          <div className="promo-sparkles" aria-hidden="true">
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow promo-sparkle-float" style={{ '--sparkle-x': '6%', '--sparkle-y': '15%', '--sparkle-size': '15px', '--sparkle-delay': '0.2s', '--sparkle-duration': '2.7s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-white" style={{ '--sparkle-x': '17%', '--sparkle-y': '81%', '--sparkle-size': '20px', '--sparkle-delay': '1.6s', '--sparkle-duration': '3.1s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red" style={{ '--sparkle-x': '29%', '--sparkle-y': '10%', '--sparkle-size': '40px', '--sparkle-delay': '0.9s', '--sparkle-duration': '2.5s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow" style={{ '--sparkle-x': '39%', '--sparkle-y': '87%', '--sparkle-size': '12px', '--sparkle-delay': '1.1s', '--sparkle-duration': '3.2s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-white promo-sparkle-float" style={{ '--sparkle-x': '50%', '--sparkle-y': '13%', '--sparkle-size': '30px', '--sparkle-delay': '0.7s', '--sparkle-duration': '2.4s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red" style={{ '--sparkle-x': '59%', '--sparkle-y': '82%', '--sparkle-size': '10px', '--sparkle-delay': '2.2s', '--sparkle-duration': '3.7s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow" style={{ '--sparkle-x': '70%', '--sparkle-y': '12%', '--sparkle-size': '12px', '--sparkle-delay': '1.3s', '--sparkle-duration': '3s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-white" style={{ '--sparkle-x': '81%', '--sparkle-y': '86%', '--sparkle-size': '25px', '--sparkle-delay': '1.4s', '--sparkle-duration': '3.3s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red promo-sparkle-float" style={{ '--sparkle-x': '92%', '--sparkle-y': '15%', '--sparkle-size': '13px', '--sparkle-delay': '1.8s', '--sparkle-duration': '3.6s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow promo-sparkle-small" style={{ '--sparkle-x': '4%', '--sparkle-y': '54%', '--sparkle-size': '14px', '--sparkle-delay': '2.4s', '--sparkle-duration': '3.5s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-white promo-sparkle-small" style={{ '--sparkle-x': '22%', '--sparkle-y': '37%', '--sparkle-size': '11px', '--sparkle-delay': '1.9s', '--sparkle-duration': '2.8s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red promo-sparkle-small" style={{ '--sparkle-x': '12%', '--sparkle-y': '64%', '--sparkle-size': '13px', '--sparkle-delay': '2.6s', '--sparkle-duration': '3.4s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow promo-sparkle-small" style={{ '--sparkle-x': '34%', '--sparkle-y': '65%', '--sparkle-size': '11px', '--sparkle-delay': '0.5s', '--sparkle-duration': '2.9s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-white promo-sparkle-small" style={{ '--sparkle-x': '88%', '--sparkle-y': '45%', '--sparkle-size': '10px', '--sparkle-delay': '2.1s', '--sparkle-duration': '3.2s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-white promo-sparkle-small" style={{ '--sparkle-x': '97%', '--sparkle-y': '71%', '--sparkle-size': '25px', '--sparkle-delay': '1.2s', '--sparkle-duration': '2.6s' }} />
           </div>
 
         </div>
@@ -617,7 +634,7 @@ export const Home = () => {
         {/* 4. CATEGORY PILLS */}
         {/* ================================== */}
 
-        <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center gap-2 overflow-x-auto">
+        <div className="customer-card bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center gap-2 overflow-x-auto">
 
           {[
             'Semua',
@@ -656,7 +673,6 @@ export const Home = () => {
 
             <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-1.5">
               <span>Best Seller Kampus</span>
-              <span>🔥</span>
             </h2>
 
             <button
@@ -668,7 +684,7 @@ export const Home = () => {
                     behavior: 'smooth',
                   });
               }}
-              className="text-xs font-bold text-[#0A2E6E] hover:underline"
+              className="text-xs font-bold text-[#2152B7] hover:underline"
             >
               Lihat Semua
             </button>
@@ -676,7 +692,7 @@ export const Home = () => {
           </div>
 
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {bestSellerItems
               .filter((item) =>
                 matchesMenuCategory(item, activeCategory)
@@ -685,21 +701,21 @@ export const Home = () => {
                 <Link
                   key={item.id}
                   to={`/canteen/${item.canteenId}`}
-                  className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:-translate-y-1 hover:border-[#0A2E6E]/40 hover:shadow-lg transition-all duration-300 group"
+                  className="customer-card menu-card-hover bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm group"
                 >
-                  <div className="h-44 sm:h-52 w-full overflow-hidden bg-slate-100">
+                  <div className="aspect-[5/4] w-full overflow-hidden bg-slate-100">
                     <img
                       src={item.imageUrl || item.image_url}
                       alt={item.name}
                       onError={(event) => {
                         event.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
                       }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      className="w-full h-full object-cover transition-transform duration-500"
                     />
                   </div>
 
                   <div className="p-4">
-                    <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-[#0A2E6E] transition">
+                    <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-[#2152B7] transition">
                       {item.name}
                     </h3>
 
@@ -721,7 +737,7 @@ export const Home = () => {
             {bestSellerItems.filter((item) =>
               matchesMenuCategory(item, activeCategory)
             ).length === 0 && (
-              <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-8 text-center">
+              <div className="customer-card sm:col-span-2 lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-8 text-center">
                 <PackageX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="font-bold text-slate-700 text-sm">
                   Belum ada best seller untuk kategori ini
@@ -763,7 +779,7 @@ export const Home = () => {
 
             </div>
 
-            <span className="text-xs font-bold text-[#0A2E6E] bg-blue-50 px-3 py-1.5 rounded-full whitespace-nowrap">
+            <span className="text-xs font-bold text-white bg-[#2152B7] px-3 py-1.5 rounded-full whitespace-nowrap">
               {filteredMenus.length} Menu
             </span>
 
@@ -780,7 +796,7 @@ export const Home = () => {
 
                 <div
                   key={item}
-                  className="bg-white rounded-2xl overflow-hidden border border-slate-200 animate-pulse"
+                  className="customer-card bg-white rounded-2xl overflow-hidden border border-slate-200 animate-pulse"
                 >
 
                   <div className="h-44 bg-slate-200" />
@@ -830,7 +846,7 @@ export const Home = () => {
 
                     <Link
                       to={`/canteen/${menu.canteenId}`}
-                      className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-slate-500 hover:text-[#0A2E6E] transition"
+                      className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-slate-500 hover:text-[#2152B7] transition"
                     >
                       Dari {menu.canteenName}
                     </Link>
@@ -850,7 +866,7 @@ export const Home = () => {
 
           {!loading && !error && filteredMenus.length === 0 && (
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+            <div className="customer-card rounded-2xl border border-slate-200 bg-white p-8 text-center">
 
               <PackageX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
 
@@ -906,12 +922,12 @@ export const Home = () => {
             <button
               type="button"
               onClick={fetchCanteens}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-[#0A2E6E] transition cursor-pointer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-[#2152B7] transition cursor-pointer"
             >
 
               <RefreshCw
                 className={`h-3 w-3 ${
-                  loading ? 'animate-spin text-[#0A2E6E]' : ''
+                  loading ? 'animate-spin text-[#2152B7]' : ''
                 }`}
               />
 
@@ -947,7 +963,7 @@ export const Home = () => {
 
                 <div
                   key={n}
-                  className="bg-white rounded-2xl p-4 border border-slate-200 animate-pulse flex gap-3"
+                  className="customer-card bg-white rounded-2xl p-4 border border-slate-200 animate-pulse flex gap-3"
                 >
 
                   <div className="w-20 h-20 bg-slate-200 rounded-xl shrink-0" />
@@ -973,7 +989,7 @@ export const Home = () => {
 
           {!loading && !error && filteredCanteens.length === 0 && (
 
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+            <div className="customer-card bg-white rounded-2xl border border-slate-200 p-8 text-center">
 
               <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
 
@@ -991,7 +1007,7 @@ export const Home = () => {
                   setSearchQuery('');
                   resetFilters();
                 }}
-                className="mt-3 text-xs font-bold text-[#0A2E6E] hover:underline"
+                className="mt-3 text-xs font-bold text-[#2152B7] hover:underline"
               >
                 Hapus semua filter
               </button>
@@ -1012,7 +1028,7 @@ export const Home = () => {
                 <Link
                   key={canteen.id}
                   to={`/canteen/${canteen.id}`}
-                  className="bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-4 shadow-sm hover:-translate-y-1 hover:border-[#0A2E6E]/40 hover:shadow-lg transition-all duration-300 flex items-center gap-4 group"
+                  className="customer-card menu-card-hover bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-4 shadow-sm flex items-center gap-4 group"
                 >
 
                   <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-slate-100">
@@ -1025,7 +1041,7 @@ export const Home = () => {
                       }
                       alt={canteen.name}
                       loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      className="w-full h-full object-cover transition-transform duration-500"
                     />
 
                   </div>
@@ -1035,7 +1051,7 @@ export const Home = () => {
 
                     <div className="flex items-center justify-between gap-2">
 
-                      <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-[#0A2E6E] transition truncate">
+                      <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-[#2152B7] transition truncate">
                         {canteen.name}
                       </h3>
 

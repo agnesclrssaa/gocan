@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AlertCircle, MapPin, Search, Star, Store } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import { api } from '../../lib/api';
+import './Home.css';
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
@@ -72,27 +73,46 @@ export const Canteens = () => {
       <Navbar />
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 pt-6 sm:px-6 lg:px-8">
-        <section className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-2xl bg-[#0A2E6E] p-6 text-white shadow-sm sm:flex-row sm:rounded-3xl sm:p-8">
-          <div className="z-10 max-w-lg space-y-3 text-center sm:text-left">
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-blue-100">
+        <section className="customer-card promo-banner explore-canteens-banner relative flex flex-col items-center justify-between gap-4 overflow-hidden p-6 text-white sm:flex-row sm:gap-6 sm:p-8">
+          <div className="promo-banner-copy z-10 max-w-lg space-y-3 text-center sm:text-left">
+            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/90">
               GOCAN
             </p>
             <h1 className="text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl lg:text-4xl">
               Jelajahi Kantin
             </h1>
-            <p className="text-xs font-medium text-blue-100 sm:text-sm">
+            <p className="text-xs font-medium text-white/90 sm:text-sm">
               Temukan berbagai pilihan kantin yang tersedia di GoCan.
             </p>
           </div>
-          <img
-            src="/GC-logo.png"
-            alt="GoCan"
-            className="h-[150px] w-[150px] max-h-none max-w-none shrink-0 rounded-2xl object-contain"
-          />
+          <div className="explore-canteens-art">
+            <img
+              src="/assets/happy-mascot.png"
+              alt="Maskot GoCan"
+              className="explore-canteens-mascot"
+            />
+          </div>
+          <div className="promo-sparkles" aria-hidden="true">
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow" style={{ '--sparkle-x': '7%', '--sparkle-y': '18%', '--sparkle-size': '14px', '--sparkle-delay': '0.5s', '--sparkle-duration': '2.8s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-white promo-sparkle-float" style={{ '--sparkle-x': '19%', '--sparkle-y': '80%', '--sparkle-size': '11px', '--sparkle-delay': '1.4s', '--sparkle-duration': '3.2s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow promo-sparkle-small" style={{ '--sparkle-x': '14%', '--sparkle-y': '67%', '--sparkle-size': '18px', '--sparkle-delay': '0.6s', '--sparkle-duration': '2.7s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red promo-sparkle-small" style={{ '--sparkle-x': '31%', '--sparkle-y': '12%', '--sparkle-size': '40px', '--sparkle-delay': '0.9s', '--sparkle-duration': '2.6s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow promo-sparkle-small" style={{ '--sparkle-x': '40%', '--sparkle-y': '69%', '--sparkle-size': '9px', '--sparkle-delay': '2s', '--sparkle-duration': '3.4s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red promo-sparkle-float" style={{ '--sparkle-x': '45%', '--sparkle-y': '32%', '--sparkle-size': '15px', '--sparkle-delay': '0.4s', '--sparkle-duration': '3.7s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-white promo-sparkle-float" style={{ '--sparkle-x': '54%', '--sparkle-y': '23%', '--sparkle-size': '20px', '--sparkle-delay': '0.7s', '--sparkle-duration': '3s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red promo-sparkle-small" style={{ '--sparkle-x': '61%', '--sparkle-y': '84%', '--sparkle-size': '10px', '--sparkle-delay': '1.7s', '--sparkle-duration': '2.9s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow promo-sparkle-small" style={{ '--sparkle-x': '68%', '--sparkle-y': '57%', '--sparkle-size': '8px', '--sparkle-delay': '1.2s', '--sparkle-duration': '2.6s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow promo-sparkle-float" style={{ '--sparkle-x': '73%', '--sparkle-y': '11%', '--sparkle-size': '13px', '--sparkle-delay': '1.1s', '--sparkle-duration': '3.5s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-white promo-sparkle-small" style={{ '--sparkle-x': '84%', '--sparkle-y': '76%', '--sparkle-size': '15px', '--sparkle-delay': '2.3s', '--sparkle-duration': '2.7s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red promo-sparkle-small" style={{ '--sparkle-x': '79%', '--sparkle-y': '43%', '--sparkle-size': '20px', '--sparkle-delay': '0.8s', '--sparkle-duration': '3.1s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red" style={{ '--sparkle-x': '94%', '--sparkle-y': '34%', '--sparkle-size': '12px', '--sparkle-delay': '0.3s', '--sparkle-duration': '3.1s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-yellow promo-sparkle-small" style={{ '--sparkle-x': '47%', '--sparkle-y': '49%', '--sparkle-size': '8px', '--sparkle-delay': '1.9s', '--sparkle-duration': '2.8s' }} />
+            <span className="promo-sparkle promo-sparkle-star promo-sparkle-red promo-sparkle-small" style={{ '--sparkle-x': '89%', '--sparkle-y': '55%', '--sparkle-size': '7px', '--sparkle-delay': '1.6s', '--sparkle-duration': '3.3s' }} />
+          </div>
         </section>
 
-        <section className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
-          <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-[#0A2E6E] focus-within:ring-2 focus-within:ring-blue-100">
+        <section className="customer-card space-y-4 rounded-3xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-[#2152B7] focus-within:ring-2 focus-within:ring-[#2152B7]/30">
             <Search className="h-5 w-5 shrink-0 text-slate-400" />
             <input
               type="search"
@@ -114,8 +134,8 @@ export const Canteens = () => {
                 aria-pressed={selectedCategory === category}
                 className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
                   selectedCategory === category
-                    ? 'border-[#0A2E6E] bg-[#0A2E6E] text-white'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-[#0A2E6E]'
+                    ? 'border-[#2152B7] bg-[#2152B7] text-white'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-[#2152B7] hover:bg-[#2152B7] hover:text-white'
                 }`}
               >
                 {category === 'Semua' ? 'Semua Kantin' : category}
@@ -127,7 +147,7 @@ export const Canteens = () => {
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-extrabold text-[#0A2E6E]">Daftar Kantin</h2>
+              <h2 className="text-lg font-extrabold text-[#2152B7]">Daftar Kantin</h2>
               {!loading && !error && (
                 <p className="mt-1 text-xs text-slate-500">
                   {filteredCanteens.length} kantin ditemukan
@@ -138,7 +158,7 @@ export const Canteens = () => {
               type="button"
               onClick={refreshCanteens}
               disabled={loading}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-blue-200 hover:text-[#0A2E6E] disabled:cursor-wait disabled:opacity-60"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-[#2152B7] hover:text-[#2152B7] disabled:cursor-wait disabled:opacity-60"
             >
               {loading ? 'Memuat...' : 'Segarkan'}
             </button>
@@ -149,7 +169,7 @@ export const Canteens = () => {
               {[1, 2, 3].map((item) => (
                 <div
                   key={item}
-                  className="overflow-hidden rounded-3xl border border-slate-200 bg-white"
+                  className="customer-card overflow-hidden rounded-3xl border border-slate-200 bg-white"
                 >
                   <div className="h-44 animate-pulse bg-slate-200" />
                   <div className="space-y-3 p-5">
@@ -182,8 +202,8 @@ export const Canteens = () => {
           )}
 
           {!loading && !error && filteredCanteens.length === 0 && (
-            <div className="rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-[#0A2E6E]">
+            <div className="customer-card rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2152B7] text-white">
                 <Store className="h-7 w-7" />
               </div>
               <h3 className="mt-4 text-base font-bold text-slate-800">
@@ -206,7 +226,7 @@ export const Canteens = () => {
                 return (
                   <article
                     key={canteen.id}
-                    className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
+                    className="customer-card menu-card-hover group flex flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm"
                   >
                     <Link
                       to={`/canteen/${encodeURIComponent(canteen.id)}`}
@@ -220,7 +240,7 @@ export const Canteens = () => {
                         onError={(event) => {
                           event.currentTarget.src = FALLBACK_IMAGE;
                         }}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        className="h-full w-full object-cover transition-transform duration-500"
                       />
                       <span
                         className={`absolute bottom-3 left-3 rounded-full px-3 py-1 text-xs font-bold text-white ${
@@ -249,14 +269,14 @@ export const Canteens = () => {
                       <div className="mt-4 flex min-h-5 items-center gap-1.5 text-xs text-slate-500">
                         {canteen.location && (
                           <>
-                            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#0A2E6E]" />
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#2152B7]" />
                             <span className="truncate">{canteen.location}</span>
                           </>
                         )}
                       </div>
                       <Link
                         to={`/canteen/${encodeURIComponent(canteen.id)}`}
-                        className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[#0A2E6E] px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-900"
+                        className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[#2152B7] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#2152B7]"
                       >
                         Lihat Kantin
                       </Link>

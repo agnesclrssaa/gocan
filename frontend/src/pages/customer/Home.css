@@ -1,0 +1,160 @@
+.promo-banner {
+  isolation: isolate;
+  min-height: 219px;
+  border: 1px solid #D6E2F0;
+  border-radius: 16px;
+  box-shadow:
+    0 4px 14px rgba(33, 82, 183, 0.09),
+    0 8px 24px rgba(33, 82, 183, 0.07);
+  background-color: #2152B7;
+  background-image: url("/assets/promo-banner-bg.png");
+  background-size: cover;
+  background-position: center center;
+}
+
+.promo-banner-copy {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 48%;
+}
+
+.promo-banner-art {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: min(52%, 610px);
+  height: clamp(166px, 17.1vw, 214px);
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.promo-food-image {
+  display: block;
+  width: 470px;
+  height: 310px;
+  object-fit: contain;
+  animation: promoFoodFloat 4.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes promoFoodFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+.explore-canteens-banner {
+  min-height: 250px;
+}
+
+.explore-canteens-art {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: min(36%, 340px);
+  height: 250px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+}
+
+.explore-canteens-mascot {
+  display: block;
+  width: 280px;
+  height: 280px;
+  object-fit: contain;
+  animation: promoFoodFloat 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.promo-sparkles {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+}
+
+.promo-sparkle {
+  position: absolute;
+  top: var(--sparkle-y);
+  left: var(--sparkle-x);
+  width: var(--sparkle-size);
+  height: var(--sparkle-size);
+  will-change: transform, opacity;
+  pointer-events: none;
+  animation: promoTwinkle var(--sparkle-duration, 2.8s) ease-in-out var(--sparkle-delay, 0s) infinite;
+}
+
+.promo-sparkle-star {
+  background: #F7BD00;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+
+.promo-sparkle-red {
+  background: #ED2028;
+}
+
+.promo-sparkle-white {
+  background: #FFFFFF;
+}
+
+.promo-sparkle-small {
+  clip-path: polygon(50% 0, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0 50%, 37% 37%);
+}
+
+.promo-sparkle-float {
+  animation-name: promoStarFloat;
+}
+
+@keyframes promoTwinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.78) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.16) rotate(45deg); }
+}
+
+@keyframes promoStarFloat {
+  0%, 100% { opacity: 0.45; transform: translateY(0) rotate(0deg) scale(0.85); }
+  50% { opacity: 1; transform: translateY(-7px) rotate(24deg) scale(1.1); }
+}
+
+@media (max-width: 639px) {
+  .promo-banner {
+    min-height: 0;
+    background-position: center bottom;
+  }
+
+  .promo-banner-copy {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .promo-banner-art {
+    width: min(100%, 430px);
+    height: clamp(124px, 38vw, 171px);
+    margin-inline: auto;
+  }
+
+  .explore-canteens-banner {
+    min-height: 0;
+  }
+
+  .explore-canteens-art {
+    width: min(100%, 260px);
+    height: 220px;
+    margin-right: 0;
+    margin-inline: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promo-food-image,
+  .explore-canteens-mascot,
+  .promo-sparkle {
+    animation: none;
+    will-change: auto;
+  }
+
+  .promo-sparkle {
+    opacity: 0.8;
+  }
+}

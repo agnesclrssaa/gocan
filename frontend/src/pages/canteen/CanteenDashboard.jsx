@@ -156,7 +156,7 @@ export default function CanteenDashboard() {
       )}
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        <section className="rounded-xl border border-slate-200 bg-white p-6">
+        <section className="merchant-card-glow rounded-xl border border-slate-200 bg-white p-6">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Pendapatan Hari Ini</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
@@ -167,7 +167,7 @@ export default function CanteenDashboard() {
           <p className="mt-2 text-xs text-slate-500">{activeTodayOrders.length} pesanan, tidak termasuk pesanan batal</p>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-6">
+        <section className="merchant-card-glow rounded-xl border border-slate-200 bg-white p-6">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Pesanan Hari Ini</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
@@ -178,7 +178,7 @@ export default function CanteenDashboard() {
           <p className="mt-2 text-xs text-slate-500">{deliveryTodayOrders} delivery · {pickupTodayOrders} ambil sendiri · {todayPendingOrders} menunggu</p>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-6">
+        <section className="merchant-card-glow rounded-xl border border-slate-200 bg-white p-6">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Pesanan Selesai Hari Ini</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
@@ -191,7 +191,7 @@ export default function CanteenDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 lg:col-span-7">
+        <section className="merchant-card-glow space-y-4 rounded-xl border border-slate-200 bg-white p-6 lg:col-span-7">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
             <div>
               <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
@@ -243,7 +243,7 @@ export default function CanteenDashboard() {
           </div>
         </section>
 
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 lg:col-span-5">
+        <section className="merchant-card-glow space-y-4 rounded-xl border border-slate-200 bg-white p-6 lg:col-span-5">
           <div>
             <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
               <Flame className="h-4 w-4 text-blue-700" />
@@ -255,7 +255,7 @@ export default function CanteenDashboard() {
           {bestSellers.length ? (
             <div className="space-y-3">
               {bestSellers.map((item) => (
-                <div key={item.name} className="space-y-2 rounded-lg border border-slate-100 p-3">
+                <div key={item.name} className="merchant-card-glow space-y-2 rounded-lg border border-slate-100 bg-white p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-blue-50 text-xs font-bold text-blue-800">#{item.rank}</span>

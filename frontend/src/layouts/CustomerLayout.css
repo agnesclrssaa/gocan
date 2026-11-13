@@ -1,0 +1,187 @@
+.customer-layout {
+  --gocan-blue: #2152B7;
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background: #F0F4F9;
+}
+
+.customer-background-decoration {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.customer-background-shape {
+  position: absolute;
+  display: block;
+  translate: -50% -50%;
+}
+
+.customer-background-blob {
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.customer-background-red.customer-background-blob {
+  background: #F52B33;
+  opacity: 0.19;
+}
+
+.customer-background-blue.customer-background-blob {
+  background: var(--gocan-blue);
+  opacity: 0.18;
+}
+
+.customer-background-yellow.customer-background-blob {
+  border-radius: 35% 48% 38% 46%;
+  background: #FFC928;
+  opacity: 0.2;
+}
+
+.customer-background-cream.customer-background-blob {
+  background: #FFF9E8;
+  opacity: 0.65;
+}
+
+.customer-background-ring {
+  aspect-ratio: 1;
+  border: 8px solid;
+  border-radius: 50%;
+  opacity: 0.18;
+}
+
+.customer-background-red.customer-background-ring,
+.customer-background-red.customer-background-arc {
+  border-color: #F52B33;
+}
+
+.customer-background-blue.customer-background-ring,
+.customer-background-blue.customer-background-arc {
+  border-color: var(--gocan-blue);
+}
+
+.customer-background-yellow.customer-background-ring,
+.customer-background-yellow.customer-background-arc {
+  border-color: #FFC928;
+}
+
+.customer-background-arc {
+  aspect-ratio: 1;
+  border: 3px solid;
+  border-radius: 50%;
+  opacity: 0.24;
+}
+
+.customer-background-arc::after {
+  position: absolute;
+  inset: 14px;
+  border: inherit;
+  border-radius: inherit;
+  content: "";
+}
+
+.customer-background-star {
+  aspect-ratio: 1;
+  clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 62%, 50% 100%, 39% 62%, 0 50%, 39% 38%);
+  opacity: 0.78;
+}
+
+.customer-background-star.customer-background-red { background: #F52B33; }
+.customer-background-star.customer-background-blue { background: var(--gocan-blue); }
+.customer-background-star.customer-background-yellow { background: #FFC928; }
+
+.customer-background-sparkle {
+  aspect-ratio: 1;
+  background: currentColor;
+  clip-path: polygon(45% 0, 55% 0, 58% 42%, 100% 45%, 100% 55%, 58% 58%, 55% 100%, 45% 100%, 42% 58%, 0 55%, 0 45%, 42% 42%);
+  opacity: 0.76;
+}
+
+.customer-background-sparkle.customer-background-red { color: #F52B33; }
+.customer-background-sparkle.customer-background-blue { color: var(--gocan-blue); }
+.customer-background-sparkle.customer-background-yellow { color: #FFC928; }
+
+.customer-background-dot {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.7;
+}
+
+.customer-background-dot.customer-background-red { background: #F52B33; }
+.customer-background-dot.customer-background-blue { background: var(--gocan-blue); }
+.customer-background-dot.customer-background-yellow { background: #FFC928; }
+
+.customer-background-animated.customer-background-blob {
+  animation: customerBackgroundBlobFloat var(--customer-animation-duration, 8s) ease-in-out var(--customer-animation-delay, 0s) infinite var(--customer-animation-direction, normal);
+}
+
+.customer-background-animated.customer-background-ring {
+  animation: customerBackgroundRingDrift var(--customer-animation-duration, 8s) ease-in-out var(--customer-animation-delay, 0s) infinite var(--customer-animation-direction, normal);
+}
+
+.customer-background-animated.customer-background-arc {
+  animation: customerBackgroundArcFloat var(--customer-animation-duration, 8s) ease-in-out var(--customer-animation-delay, 0s) infinite var(--customer-animation-direction, normal);
+}
+
+.customer-background-animated.customer-background-star {
+  animation: customerBackgroundStarFloat var(--customer-animation-duration, 3.5s) ease-in-out var(--customer-animation-delay, 0s) infinite var(--customer-animation-direction, normal);
+}
+
+.customer-background-animated.customer-background-sparkle {
+  animation: customerBackgroundSparkle var(--customer-animation-duration, 2.7s) ease-in-out var(--customer-animation-delay, 0s) infinite var(--customer-animation-direction, normal);
+}
+
+.customer-background-animated.customer-background-dot {
+  animation: customerBackgroundDotPulse var(--customer-animation-duration, 2.7s) ease-in-out var(--customer-animation-delay, 0s) infinite var(--customer-animation-direction, normal);
+}
+
+.customer-layout-content > .min-h-screen {
+  position: relative;
+  z-index: 1;
+  background-color: transparent;
+}
+
+@keyframes customerBackgroundArcFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  50% { transform: translate(8px, -8px) rotate(8deg); }
+}
+
+@keyframes customerBackgroundBlobFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0) scale(1); }
+  50% { transform: translate(10px, -9px) rotate(4deg) scale(1.025); }
+}
+
+@keyframes customerBackgroundRingDrift {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  50% { transform: translate(-7px, -10px) rotate(10deg); }
+}
+
+@keyframes customerBackgroundStarFloat {
+  0%, 100% { opacity: 0.72; transform: translate(0, 0) rotate(0) scale(0.92); }
+  50% { opacity: 0.95; transform: translate(3px, -8px) rotate(12deg) scale(1.08); }
+}
+
+@keyframes customerBackgroundSparkle {
+  0%, 100% { opacity: 0.62; transform: rotate(0) scale(0.9); }
+  50% { opacity: 0.96; transform: rotate(45deg) scale(1.08); }
+}
+
+@keyframes customerBackgroundDotPulse {
+  0%, 100% { opacity: 0.58; transform: translate(0, 0) scale(0.88); }
+  50% { opacity: 0.94; transform: translate(3px, -5px) scale(1.22); }
+}
+
+@media (max-width: 640px) {
+  .customer-background-blob { max-width: 56vw; }
+  .customer-background-ring { border-width: 6px; }
+  .customer-background-shape { translate: -50% -50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-layout .customer-background-animated {
+    animation: none;
+  }
+}

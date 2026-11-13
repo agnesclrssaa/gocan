@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/common/BrandLogo';
+import './MerchantSidebarDecor.css';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import {
@@ -123,18 +124,42 @@ export default function CanteenLayout() {
 
       {/* Merchant Sidebar (Desktop + Mobile Drawer) */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-40 h-full md:h-screen w-64 md:w-72 bg-[#123B72] text-white flex flex-col justify-between border-r border-[#0D2C55] transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed md:sticky top-0 left-0 z-40 isolate overflow-hidden h-full md:h-screen w-64 md:w-72 bg-[#123B72] text-white flex flex-col justify-between border-r border-[#0D2C55] transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
       >
-        <div className="p-5 flex flex-col gap-6">
+        {/* Merchant Sidebar Decorations */}
+        <div
+          className="merchant-sidebar-decor absolute inset-0 overflow-hidden pointer-events-none"
+          aria-hidden="true"
+        >
+          <div className="merchant-decor-red" />
+          <div className="merchant-decor-yellow" />
+          <div className="merchant-decor-blue" />
+          <div className="merchant-decor-cream" />
+
+          <div className="merchant-decor-arc merchant-arc-top" />
+          <div className="merchant-decor-arc merchant-arc-bottom" />
+
+          <span className="merchant-star star-yellow star-one" />
+          <span className="merchant-star star-red star-two" />
+          <span className="merchant-star star-blue star-three" />
+          <span className="merchant-star star-yellow star-four" />
+          <span className="merchant-star star-red star-five" />
+
+          <span className="merchant-dot dot-yellow dot-one" />
+          <span className="merchant-dot dot-red dot-two" />
+          <span className="merchant-dot dot-blue dot-three" />
+        </div>
+        <div className="relative z-10 p-5 flex flex-col gap-6">
           {/* Logo & Stan Info */}
           <div>
             <div className="flex items-center justify-between">
               <Link to="/" className="flex items-center gap-2 group">
                 <BrandLogo className="h-9 w-9 rounded-xl" />
                 <div>
-                  <span className="text-lg font-black tracking-tight text-white">
-                    Go<span className="text-blue-300">Can</span>
+                  <span className="text-lg font-black tracking-tight text-[#ED2028]">
+                    <span className="text-[#ED2028]">Go</span>
+                    <span className="text-[#F7BD00]">Can</span>
                   </span>
                   <span className="ml-1.5 text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-blue-800 text-blue-100 border border-blue-700">
                     Merchant
@@ -225,7 +250,7 @@ export default function CanteenLayout() {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-blue-800 bg-[#102F5A] flex flex-col gap-2">
+        <div className="relative z-10 p-4 border-t border-blue-800 bg-[#102F5A] flex flex-col gap-2">
           <Link
             to="/"
             className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-blue-200 hover:bg-blue-900 hover:text-white transition"
@@ -264,7 +289,7 @@ export default function CanteenLayout() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 font-semibold">
+            <div className="merchant-card-glow flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 font-semibold">
               <span className={`w-2.5 h-2.5 rounded-full ${isOpen ? 'bg-blue-600' : 'bg-rose-500'}`} />
               {isOpen ? 'Stan Menerima Pesanan' : 'Stan Sedang Tutup'}
             </div>
@@ -298,7 +323,7 @@ export default function CanteenLayout() {
             </div>
           )}
           {canteenLoading && !canteen ? (
-            <div role="status" className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+            <div role="status" className="merchant-card-glow rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
               Memuat data kantin...
             </div>
           ) : (
