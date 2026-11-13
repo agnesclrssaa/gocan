@@ -124,7 +124,7 @@ export default function RunnerLayout() {
           {/* Back to Customer Web & Logout */}
           <div className="flex items-center gap-2">
             <Link
-              to="/runner-portal/profile"
+              to="/profile"
               className="flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-white/5 hover:text-emerald-300"
             >
               <User className="h-3.5 w-3.5" />

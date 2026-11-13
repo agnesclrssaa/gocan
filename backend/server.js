@@ -30,6 +30,7 @@ const ratingRoutes = require('./routes/rating.routes');
 const userRoutes = require('./routes/user.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const runnerRoutes = require('./routes/runner.routes');
+const searchRoutes = require('./routes/search.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -69,6 +70,8 @@ app.use((_req, res, next) => {
 
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);

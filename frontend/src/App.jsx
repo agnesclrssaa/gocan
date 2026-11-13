@@ -26,6 +26,7 @@ import OrderSuccess from './pages/customer/OrderSuccess';
 import OrderTracking from './pages/customer/OrderTracking';
 import History from './pages/customer/History';
 import MenuPreview from './pages/customer/MenuPreview';
+import Profile from './pages/Profile';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -258,6 +259,10 @@ export function App() {
               <Route path="/register" element={<Register />} />
             </Route>
             <Route path="/menu-preview" element={<CustomerLayout><MenuPreview /></CustomerLayout>} />
+
+            <Route element={<ProtectedRoute requireApproval={false} />}>
+              <Route path="/profile" element={<Profile />} />
+            </Route>
 
             {/* Customer Routes */}
             <Route element={<ProtectedRoute allowedRoles={['customer']} />}>

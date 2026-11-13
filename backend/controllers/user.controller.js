@@ -13,7 +13,23 @@ const profileSelect = {
   bankName: true,
   accountNumber: true,
   accountHolderName: true,
+  canteen: {
+    select: {
+      id: true,
+      name: true,
+      building: true,
+      location: true,
+      imageUrl: true,
+    },
+  },
 };
+
+const getPublicProfile = (user, req) => ({
+  ...user,
+  avatarUrl: user.avatarUrl
+    ? new URL(user.avatarUrl, `${req.protocol}://${req.get('host')}`).toString()
+    : null,
+});
 
 const getProfile = async (req, res, next) => {
   try {
@@ -24,7 +40,7 @@ const getProfile = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'Profil pengguna tidak ditemukan.' });
     }
-    return res.json({ success: true, data: user });
+    return res.json({ success: true, data: getPublicProfile(user, req) });
   } catch (error) {
     return next(error);
   }
@@ -32,7 +48,14 @@ const getProfile = async (req, res, next) => {
 
 const updateProfile = async (req, res, next) => {
   try {
-    const body = req.body || {};
+    const body = req.body;
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Data profil tidak valid.',
+      });
+    }
+
     if (Object.prototype.hasOwnProperty.call(body, 'email')) {
       return res.status(400).json({
         success: false,
@@ -47,6 +70,9 @@ const updateProfile = async (req, res, next) => {
       'avatarUrl',
       'defaultBuilding',
       'defaultRoom',
+      'bankName',
+      'accountNumber',
+      'accountHolderName',
     ]);
     if (Object.keys(body).some((field) => !allowedFields.has(field))) {
       return res.status(400).json({
@@ -55,8 +81,17 @@ const updateProfile = async (req, res, next) => {
       });
     }
 
-    const name = typeof body.name === 'string' ? body.name.trim() : '';
-    if (name.length < 2 || name.length > 100) {
+    if (Object.keys(body).length === 0 && !req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Masukkan setidaknya satu data profil untuk diperbarui.',
+      });
+    }
+
+    if (
+      body.name !== undefined &&
+      (typeof body.name !== 'string' || body.name.trim().length < 2 || body.name.trim().length > 100)
+    ) {
       return res.status(400).json({
         success: false,
         message: 'Nama wajib berupa teks dengan panjang 2 hingga 100 karakter.',
@@ -66,7 +101,8 @@ const updateProfile = async (req, res, next) => {
     if (
       body.phoneNumber !== undefined &&
       body.phoneNumber !== null &&
-      (typeof body.phoneNumber !== 'string' || !/^\d{10,14}$/.test(body.phoneNumber))
+      body.phoneNumber !== '' &&
+      (typeof body.phoneNumber !== 'string' || !/^\d{10,14}$/.test(body.phoneNumber.trim()))
     ) {
       return res.status(400).json({
         success: false,
@@ -74,10 +110,16 @@ const updateProfile = async (req, res, next) => {
       });
     }
 
-    const optionalTextFields = ['avatarUrl', 'defaultBuilding', 'defaultRoom'];
+    const optionalTextFields = [
+      'defaultBuilding',
+      'defaultRoom',
+      'bankName',
+      'accountNumber',
+      'accountHolderName',
+    ];
     for (const field of optionalTextFields) {
       const value = body[field];
-      const maxLength = field === 'avatarUrl' ? 2048 : 120;
+      const maxLength = 120;
       if (value !== undefined && value !== null && (typeof value !== 'string' || value.length > maxLength)) {
         return res.status(400).json({
           success: false,
@@ -86,22 +128,57 @@ const updateProfile = async (req, res, next) => {
       }
     }
 
-    const data = { name };
+    if (
+      body.avatarUrl !== undefined &&
+      (typeof body.avatarUrl !== 'string' || body.avatarUrl.length > 2048)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'URL foto profil harus berupa teks maksimal 2048 karakter.',
+      });
+    }
+
+    const data = {};
+    if (body.name !== undefined) data.name = body.name.trim();
     if (body.phoneNumber !== undefined) {
-      data.phoneNumber = typeof body.phoneNumber === 'string' ? body.phoneNumber : null;
+      data.phoneNumber = typeof body.phoneNumber === 'string' && body.phoneNumber.trim()
+        ? body.phoneNumber.trim()
+        : null;
     }
     for (const field of optionalTextFields) {
       if (body[field] !== undefined) {
         data[field] = typeof body[field] === 'string' ? body[field].trim() || null : null;
       }
     }
+    if (req.file) {
+      data.avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    }
 
-    const user = await prisma.user.update({
-      where: { id: req.auth.userId },
-      data,
-      select: profileSelect,
+    const user = await prisma.$transaction(async (transaction) => {
+      const updatedUser = await transaction.user.update({
+        where: { id: req.auth.userId },
+        data,
+        select: profileSelect,
+      });
+
+      if (req.auth.role === 'canteen' && body.name !== undefined && updatedUser.canteen) {
+        const canteen = await transaction.canteen.update({
+          where: { id: updatedUser.canteen.id },
+          data: { name: data.name },
+          select: {
+            id: true,
+            name: true,
+            building: true,
+            location: true,
+            imageUrl: true,
+          },
+        });
+        return { ...updatedUser, canteen };
+      }
+
+      return updatedUser;
     });
-    return res.json({ success: true, data: user });
+    return res.json({ success: true, data: getPublicProfile(user, req) });
   } catch (error) {
     if (error.code === 'P2025') {
       return res.status(404).json({ success: false, message: 'Profil pengguna tidak ditemukan.' });

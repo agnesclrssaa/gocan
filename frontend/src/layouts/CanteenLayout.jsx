@@ -261,6 +261,12 @@ export default function CanteenLayout() {
             </span>
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
+          <Link
+            to="/profile"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-blue-200 hover:bg-blue-900 hover:text-white transition"
+          >
+            Edit Profil Akun
+          </Link>
           <button
             type="button"
             onClick={handleLogout}

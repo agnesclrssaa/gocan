@@ -22,8 +22,8 @@ router.patch('/mine', requireAuth, requireRole('canteen'), updateMyCanteen);
 router.post('/mine/menus', requireAuth, requireRole('canteen'), createMenu);
 router.patch('/mine/menus/:menuId', requireAuth, requireRole('canteen'), updateMenu);
 router.put('/:id', requireAuth, requireRole('canteen'), updateMenu);
-router.delete('/:id', requireAuth, requireRole('canteen', 'admin'), deleteMenu);
-router.delete('/mine/menus/:menuId', requireAuth, requireRole('canteen', 'admin'), deleteMenu);
+router.delete('/:id', requireAuth, requireRole('canteen'), deleteMenu);
+router.delete('/mine/menus/:menuId', requireAuth, requireRole('canteen'), deleteMenu);
 router.get('/:id/menus', listCanteenMenus);
 router.get('/:id/menu', listCanteenMenus);
 

@@ -17,7 +17,9 @@ export default function CanteenMenuSales() {
   const [actionError, setActionError] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [deletingItem, setDeletingItem] = useState(null);
   const [deletingMenuId, setDeletingMenuId] = useState(null);
+  const [deletedMenuIds, setDeletedMenuIds] = useState(() => new Set());
   const [savingMenu, setSavingMenu] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
@@ -37,7 +39,7 @@ export default function CanteenMenuSales() {
     if (imagePreview) URL.revokeObjectURL(imagePreview);
   }, [imagePreview]);
 
-  const menuItems = canteen?.menus || [];
+  const menuItems = (canteen?.menus || []).filter((item) => !deletedMenuIds.has(item.id));
   const fetchOrders = useCallback(async () => {
     setOrdersLoading(true);
     setOrdersError(null);
@@ -85,18 +87,21 @@ export default function CanteenMenuSales() {
     );
   };
 
-  const handleDeleteMenu = async (item) => {
-    const confirmed = window.confirm(
-      `Apakah kamu yakin ingin menghapus menu "${item.name}"?`
-    );
-    if (!confirmed || deletingMenuId !== null) return;
+  const handleDeleteMenu = async () => {
+    if (!deletingItem || deletingMenuId) return;
 
-    setDeletingMenuId(item.id);
+    setDeletingMenuId(deletingItem.id);
     setActionError(null);
     try {
-      await api.delete(`/canteens/mine/menus/${item.id}`);
+      const result = await api.delete(`/menu/${encodeURIComponent(deletingItem.id)}`);
+      if (!result?.success) {
+        throw new Error(result?.message || 'Server tidak mengonfirmasi penghapusan menu.');
+      }
+
+      setDeletedMenuIds((current) => new Set(current).add(deletingItem.id));
+      triggerToast(`Menu "${deletingItem.name}" berhasil dihapus.`);
+      setDeletingItem(null);
       await refreshCanteen();
-      triggerToast(`Menu "${item.name}" berhasil dihapus.`);
     } catch (error) {
       setActionError(`Gagal menghapus menu: ${error.message}`);
     } finally {
@@ -403,23 +408,17 @@ export default function CanteenMenuSales() {
                     >
                       Edit Info
                     </button>
+                    <span className="text-slate-300">•</span>
                     <button
                       type="button"
-                      onClick={() => handleDeleteMenu(item)}
-                      disabled={deletingMenuId !== null}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 disabled:opacity-50"
+                      onClick={() => {
+                        setActionError(null);
+                        setDeletingItem(item);
+                      }}
+                      className="inline-flex items-center gap-1 font-semibold text-rose-700 hover:text-rose-800"
                     >
-                      {deletingMenuId === item.id ? (
-                        <>
-                          <LoaderCircle className="h-3 w-3 animate-spin" />
-                          Menghapus...
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="h-3 w-3" />
-                          Hapus
-                        </>
-                      )}
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Hapus
                     </button>
                   </div>
                 </div>
@@ -505,6 +504,61 @@ export default function CanteenMenuSales() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {deletingItem && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deletingMenuId) setDeletingItem(null);
+          }}
+        >
+          <section
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-menu-title"
+            aria-describedby="delete-menu-description"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+          >
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-700">
+                <Trash2 className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 id="delete-menu-title" className="text-base font-bold text-slate-900">
+                  Hapus menu?
+                </h2>
+                <p id="delete-menu-description" className="mt-2 text-sm text-slate-600">
+                  Menu <strong>{deletingItem.name}</strong> akan dihapus dari daftar menu kantin.
+                </p>
+              </div>
+            </div>
+            {actionError && (
+              <p role="alert" className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
+                {actionError}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeletingItem(null)}
+                disabled={Boolean(deletingMenuId)}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteMenu}
+                disabled={Boolean(deletingMenuId)}
+                className="inline-flex items-center gap-2 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800 disabled:cursor-wait disabled:opacity-60"
+              >
+                {deletingMenuId && <LoaderCircle className="h-4 w-4 animate-spin" />}
+                {deletingMenuId ? 'Menghapus...' : 'Ya, hapus menu'}
+              </button>
+            </div>
+          </section>
         </div>
       )}
     </div>

@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   MapPin,
   ChevronDown,
+  UserRound,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -278,6 +279,15 @@ export const Navbar = () => {
                   <span>Kurir</span>
                 </Link>
               )}
+
+              <Link
+                to="/profile"
+                className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-blue-50 hover:text-[#0A2E6E]"
+                title="Edit profil"
+              >
+                <UserRound className="h-4 w-4" />
+                <span>Profil</span>
+              </Link>
 
               {/* Logout Button */}
               <button

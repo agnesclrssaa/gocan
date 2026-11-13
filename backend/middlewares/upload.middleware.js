@@ -4,6 +4,7 @@ const multer = require('multer');
 const { randomBytes } = require('crypto');
 
 const uploadDirectory = path.join(__dirname, '..', 'uploads');
+const avatarUploadDirectory = path.join(uploadDirectory, 'avatars');
 const privateUploadDirectory = path.join(__dirname, '..', 'private-uploads');
 const allowedImageTypes = new Map([
   ['image/jpeg', '.jpg'],
@@ -12,6 +13,7 @@ const allowedImageTypes = new Map([
 ]);
 
 fs.mkdirSync(uploadDirectory, { recursive: true });
+fs.mkdirSync(avatarUploadDirectory, { recursive: true });
 fs.mkdirSync(privateUploadDirectory, { recursive: true });
 
 const createUploader = (directory, prefix) => multer({
@@ -33,10 +35,12 @@ const createUploader = (directory, prefix) => multer({
 });
 
 const upload = createUploader(uploadDirectory, 'menu');
+const uploadAvatar = createUploader(avatarUploadDirectory, 'avatar');
 const uploadKtm = createUploader(privateUploadDirectory, 'ktm');
 
 module.exports = {
   upload,
+  uploadAvatar,
   uploadKtm,
   multer,
   privateUploadDirectory,
