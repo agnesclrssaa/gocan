@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom';
 import { Trash2, ArrowLeft, ArrowRight, ShoppingBag, Store, Plus, Minus } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import Navbar from '../../components/common/Navbar';
+import { getCustomerRoute, useCustomerPreview } from '../../lib/customerRoutes';
 
 export const Cart = () => {
+  const preview = useCustomerPreview();
   const {
     cartItems,
     currentCanteen,
@@ -29,7 +31,7 @@ export const Cart = () => {
         {/* Header navigation bar */}
         <div className="flex items-center justify-between mb-6">
           <Link
-            to={currentCanteen ? `/canteen/${currentCanteen.id}` : '/'}
+            to={getCustomerRoute(currentCanteen ? `/canteen/${currentCanteen.id}` : '/', preview)}
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-[#2152B7] transition"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -60,7 +62,7 @@ export const Cart = () => {
               Yuk jelajahi berbagai menu kantin favoritmu di UKWMS!
             </p>
             <Link
-              to="/"
+              to={getCustomerRoute('/', preview)}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#2152B7] px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-[#2152B7] transition"
             >
               <span>Jelajahi Menu</span>
@@ -178,7 +180,7 @@ export const Cart = () => {
 
               {/* Action Button: Deep Navy */}
               <Link
-                to="/checkout"
+                to={getCustomerRoute('/checkout', preview)}
                 className="w-full bg-[#2152B7] hover:bg-[#2152B7] text-white font-bold py-3.5 px-6 rounded-full text-center block shadow-md transition active:scale-98"
               >
                 Lanjut ke Pembayaran

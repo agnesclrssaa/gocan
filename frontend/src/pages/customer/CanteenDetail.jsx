@@ -5,7 +5,7 @@ import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 import MenuCard from '../../components/customer/MenuCard';
 
-export const CanteenDetail = () => {
+export const CanteenDetail = ({ preview = false }) => {
   const { canteenId } = useParams();
   const [canteen, setCanteen] = useState(null);
   const [menus, setMenus] = useState([]);
@@ -20,14 +20,28 @@ export const CanteenDetail = () => {
         setError(null);
         setActiveCategory('Semua');
 
-        const [canteens, menuData] = await Promise.all([
-          api.get('/canteens'),
-          api.get(`/canteens/${encodeURIComponent(canteenId)}/menus`),
-        ]);
-        const selectedCanteen = canteens.find((item) => item.id === canteenId);
-        if (!selectedCanteen) {
-          throw new Error('Kantin tidak ditemukan.');
+        let selectedCanteen;
+        let menuData;
+        if (preview) {
+          selectedCanteen = await api.get('/canteens/mine');
+          if (!selectedCanteen) {
+            throw new Error('Data kantin akun ini tidak ditemukan.');
+          }
+          menuData = await api.get(
+            `/canteens/${encodeURIComponent(selectedCanteen.id)}/menus`
+          );
+        } else {
+          const [canteens, customerMenuData] = await Promise.all([
+            api.get('/canteens'),
+            api.get(`/canteens/${encodeURIComponent(canteenId)}/menus`),
+          ]);
+          selectedCanteen = canteens.find((item) => item.id === canteenId);
+          if (!selectedCanteen) {
+            throw new Error('Kantin tidak ditemukan.');
+          }
+          menuData = customerMenuData;
         }
+
         setCanteen(selectedCanteen);
         setMenus(menuData);
       } catch (err) {
@@ -41,7 +55,7 @@ export const CanteenDetail = () => {
     };
 
     fetchCanteenAndMenus();
-  }, [canteenId]);
+  }, [canteenId, preview]);
 
   const categories = useMemo(
     () => ['Semua', ...new Set(menus.map((menu) => menu.category?.trim()).filter(Boolean))],
@@ -55,13 +69,13 @@ export const CanteenDetail = () => {
 
   return (
     <div className="min-h-screen bg-[#F0F4F9] text-slate-800 font-sans selection:bg-[#2152B7] selection:text-white pb-32">
-      <Navbar />
+      <Navbar preview={preview} />
 
       <main className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6">
         {/* Back navigation & Title */}
         <div className="flex items-center gap-3">
           <Link
-            to="/"
+            to={preview ? '/canteen-dashboard' : '/'}
             className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-2xs hover:bg-slate-50 transition"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -164,7 +178,11 @@ export const CanteenDetail = () => {
           {/* Menu grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredMenus.map((menu) => (
-              <MenuCard key={menu.id} menu={menu} canteen={canteen} />
+              <MenuCard
+                key={menu.id}
+                menu={menu}
+                canteen={canteen}
+              />
             ))}
           </div>
           {filteredMenus.length === 0 && (

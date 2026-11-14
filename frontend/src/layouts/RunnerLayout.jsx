@@ -1,25 +1,19 @@
 import { useState } from 'react';
-import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import RunnerBackgroundDecoration from '../components/common/RunnerBackgroundDecoration';
 import {
   Wallet,
   Compass,
   Bike,
-  ShieldCheck,
-  ChevronRight,
   ExternalLink,
-  Power,
-  Bell,
-  MapPin,
   User,
-  Zap,
-  Sparkles,
   LogOut
 } from 'lucide-react';
+import './RunnerTheme.css';
 
 export default function RunnerLayout() {
   const [isOnline, setIsOnline] = useState(true);
-  const location = useLocation();
   const { signOut, profile } = useAuth();
   const navigate = useNavigate();
 
@@ -29,21 +23,14 @@ export default function RunnerLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans relative selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden">
-      {/* Ambient Deep Blue & Neon Emerald Glow Mesh */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute top-1/4 -right-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-[140px]" />
-        <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-teal-500/15 rounded-full blur-[120px]" />
-      </div>
-
-      {/* Top Header with Glassmorphism */}
-      <header className="sticky top-0 z-40 bg-slate-900/75 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+    <div className="runner-theme min-h-screen overflow-x-hidden bg-white font-sans text-slate-800 selection:bg-[#2152B7] selection:text-white">
+      <RunnerBackgroundDecoration />
+      <header className="sticky top-0 z-40 border-b border-[#193F91] bg-[#2152B7] text-white shadow-md shadow-blue-950/15">
+        <div className="mx-auto flex min-h-[76px] max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           {/* Runner Identity & Online Toggle */}
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-md shadow-emerald-500/20">
+              <div className="h-10 w-10 rounded-full bg-white/25 p-0.5 shadow-sm">
                 <img
                   src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
                   alt={profile?.name || 'Campus Runner'}
@@ -51,44 +38,43 @@ export default function RunnerLayout() {
                 />
               </div>
               <span
-                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-950 ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+                className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${isOnline ? 'bg-[#2152B7]' : 'bg-slate-400'
                   }`}
               />
             </div>
 
             <div>
               <div className="flex items-center gap-1.5">
-                <h2 className="text-sm sm:text-base font-black text-white leading-tight">{profile?.name || 'Campus Runner'}</h2>
-                <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <h2 className="text-sm font-black leading-tight text-white sm:text-base">{profile?.name || 'Campus Runner'}</h2>
+                <span className="rounded-md border border-white/30 bg-white/15 px-1.5 py-0.5 text-[9px] font-extrabold text-white">
                   NRP {profile?.nrp || 'Runner'}
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-400">UKWMS Dinoyo • Runner</p>
+              <p className="text-[11px] font-medium text-blue-100">UKWMS Dinoyo • Runner</p>
             </div>
 
             {/* Toggle Status Online / Offline */}
             <button
               type="button"
               onClick={() => setIsOnline(!isOnline)}
-              className={`ml-1 sm:ml-3 px-3 py-1 rounded-full text-xs font-black tracking-wide border transition flex items-center gap-1.5 shadow-xs ${isOnline
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 hover:bg-emerald-500/30'
-                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+              className={`ml-1 flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black tracking-wide shadow-xs transition sm:ml-3 ${isOnline
+                  ? 'border-white bg-white text-[#2152B7] hover:bg-blue-50'
+                  : 'border-blue-300 bg-blue-800 text-white hover:bg-blue-900'
                 }`}
             >
-              <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`} />
+              <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-[#2152B7]' : 'bg-slate-400'}`} />
               <span>{isOnline ? 'ONLINE' : 'OFFLINE'}</span>
             </button>
           </div>
 
-          {/* Desktop Navigation Pills */}
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-900/90 p-1.5 rounded-full border border-white/10 backdrop-blur-md">
+          <nav aria-label="Navigasi Runner" className="hidden items-center gap-1 rounded-full border border-white/25 bg-blue-950/15 p-1 lg:flex">
             <NavLink
               to="/runner-portal"
               end
               className={({ isActive }) =>
-                `px-5 py-2 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${isActive
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black shadow-md shadow-emerald-500/25'
-                  : 'text-slate-300 hover:text-white hover:bg-white/10'
+                `flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${isActive
+                  ? 'bg-white text-[#2152B7] shadow-sm'
+                  : 'text-white hover:bg-white/15'
                 }`
               }
             >
@@ -98,9 +84,9 @@ export default function RunnerLayout() {
             <NavLink
               to="/runner-portal/orders"
               className={({ isActive }) =>
-                `px-5 py-2 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${isActive
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black shadow-md shadow-emerald-500/25'
-                  : 'text-slate-300 hover:text-white hover:bg-white/10'
+                `flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${isActive
+                  ? 'bg-white text-[#2152B7] shadow-sm'
+                  : 'text-white hover:bg-white/15'
                 }`
               }
             >
@@ -110,29 +96,29 @@ export default function RunnerLayout() {
             <NavLink
               to="/runner-portal/detail"
               className={({ isActive }) =>
-                `px-5 py-2 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${isActive
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black shadow-md shadow-emerald-500/25'
-                  : 'text-slate-300 hover:text-white hover:bg-white/10'
+                `flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${isActive
+                  ? 'bg-white text-[#2152B7] shadow-sm'
+                  : 'text-white hover:bg-white/15'
                 }`
               }
             >
               <Bike className="w-3.5 h-3.5" />
               <span>Proses Antar Aktif</span>
             </NavLink>
-          </div>
+          </nav>
 
           {/* Back to Customer Web & Logout */}
           <div className="flex items-center gap-2">
             <Link
               to="/profile"
-              className="flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-white/5 hover:text-emerald-300"
+              className="flex items-center gap-1.5 rounded-xl border border-white/25 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/15"
             >
               <User className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Profil</span>
             </Link>
             <Link
               to="/"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-300 transition px-3 py-1.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10"
+              className="hidden items-center gap-1.5 rounded-xl border border-transparent px-3 py-1.5 text-xs font-bold text-white transition hover:border-white/25 hover:bg-white/15 sm:flex"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span>Web Pemesan</span>
@@ -140,7 +126,7 @@ export default function RunnerLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center gap-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 transition px-3 py-1.5 rounded-xl bg-white/5 hover:bg-rose-950/40 border border-white/10 hover:border-rose-800/50 cursor-pointer"
+              className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#ED2028] bg-[#ED2028] px-3 py-1.5 text-xs font-bold text-white transition hover:border-red-700 hover:bg-red-700"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Keluar</span>
@@ -150,57 +136,69 @@ export default function RunnerLayout() {
       </header>
 
       {/* Main Outlet Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 pb-28 md:pb-12 relative z-10">
+      <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 p-4 pb-28 sm:p-6 lg:p-8 lg:pb-12">
         <Outlet context={{ isOnline, setIsOnline }} />
       </main>
 
-      {/* Mobile Floating Bottom Dock (Antigravity Floating Navigation Bar) */}
-      <div className="md:hidden fixed bottom-4 inset-x-4 z-40 flex justify-center pointer-events-none">
-        <nav className="pointer-events-auto glass-card-dark rounded-full px-5 py-2.5 flex items-center justify-between gap-6 border border-white/20 shadow-2xl shadow-emerald-950/60 backdrop-blur-2xl">
+      <div className="pointer-events-none fixed inset-x-3 bottom-3 z-40 flex justify-center lg:hidden">
+        <nav aria-label="Navigasi Runner" className="pointer-events-auto flex w-full max-w-xl items-center justify-around gap-1 rounded-2xl border border-[#D6E2F0] bg-white/95 px-2 py-2 shadow-lg backdrop-blur-xl">
           <NavLink
             to="/runner-portal"
             end
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 transition ${isActive ? 'text-emerald-400 font-black scale-110' : 'text-slate-400 hover:text-slate-200'
+              `flex min-w-0 flex-col items-center gap-1 px-1 py-1 transition ${isActive ? 'font-black text-[#2152B7]' : 'text-slate-500 hover:text-[#2152B7]'
               }`
             }
           >
             <Wallet className="w-5 h-5" />
-            <span className="text-[10px]">Dompet</span>
+            <span className="text-[9px] sm:text-[10px]">Dompet</span>
           </NavLink>
 
           <NavLink
             to="/runner-portal/orders"
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 transition relative ${isActive ? 'text-emerald-400 font-black scale-110' : 'text-slate-400 hover:text-slate-200'
+              `relative flex min-w-0 flex-col items-center gap-1 px-1 py-1 transition ${isActive ? 'font-black text-[#2152B7]' : 'text-slate-500 hover:text-[#2152B7]'
               }`
             }
           >
-            <div className="relative">
-              <Compass className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-            </div>
-            <span className="text-[10px]">Job Board</span>
+            <Compass className="h-5 w-5" />
+            <span className="text-[9px] sm:text-[10px]">Job Board</span>
           </NavLink>
 
           <NavLink
             to="/runner-portal/detail"
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 transition ${isActive ? 'text-emerald-400 font-black scale-110' : 'text-slate-400 hover:text-slate-200'
+              `flex min-w-0 flex-col items-center gap-1 px-1 py-1 transition ${isActive ? 'font-black text-[#2152B7]' : 'text-slate-500 hover:text-[#2152B7]'
               }`
             }
           >
             <Bike className="w-5 h-5" />
-            <span className="text-[10px]">Antar</span>
+            <span className="text-[9px] sm:text-[10px]">Antar</span>
           </NavLink>
+
+          <Link
+            to="/profile"
+            className="flex min-w-0 flex-col items-center gap-1 px-1 py-1 text-slate-500 transition hover:text-[#2152B7]"
+          >
+            <User className="h-5 w-5" />
+            <span className="text-[9px] sm:text-[10px]">Profil</span>
+          </Link>
+
+          <Link
+            to="/"
+            className="flex min-w-0 flex-col items-center gap-1 px-1 py-1 text-slate-500 transition hover:text-[#2152B7]"
+          >
+            <ExternalLink className="h-5 w-5" />
+            <span className="text-[9px] sm:text-[10px]">Pemesan</span>
+          </Link>
 
           <button
             type="button"
             onClick={handleLogout}
-            className="flex flex-col items-center gap-1 text-rose-400 hover:text-rose-300 transition cursor-pointer"
+            className="flex min-w-0 flex-col items-center gap-1 px-1 py-1 text-[#C51D24] transition hover:text-red-700"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="text-[10px]">Keluar</span>
+            <LogOut className="h-5 w-5" />
+            <span className="text-[9px] sm:text-[10px]">Keluar</span>
           </button>
         </nav>
       </div>

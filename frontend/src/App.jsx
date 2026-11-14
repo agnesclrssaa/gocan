@@ -275,6 +275,16 @@ export function App() {
                 <Route path="/orders/:orderId" element={<OrderTracking />} />
                 <Route path="/order/:orderId" element={<OrderTracking />} />
                 <Route path="/history" element={<History />} />
+                <Route path="/customer-preview">
+                  <Route index element={<Home />} />
+                  <Route path="canteen/:canteenId" element={<CanteenDetail />} />
+                  <Route path="cart" element={<Cart />} />
+                  <Route path="checkout" element={<Checkout />} />
+                  <Route path="order-success/:orderId" element={<OrderSuccess />} />
+                  <Route path="orders/:orderId" element={<OrderTracking />} />
+                  <Route path="order/:orderId" element={<OrderTracking />} />
+                  <Route path="history" element={<History />} />
+                </Route>
               </Route>
             </Route>
 

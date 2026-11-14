@@ -4,6 +4,7 @@ import { ShoppingBag } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
+import { getCustomerRoute, useCustomerPreview } from '../../lib/customerRoutes';
 
 const ORDER_STATUS_LABELS = {
   pending: 'Menunggu konfirmasi',
@@ -20,7 +21,7 @@ const formatDate = (date) =>
     timeStyle: 'short',
   });
 
-const OrderCard = ({ order }) => {
+const OrderCard = ({ order, preview }) => {
   const items = Array.isArray(order.items) ? order.items : [];
   const itemCount = items.reduce((total, item) => total + (Number(item.quantity) || 1), 0);
 
@@ -45,7 +46,7 @@ const OrderCard = ({ order }) => {
             Rp {Number(order.totalPrice).toLocaleString('id-ID')}
           </span>
           <Link
-            to={`/order/${order.id}`}
+            to={getCustomerRoute(`/order/${order.id}`, preview)}
             className="text-sm font-bold text-[#2152B7] hover:underline"
           >
             Detail
@@ -62,6 +63,7 @@ const OrderCard = ({ order }) => {
 };
 
 export const History = () => {
+  const preview = useCustomerPreview();
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +126,7 @@ export const History = () => {
           {loading ? (
             <p className="customer-card rounded-2xl bg-white p-5 text-sm text-slate-500">Memuat pesanan...</p>
           ) : activeOrders.length > 0 ? (
-            activeOrders.map((order) => <OrderCard key={order.id} order={order} />)
+            activeOrders.map((order) => <OrderCard key={order.id} order={order} preview={preview} />)
           ) : (
             <div className="customer-card rounded-2xl border border-slate-200 bg-white p-8 text-center">
               <ShoppingBag className="mx-auto mb-2 h-12 w-12 text-slate-300" />
@@ -132,7 +134,7 @@ export const History = () => {
                 Belum ada pesanan yang sedang berjalan.
               </p>
               <Link
-                to="/"
+                to={getCustomerRoute('/', preview)}
                 className="mt-4 inline-flex rounded-full bg-[#DC2626] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-700"
               >
                 Mulai Pesan Makanan
@@ -148,7 +150,7 @@ export const History = () => {
           {loading ? (
             <p className="customer-card rounded-2xl bg-white p-5 text-sm text-slate-500">Memuat riwayat...</p>
           ) : pastOrders.length > 0 ? (
-            pastOrders.map((order) => <OrderCard key={order.id} order={order} />)
+            pastOrders.map((order) => <OrderCard key={order.id} order={order} preview={preview} />)
           ) : (
             <div className="customer-card rounded-2xl border border-slate-200 bg-white p-8 text-center">
               <ShoppingBag className="mx-auto mb-2 h-12 w-12 text-slate-300" />
@@ -156,7 +158,7 @@ export const History = () => {
                 Belum ada riwayat pesanan
               </p>
               <Link
-                to="/"
+                to={getCustomerRoute('/', preview)}
                 className="mt-4 inline-flex rounded-full bg-[#DC2626] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-700"
               >
                 Mulai Pesan Makanan
