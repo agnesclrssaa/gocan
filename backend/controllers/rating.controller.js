@@ -158,4 +158,59 @@ const listRatings = async (req, res, next) => {
   }
 };
 
-module.exports = { listRatings, submitRating };
+const getOrderRating = async (req, res, next) => {
+  const rawOrderId = String(req.params.orderId || '');
+  const orderId = Number(rawOrderId);
+
+  if (
+    !/^\d+$/.test(rawOrderId) ||
+    !Number.isSafeInteger(orderId) ||
+    orderId <= 0
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: 'Nomor pesanan tidak valid.',
+    });
+  }
+
+  try {
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        userId: req.auth.userId,
+      },
+      select: { id: true },
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pesanan tidak ditemukan untuk akun Anda.',
+      });
+    }
+
+    const rating = await prisma.rating.findUnique({
+      where: { orderId },
+      select: {
+        id: true,
+        orderId: true,
+        stars: true,
+        reviewText: true,
+        createdAt: true,
+      },
+    });
+
+    return res.json({
+      success: true,
+      data: rating,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = {
+  listRatings,
+  submitRating,
+  getOrderRating,
+};

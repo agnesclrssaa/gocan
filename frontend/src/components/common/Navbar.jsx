@@ -1,3 +1,8 @@
+import {
+  readDeliveryLocation,
+  saveDeliveryLocation,
+  subscribeDeliveryLocation,
+} from '../../lib/deliveryLocation';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -13,26 +18,23 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import BrandLogo from './BrandLogo';
 
-const DELIVERY_LOCATION_KEY = 'gocan-delivery-location';
-const DEFAULT_DELIVERY_LOCATION = 'Gedung Benedictus, Lt. 3';
-
 export const Navbar = () => {
   const { user, profile, signOut } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
-  const [deliveryLocation, setDeliveryLocation] = useState(() => {
-    try {
-      return localStorage.getItem(DELIVERY_LOCATION_KEY) || DEFAULT_DELIVERY_LOCATION;
-    } catch (error) {
-      console.error('Gagal membaca lokasi pengantaran dari localStorage:', error);
-      return DEFAULT_DELIVERY_LOCATION;
-    }
-  });
+  const [deliveryLocation, setDeliveryLocation] = useState(
+  () => readDeliveryLocation().building
+);
   const [locationInput, setLocationInput] = useState(deliveryLocation);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [locationError, setLocationError] = useState('');
   const locationPickerRef = useRef(null);
+useEffect(() => {
+  return subscribeDeliveryLocation((savedLocation) => {
+    setDeliveryLocation(savedLocation.building);
+  });
+}, []);
 
   const handleLogout = async () => {
     await signOut();
@@ -59,24 +61,39 @@ export const Navbar = () => {
     };
   }, [isLocationOpen]);
 
-  const handleSaveLocation = (event) => {
-    event.preventDefault();
-    const nextLocation = locationInput.trim();
-    if (!nextLocation) {
-      setLocationError('Masukkan lokasi pengantaran terlebih dahulu.');
-      return;
-    }
+const handleSaveLocation = (event) => {
+  event.preventDefault();
 
-    try {
-      localStorage.setItem(DELIVERY_LOCATION_KEY, nextLocation);
-      setDeliveryLocation(nextLocation);
-      setLocationError('');
-      setIsLocationOpen(false);
-    } catch (error) {
-      console.error('Gagal menyimpan lokasi pengantaran ke localStorage:', error);
-      setLocationError('Lokasi gagal disimpan. Silakan coba lagi.');
-    }
-  };
+  const nextLocation = locationInput.trim();
+
+  if (!nextLocation) {
+    setLocationError('Masukkan lokasi pengantaran terlebih dahulu.');
+    return;
+  }
+
+  if (nextLocation.length > 500) {
+    setLocationError('Lokasi maksimal 500 karakter.');
+    return;
+  }
+
+  try {
+    const currentLocation = readDeliveryLocation();
+
+    const savedLocation = saveDeliveryLocation({
+      ...currentLocation,
+      building: nextLocation,
+    });
+
+    setDeliveryLocation(savedLocation.building);
+    setLocationInput(savedLocation.building);
+    setLocationError('');
+    setIsLocationOpen(false);
+  } catch (error) {
+    setLocationError(
+      error.message || 'Lokasi gagal disimpan. Silakan coba lagi.'
+    );
+  }
+};
 
   const isHomeActive = location.pathname === '/';
   const isHistoryActive = location.pathname === '/history';
@@ -148,7 +165,7 @@ export const Navbar = () => {
               }`}
               aria-expanded={isLocationOpen}
               aria-controls="delivery-location-popover"
-              aria-label={`Ubah lokasi pengantaran. Lokasi saat ini: ${deliveryLocation}`}
+              aria-label={`Ubah lokasi pengantaran. Lokasi saat ini: ${deliveryLocation || 'Pilih lokasi'}`}
             >
               <MapPin className={`h-4 w-4 shrink-0 ${isCustomer ? 'text-[#2152B7] group-hover:text-white' : 'text-[#0A2E6E]'}`} />
               <span className={`hidden sm:inline font-medium ${isCustomer ? 'text-slate-500 group-hover:text-white' : 'text-slate-500'}`}>Kirim ke:</span>
@@ -278,6 +295,22 @@ export const Navbar = () => {
                   <span>Kurir</span>
                 </Link>
               )}
+
+{isCustomer && (
+  <Link
+    to="/profile"
+    aria-current={
+      location.pathname === '/profile' ? 'page' : undefined
+    }
+    className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition ${
+      location.pathname === '/profile'
+        ? 'bg-[#2152B7] text-white'
+        : 'bg-blue-50 text-[#2152B7] hover:bg-blue-100'
+    }`}
+  >
+    Profil
+  </Link>
+)}
 
               {/* Logout Button */}
               <button

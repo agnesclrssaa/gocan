@@ -22,6 +22,7 @@ import Canteens from './pages/customer/Canteens';
 import CanteenDetail from './pages/customer/CanteenDetail';
 import Cart from './pages/customer/Cart';
 import Checkout from './pages/customer/Checkout';
+import UserProfile from './pages/customer/UserProfile';
 import OrderSuccess from './pages/customer/OrderSuccess';
 import OrderTracking from './pages/customer/OrderTracking';
 import History from './pages/customer/History';
@@ -266,6 +267,7 @@ export function App() {
                 <Route path="/canteen/:canteenId" element={<CanteenDetail />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/profile" element={<UserProfile />} />
                 <Route path="/order-success/:orderId" element={<OrderSuccess />} />
                 <Route path="/orders/:orderId" element={<OrderTracking />} />
                 <Route path="/order/:orderId" element={<OrderTracking />} />
@@ -307,6 +309,7 @@ export function App() {
             <Route element={<ProtectedRoute allowedRoles={['admin']} requireApproval={false} />}>
               <Route path="/admin-portal" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="orders" element={<CanteenOrders />} />
                 <Route path="campus" element={<AdminCampus />} />
                 <Route path="finance" element={<AdminFinance />} />
                 <Route path="management" element={<AdminManagement />} />

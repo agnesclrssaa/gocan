@@ -18,6 +18,20 @@ const getCanteenCategory = (canteen) => {
   return category?.trim() || 'Lainnya';
 };
 
+const matchesSearchQuery = (query, ...values) => {
+  const normalize = (value) =>
+    String(value ?? '')
+      .normalize('NFKC')
+      .toLocaleLowerCase('id-ID')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const words = normalize(query).split(' ').filter(Boolean);
+  const searchableText = values.map(normalize).join(' ');
+
+  return words.every((word) => searchableText.includes(word));
+};
+
 export const Canteens = () => {
   const [canteens, setCanteens] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,18 +39,62 @@ export const Canteens = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchCanteens = async () => {
-    try {
-      const data = await api.get('/canteens');
-      setCanteens(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Gagal mengambil daftar kantin:', err);
-      setCanteens([]);
-      setError(err.message || 'Gagal memuat daftar kantin.');
-    } finally {
-      setLoading(false);
+const fetchCanteens = async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const response = await api.get('/canteens');
+
+    if (!Array.isArray(response)) {
+      throw new Error('Format daftar kantin belum sesuai.');
     }
-  };
+
+    const seenIds = new Set();
+
+    const validCanteens = response.filter((canteen) => {
+      if (!canteen?.id || seenIds.has(canteen.id)) return false;
+
+      seenIds.add(canteen.id);
+      return true;
+    });
+
+    const results = await Promise.all(
+      validCanteens.map(async (canteen) => {
+        try {
+          const menus = await api.get(
+            `/canteens/${encodeURIComponent(canteen.id)}/menus`
+          );
+
+          if (!Array.isArray(menus)) {
+            throw new Error('Format daftar menu belum sesuai.');
+          }
+
+          return {
+            ...canteen,
+            searchMenus: menus,
+            menuSearchFailed: false,
+          };
+        } catch {
+          return {
+            ...canteen,
+            searchMenus: [],
+            menuSearchFailed: true,
+          };
+        }
+      })
+    );
+
+    setCanteens(results);
+  } catch (requestError) {
+    setCanteens([]);
+    setError(
+      requestError.message || 'Gagal memuat daftar kantin.'
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchCanteens();
@@ -53,20 +111,34 @@ export const Canteens = () => {
     [canteens]
   );
 
-  const filteredCanteens = useMemo(() => {
-    const query = searchQuery.trim().toLocaleLowerCase('id-ID');
-    const seenIds = new Set();
+const filteredCanteens = useMemo(() => {
+  return canteens.filter((canteen) => {
+    const canteenFields = [
+      canteen.name,
+      canteen.description,
+      canteen.location,
+      getCanteenCategory(canteen),
+    ];
 
-    return canteens.filter((canteen) => {
-      if (!canteen?.id || seenIds.has(canteen.id)) return false;
-      seenIds.add(canteen.id);
+    const matchesSearch =
+      matchesSearchQuery(searchQuery, ...canteenFields) ||
+      (canteen.searchMenus || []).some((menu) =>
+        matchesSearchQuery(
+          searchQuery,
+          ...canteenFields,
+          menu.name,
+          menu.description,
+          menu.category
+        )
+      );
 
-      const matchesName = (canteen.name || '').toLocaleLowerCase('id-ID').includes(query);
-      const matchesCategory =
-        selectedCategory === 'Semua' || getCanteenCategory(canteen) === selectedCategory;
-      return matchesName && matchesCategory;
-    });
-  }, [canteens, searchQuery, selectedCategory]);
+    const matchesCategory =
+      selectedCategory === 'Semua' ||
+      getCanteenCategory(canteen) === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+}, [canteens, searchQuery, selectedCategory]); 
 
   return (
     <div className="min-h-screen bg-[#F0F4F9] pb-16 font-sans text-slate-800">
@@ -118,11 +190,24 @@ export const Canteens = () => {
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Cari nama kantin..."
-              aria-label="Cari nama kantin"
+              placeholder="Cari kantin, menu, atau lokasi..."
+              aria-label="Cari kantin, menu, atau lokasi"
               className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
             />
           </label>
+
+{!loading &&
+  !error &&
+  canteens.some((canteen) => canteen.menuSearchFailed) && (
+    <p
+      role="status"
+      className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800"
+    >
+      Sebagian menu belum berhasil dimuat. Hasil pencarian
+      berdasarkan menu mungkin belum lengkap. Klik Segarkan
+      untuk mencoba lagi.
+    </p>
+  )}
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="mr-1 text-xs font-bold text-slate-500">Kategori:</span>

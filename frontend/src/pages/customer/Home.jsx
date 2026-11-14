@@ -35,6 +35,20 @@ const matchesMenuCategory = (menu, category) => {
   return aliases.includes(menuCategory);
 };
 
+const matchesSearchQuery = (query, ...values) => {
+  const normalize = (value) =>
+    String(value ?? '')
+      .normalize('NFKC')
+      .toLocaleLowerCase('id-ID')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const words = normalize(query).split(' ').filter(Boolean);
+  const searchableText = values.map(normalize).join(' ');
+
+  return words.every((word) => searchableText.includes(word));
+};
+
 export const Home = () => {
   const [canteens, setCanteens] = useState([]);
   const [canteenMenus, setCanteenMenus] = useState({});
@@ -186,15 +200,25 @@ export const Home = () => {
     return canteens
       .filter((canteen) => {
         const menus = canteenMenus[canteen.id] || [];
-        const keyword = searchQuery.toLowerCase().trim();
 
         const matchesSearch =
-          canteen.name?.toLowerCase().includes(keyword) ||
-          canteen.location?.toLowerCase().includes(keyword) ||
-          canteen.description?.toLowerCase().includes(keyword) ||
-          menus.some((menu) =>
-            menu.name?.toLowerCase().includes(keyword)
-          );
+  matchesSearchQuery(
+    searchQuery,
+    canteen.name,
+    canteen.location,
+    canteen.description
+  ) ||
+  menus.some((menu) =>
+    matchesSearchQuery(
+      searchQuery,
+      canteen.name,
+      canteen.location,
+      canteen.description,
+      menu.name,
+      menu.description,
+      menu.category
+    )
+  );
 
         const matchesCanteen =
           appliedCanteen === 'Semua' ||
@@ -276,8 +300,6 @@ export const Home = () => {
   // ==========================================
 
   const filteredMenus = useMemo(() => {
-    const keyword = searchQuery.toLowerCase().trim();
-
     let menus = filteredCanteens.flatMap((canteen) => {
       const canteenMenuList = canteenMenus[canteen.id] || [];
 
@@ -285,6 +307,8 @@ export const Home = () => {
         ...menu,
         canteenId: canteen.id,
         canteenName: canteen.name,
+        canteenLocation: canteen.location,
+canteenDescription: canteen.description,
         imageUrl:
           menu.imageUrl ||
           menu.image_url ||
@@ -293,10 +317,15 @@ export const Home = () => {
     });
 
     menus = menus.filter((menu) => {
-      const matchesSearch =
-        menu.name?.toLowerCase().includes(keyword) ||
-        menu.canteenName?.toLowerCase().includes(keyword) ||
-        menu.description?.toLowerCase().includes(keyword);
+    const matchesSearch = matchesSearchQuery(
+  searchQuery,
+  menu.name,
+  menu.description,
+  menu.category,
+  menu.canteenName,
+  menu.canteenLocation,
+  menu.canteenDescription
+);
 
       const matchesCategory = matchesMenuCategory(
         menu,

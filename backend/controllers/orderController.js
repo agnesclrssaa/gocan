@@ -1,3 +1,4 @@
+const { randomUUID } = require('node:crypto');
 const prisma = require('../src/lib/prisma');
 const { createPickupQrCode } = require('../utils/qrGenerator');
 
@@ -103,7 +104,7 @@ const createOrder = async (req, res, next) => {
       floor > 100 ||
       !['IMMEDIATE', 'SCHEDULED'].includes(orderType) ||
       !['delivery', 'pickup'].includes(fulfillmentType) ||
-      !['QRIS', 'CASH'].includes(paymentMethod) ||
+      !['QRIS', 'DEBIT', 'CASH'].includes(paymentMethod) ||
       [destinationBuilding, destinationRoom, notes, buildingName, meetingPoint, classInfo, deliveryNote].some(
         (value) =>
           value !== undefined &&
@@ -227,6 +228,10 @@ const createOrder = async (req, res, next) => {
         fulfillmentType,
         paymentMethod,
         paymentStatus: 'PENDING',
+        paymentReference:
+        paymentMethod === 'CASH'
+        ? null
+        : `DEMO-${randomUUID()}`,
         status: initialStatus,
         scheduledTime: orderType === 'SCHEDULED' ? new Date(scheduledTime) : null,
         createdAt,
@@ -270,6 +275,40 @@ const parseOrderItems = (order) => ({
 
 const listCanteenOrders = async (req, res, next) => {
   try {
+  if (req.auth.role === 'admin') {
+  const orders = await prisma.order.findMany({
+    include: {
+      canteen: {
+        select: {
+          id: true,
+          name: true,
+          location: true,
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      courier: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      runner: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return res.json(orders.map(parseOrderItems));
+}  
     const user = await prisma.user.findUnique({
       where: { id: req.auth.userId },
       select: { canteenId: true },
@@ -329,6 +368,44 @@ const updateOrderStatus = async (req, res, next) => {
       if (!currentOrder) {
         return res.status(404).json({ error: 'Pesanan tidak ditemukan untuk kantin ini.' });
       }
+      if (
+  targetStatus === 'cooking' &&
+  String(currentOrder.orderType).toUpperCase() === 'SCHEDULED'
+) {
+  const scheduledDate = currentOrder.scheduledTime
+    ? new Date(currentOrder.scheduledTime)
+    : null;
+
+  if (
+    !scheduledDate ||
+    !Number.isFinite(scheduledDate.getTime())
+  ) {
+    return res.status(409).json({
+      success: false,
+      code: 'INVALID_ORDER_SCHEDULE',
+      message:
+        'Jadwal pesanan tidak valid. Periksa data pesanan sebelum mulai menyiapkan.',
+    });
+  }
+
+  if (scheduledDate.getTime() > Date.now()) {
+    const scheduleLabel = scheduledDate.toLocaleString(
+      'id-ID',
+      {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: 'Asia/Jakarta',
+      }
+    );
+
+    return res.status(409).json({
+      success: false,
+      code: 'SCHEDULE_NOT_DUE',
+      message:
+        `Pesanan ini dijadwalkan mulai disiapkan pada ${scheduleLabel} WIB. Belum dapat diproses sekarang.`,
+    });
+  }
+}
       const currentStatus = currentOrder.status.toUpperCase();
       const validTransition =
         ((currentStatus === 'PENDING' || currentStatus === 'PAID') && targetStatus === 'cooking') ||

@@ -24,16 +24,16 @@ export const FloatingCart = () => {
         <div
           role="status"
           aria-live="polite"
-          className={`customer-card w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-[#2152B7] bg-white/95 p-3 text-slate-900 shadow-xl shadow-slate-950/15 backdrop-blur-md transition-all duration-300 ease-out motion-reduce:transition-none ${
+          className={`customer-card w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-slate-900 shadow-xl shadow-slate-950/15 backdrop-blur-md transition-all duration-300 ease-out motion-reduce:transition-none ${
             isToastVisible && cartNotificationPhase === 'visible'
               ? 'translate-y-0 opacity-100'
               : 'translate-y-3 opacity-0'
           }`}
         >
-          <div className="truncate text-xs font-bold text-[#2152B7]">
+          <div className="truncate text-xs font-bold text-emerald-800">
             Berhasil ditambahkan ke keranjang
           </div>
-          <div className="mt-0.5 truncate text-[11px] text-slate-500">
+          <div className="mt-0.5 truncate text-[11px] text-emerald-700">
             {currentCanteen?.name || `${totalItems} menu`} · Rp {totalFoodPrice.toLocaleString('id-ID')}
           </div>
         </div>

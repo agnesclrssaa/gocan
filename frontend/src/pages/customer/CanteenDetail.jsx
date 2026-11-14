@@ -1,3 +1,4 @@
+import CanteenReviews from '../../components/customer/CanteenReviews';
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, MapPin, Star, AlertCircle } from 'lucide-react';
@@ -117,7 +118,12 @@ export const CanteenDetail = () => {
               <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600 pt-1">
                 <div className="flex items-center gap-1 text-amber-600">
                   <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-                  <span>{canteen.rating || '4.9 (1.2k Rating)'}</span>
+                  <a
+  href="#ulasan-kantin"
+  className="font-semibold hover:underline"
+>
+  Lihat rating dan review
+</a>
                 </div>
                 <div className="flex items-center gap-1 text-slate-500">
                   <MapPin className="w-4 h-4 text-[#DC2626]" />
@@ -184,6 +190,14 @@ export const CanteenDetail = () => {
             </div>
           )}
         </div>
+
+{canteen && (
+  <CanteenReviews
+    key={canteenId}
+    canteenId={canteenId}
+  />
+)}
+        
       </main>
 
     </div>

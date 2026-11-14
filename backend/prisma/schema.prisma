@@ -28,6 +28,8 @@ model User {
   canteen           Canteen? @relation(fields: [canteenId], references: [id], onDelete: SetNull)
   orders            Order[]
   ratings           Rating[]
+  runnerReviewsWritten  RunnerRating[] @relation("RunnerReviewCustomer")
+  runnerReviewsReceived RunnerRating[] @relation("RunnerReviewRunner")
   courierOrders     Order[]  @relation("CourierOrders")
   customerOrders    Order[]  @relation("OrderCustomer")
   runnerOrders      Order[]  @relation("OrderRunner")
@@ -78,6 +80,7 @@ model Order {
   customer            User?     @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: Cascade)
   canteen             Canteen   @relation(fields: [canteenId], references: [id], onDelete: Restrict)
   rating              Rating?
+  runnerRating        RunnerRating?
   courierId           Int?
   courier             User?     @relation("CourierOrders", fields: [courierId], references: [id], onDelete: SetNull)
   runner              User?     @relation("OrderRunner", fields: [runnerId], references: [id], onDelete: SetNull)
@@ -139,4 +142,20 @@ model Menu {
 
   @@index([canteenId, name])
   @@index([canteenId, isActive, isDeleted])
+}
+model RunnerRating {
+  id         Int      @id @default(autoincrement())
+  orderId    Int      @unique @map("order_id")
+  customerId Int      @map("customer_id")
+  runnerId   Int      @map("runner_id")
+  stars      Int
+  reviewText String?  @map("review_text")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  order    Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customer User  @relation("RunnerReviewCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  runner   User  @relation("RunnerReviewRunner", fields: [runnerId], references: [id], onDelete: Cascade)
+
+  @@index([runnerId, createdAt])
+  @@index([customerId, createdAt])
 }

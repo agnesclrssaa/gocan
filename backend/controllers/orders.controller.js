@@ -47,11 +47,12 @@ const listOrders = async (req, res, next) => {
         destinationRoom: true,
         cancelReason: true,
         cancelNote: true,
-        courierId: true,
+        runnerId: true,
         createdAt: true,
         updatedAt: true,
         canteen: { select: { name: true, location: true } },
         courier: { select: { id: true, name: true } },
+        runner: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -193,7 +194,27 @@ const verifyPickup = async (req, res, next) => {
       });
     }
 
-    if (req.auth.role === 'canteen') {
+    if (req.auth.role === 'admin') {
+  if (!['pickup', 'delivery'].includes(order.fulfillmentType)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Jenis pengambilan pesanan tidak valid.',
+    });
+  }
+
+  const assignedRunnerId = order.courierId ?? order.runnerId;
+
+  if (
+    order.fulfillmentType === 'delivery' &&
+    !assignedRunnerId
+  ) {
+    return res.status(409).json({
+      success: false,
+      message:
+        'Tugaskan runner terlebih dahulu sebelum memverifikasi pengambilan pesanan delivery.',
+    });
+  }
+} else if (req.auth.role === 'canteen') {
       if (order.fulfillmentType !== 'pickup') {
         return res.status(403).json({ success: false, message: 'E-Ticket ini bukan pesanan pickup kantin.' });
       }
@@ -204,15 +225,30 @@ const verifyPickup = async (req, res, next) => {
       if (!canteenUser?.canteenId || canteenUser.canteenId !== order.canteenId) {
         return res.status(403).json({ success: false, message: 'Pesanan bukan milik kantin Anda.' });
       }
-    } else if (order.fulfillmentType !== 'delivery' || order.courierId !== req.auth.userId) {
-      return res.status(403).json({ success: false, message: 'Pesanan antar belum ditugaskan kepada Runner ini.' });
-    }
+    
+    } else {
+  const assignedRunnerId = order.courierId ?? order.runnerId;
+
+  if (
+    order.fulfillmentType !== 'delivery' ||
+    assignedRunnerId !== req.auth.userId
+  ) {
+    return res.status(403).json({
+      success: false,
+      message: 'Pesanan antar belum ditugaskan kepada Runner ini.',
+    });
+  }
+}
 
     const items = JSON.parse(order.items);
     const itemsSummary = items.map((item) => ({
       name: item.name || item.menuName || 'Menu',
       quantity: Number.isSafeInteger(Number(item.quantity)) ? Number(item.quantity) : 1,
     }));
+    const nextStatus =
+  order.fulfillmentType === 'pickup'
+    ? 'COMPLETED'
+    : 'DELIVERING';
     const updated = await prisma.order.updateMany({
       where: {
         id: order.id,
@@ -221,7 +257,16 @@ const verifyPickup = async (req, res, next) => {
         status: order.status,
         OR: [{ paymentStatus: 'PAID' }, { paymentMethod: 'CASH' }],
       },
-      data: { isPickupVerified: true, status: 'DELIVERING' },
+     data: {
+  isPickupVerified: true,
+  status: nextStatus,
+  ...(
+    order.fulfillmentType === 'pickup' &&
+    order.paymentMethod === 'CASH'
+      ? { paymentStatus: 'PAID' }
+      : {}
+  ),
+},
     });
     if (updated.count !== 1) {
       return res.status(400).json({
@@ -233,7 +278,10 @@ const verifyPickup = async (req, res, next) => {
 
     return res.json({
       success: true,
-      message: 'E-Ticket valid! Pesanan dapat diserahkan.',
+      message:
+  nextStatus === 'COMPLETED'
+    ? 'Pengambilan berhasil diverifikasi. Pesanan pickup selesai.'
+    : 'Pengambilan oleh runner berhasil diverifikasi. Pesanan sedang diantar.',
       data: {
         orderId: order.id,
         customerName: order.user.name,

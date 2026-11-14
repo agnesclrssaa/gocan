@@ -1,4 +1,9 @@
-import { useState, useEffect } from 'react';
+import {
+  readDeliveryLocation,
+  saveDeliveryLocation,
+  subscribeDeliveryLocation,
+} from '../../lib/deliveryLocation';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   QrCode,
@@ -23,29 +28,86 @@ export const Checkout = () => {
   const navigate = useNavigate();
 
   const [isOrderSubmitted, setIsOrderSubmitted] = useState(false);
+  const orderRequestRef = useRef(false);
   const [orderType, setOrderType] = useState('delivery'); // 'delivery' | 'pickup'
-  const [scheduleType, setScheduleType] = useState('scheduled'); // 'now' | 'scheduled'
+ const [scheduleType, setScheduleType] = useState('now');
+const [scheduledDateTime, setScheduledDateTime] = useState('');
   
   // Delivery details
-  const [building, setBuilding] = useState('Gedung Benedictus (Rektorat & Pascasarjana)');
-  const [meetingPoint, setMeetingPoint] = useState('Lobby Depan Lift Lt. 3');
-  const [classInfo, setClassInfo] = useState('Ruang Kuliah 3.02');
-  const [additionalNote, setAdditionalNote] = useState('Tolong kabari jika sudah sampai lobby lantai 3');
+  const [savedLocation, setSavedLocation] = useState(
+  readDeliveryLocation
+);
+
+const [building, setBuilding] = useState(savedLocation.building);
+const [meetingPoint, setMeetingPoint] = useState(
+  savedLocation.meetingPoint
+);
+const [classInfo, setClassInfo] = useState(savedLocation.classInfo);
+const [additionalNote, setAdditionalNote] = useState(
+  savedLocation.additionalNote
+);
 
   // Pickup notes
   const [pickupNote, setPickupNote] = useState('');
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState('gocan_pay'); // 'gocan_pay' | 'cash'
+const [paymentMethod, setPaymentMethod] = useState('cash');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  useEffect(() => {
+  return subscribeDeliveryLocation((location) => {
+    setSavedLocation(location);
+    setBuilding(location.building);
+    setMeetingPoint(location.meetingPoint);
+    setClassInfo(location.classInfo);
+    setAdditionalNote(location.additionalNote);
+  });
+}, []);
+
+const locationIsSaved =
+  Boolean(building.trim()) &&
+  building.trim() === savedLocation.building &&
+  meetingPoint.trim() === savedLocation.meetingPoint &&
+  classInfo.trim() === savedLocation.classInfo &&
+  additionalNote.trim() === savedLocation.additionalNote;
+
+const handleSaveDeliveryLocation = () => {
+  const fields = [building, meetingPoint, classInfo, additionalNote];
+
+  if (fields.some((value) => value.trim().length > 500)) {
+    setError('Setiap kolom lokasi dan catatan maksimal 500 karakter.');
+    return;
+  }
+
+  try {
+    saveDeliveryLocation({
+      building,
+      meetingPoint,
+      classInfo,
+      additionalNote,
+    });
+
+    setError(null);
+  } catch (saveError) {
+    setError(
+      saveError.message || 'Lokasi belum berhasil disimpan.'
+    );
+  }
+};
 
   const destinationFloor = getDestinationFloor(meetingPoint);
   const deliveryFee = orderType === 'delivery'
     ? 3000 + (Math.max(0, destinationFloor - 1) * 1000)
     : 0;
-  const serviceFee = 1000;
-  const totalAmount = totalFoodPrice + deliveryFee + serviceFee;
+const serviceFee = 1000;
+
+const deliveryDiscount =
+  orderType === 'delivery' && totalFoodPrice >= 25000
+    ? Math.min(1000, deliveryFee)
+    : 0;
+
+const totalAmount =
+  totalFoodPrice + deliveryFee - deliveryDiscount + serviceFee;
 
   useEffect(() => {
     if (cartItems.length === 0 && !isOrderSubmitted) {
@@ -66,7 +128,11 @@ export const Checkout = () => {
 
   const handlePlaceOrder = async (e) => {
     if (e) e.preventDefault();
-    if (submitting) return;
+    if (
+  submitting ||
+  orderRequestRef.current ||
+  isOrderSubmitted
+) return;
 
     if (!user) {
       navigate('/login', { state: { from: '/checkout' } });
@@ -80,17 +146,66 @@ export const Checkout = () => {
       }
     }
 
+    let scheduledTime = null;
+
+if (scheduleType === 'scheduled') {
+  if (
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(scheduledDateTime)
+  ) {
+    setError('Pilih tanggal dan waktu pesanan terlebih dahulu.');
+    return;
+  }
+
+  // Nilai input selalu ditafsirkan sebagai WIB.
+  const selectedDate = new Date(
+    `${scheduledDateTime}:00+07:00`
+  );
+
+  if (
+    !Number.isFinite(selectedDate.getTime()) ||
+    selectedDate.getTime() < Date.now() + 30 * 60 * 1000
+  ) {
+    setError('Jadwal pesanan minimal 30 menit dari sekarang.');
+    return;
+  }
+
+  const [hour, minute] = scheduledDateTime
+    .slice(11)
+    .split(':')
+    .map(Number);
+
+  if (
+    hour < 7 ||
+    hour > 17 ||
+    (hour === 17 && minute > 0)
+  ) {
+    setError(
+      'Pilih waktu antara pukul 07.00 sampai 17.00 WIB.'
+    );
+    return;
+  }
+
+  scheduledTime = selectedDate.toISOString();
+}
+
     try {
-      setSubmitting(true);
+  orderRequestRef.current = true;
+  setSubmitting(true);
       setError(null);
 
       const { order } = await api.post('/orders', {
         items: cartItems,
         totalPrice: totalAmount,
         canteenId: currentCanteen?.id || cartItems[0]?.canteen_id,
-        orderType: 'IMMEDIATE',
+        orderType:
+  scheduleType === 'scheduled' ? 'SCHEDULED' : 'IMMEDIATE',
+scheduledTime,
         fulfillmentType: orderType,
-        paymentMethod: paymentMethod === 'cash' ? 'CASH' : 'QRIS',
+        paymentMethod: {
+  cash: 'CASH',
+  gocan_pay: 'QRIS',
+  debit: 'DEBIT',
+}[paymentMethod],
         buildingName: orderType === 'delivery' ? building.trim() : null,
         destinationFloor: orderType === 'delivery' ? destinationFloor : null,
         meetingPoint: orderType === 'delivery' ? meetingPoint.trim() : null,
@@ -98,9 +213,24 @@ export const Checkout = () => {
         deliveryNote: orderType === 'delivery' ? additionalNote.trim() : pickupNote.trim(),
       });
 
-      setIsOrderSubmitted(true);
-      clearCart();
-      navigate(`/order-success/${order.id}`, { replace: true });
+    const confirmedOrderId = Number(order?.id);
+
+if (
+  !Number.isSafeInteger(confirmedOrderId) ||
+  confirmedOrderId <= 0
+) {
+  setError(
+    'Server belum mengembalikan nomor pesanan yang valid. Keranjang belum dikosongkan. Periksa Pesanan Saya sebelum mencoba lagi untuk menghindari pesanan ganda.'
+  );
+  return;
+}
+
+setIsOrderSubmitted(true);
+clearCart();
+
+navigate(`/order-success/${confirmedOrderId}`, {
+  replace: true,
+});
     } catch (err) {
       console.error('Gagal memproses submit pesanan:', err);
       setError(
@@ -109,8 +239,9 @@ export const Checkout = () => {
           : 'Terjadi gangguan saat memproses pesanan. Keranjang Anda tetap tersimpan.'
       );
     } finally {
-      setSubmitting(false);
-    }
+  orderRequestRef.current = false;
+  setSubmitting(false);
+}
   };
 
   return (
@@ -213,23 +344,40 @@ export const Checkout = () => {
               </div>
 
               {scheduleType === 'scheduled' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                  <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                    <p className="text-xs text-slate-500">Tanggal Terjadwal</p>
-                    <p className="text-sm font-bold text-slate-800 mt-1">Kamis, 21 Februari 2024</p>
-                  </div>
-                  <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                    <p className="text-xs text-slate-500">Waktu Pengantaran</p>
-                    <p className="text-sm font-bold text-[#2152B7] mt-1">12:15 WIB · Saat Istirahat</p>
-                  </div>
-                </div>
-              )}
+  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+    <label
+      htmlFor="scheduled-order-time"
+      className="block text-sm font-bold text-slate-700"
+    >
+      Tanggal dan waktu mulai penyiapan (WIB)
+    </label>
+
+    <input
+      id="scheduled-order-time"
+      type="datetime-local"
+      step={60}
+      value={scheduledDateTime}
+      onChange={(event) => {
+        setScheduledDateTime(event.target.value);
+        setError(null);
+      }}
+      disabled={submitting}
+      className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#2152B7] focus:ring-2 focus:ring-blue-100 disabled:opacity-50"
+    />
+
+    <p className="mt-2 text-xs leading-relaxed text-slate-500">
+      Minimal 30 menit dari sekarang, antara pukul
+      07.00–17.00 WIB. Waktu ini adalah jadwal mulai
+      penyiapan, bukan jaminan waktu pesanan tiba.
+    </p>
+  </div>
+)}
 
               <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-500">
                 <span className="font-bold text-slate-700 uppercase tracking-wide block mb-1">
                   CATATAN SCHEDULED ORDER
                 </span>
-                Pesanan akan diproses mendekati waktu yang dipilih. Perubahan jadwal sebaiknya dilakukan sebelum pesanan dikonfirmasi.
+                Pilihan jadwal dikirim bersama pesanan. Kantin dan runner tetap perlu menyesuaikan proses penyiapan serta pengantaran dengan jadwal tersebut.
               </div>
             </div>
 
@@ -272,7 +420,13 @@ export const Checkout = () => {
 
                   <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
                     <p className="text-xs text-slate-500 mb-1">Status Jadwal</p>
-                    <p className="text-sm font-bold text-[#2152B7]">Terjadwal · Kamis, 21 Feb 2024 · 12:15 WIB</p>
+                    <p className="mt-1 text-sm font-bold text-[#2152B7]">
+  {scheduleType === 'scheduled'
+    ? scheduledDateTime
+      ? `${scheduledDateTime.slice(8, 10)}/${scheduledDateTime.slice(5, 7)}/${scheduledDateTime.slice(0, 4)} - ${scheduledDateTime.slice(11, 16)} WIB`
+      : 'Tanggal dan waktu belum dipilih'
+    : 'Pesan sekarang'}
+</p>
                   </div>
                 </div>
 
@@ -286,6 +440,27 @@ export const Checkout = () => {
                     className="w-full bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-medium border border-slate-200 outline-none focus:border-[#2152B7]"
                   />
                 </div>
+                <div className="space-y-2 border-t border-slate-100 pt-4">
+  <button
+    type="button"
+    onClick={handleSaveDeliveryLocation}
+    disabled={submitting}
+    className="rounded-full border border-blue-200 bg-blue-50 px-5 py-2.5 text-sm font-bold text-[#2152B7] hover:bg-blue-100 disabled:opacity-50"
+  >
+    Simpan lokasi pengantaran
+  </button>
+
+  <p
+    role="status"
+    className={`text-xs ${
+      locationIsSaved ? 'text-emerald-700' : 'text-slate-500'
+    }`}
+  >
+    {locationIsSaved
+      ? 'Lokasi tersimpan di browser ini dan tersambung dengan navbar.'
+      : 'Ada perubahan lokasi yang belum disimpan untuk kunjungan berikutnya.'}
+  </p>
+</div>
               </div>
             ) : (
               <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
@@ -294,8 +469,8 @@ export const Checkout = () => {
                 </h2>
                 <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200">
                   <p className="text-xs text-slate-500">Kantin Tujuan</p>
-                  <p className="text-base font-bold text-slate-800 mt-1">{currentCanteen?.name || 'Kantin Pak Brazil'}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Area Foodcourt Utama Kampus UKWMS Dinoyo</p>
+                  <p className="text-base font-bold text-slate-800 mt-1">{currentCanteen?.name || 'Kantin sesuai keranjang'}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{currentCanteen?.location || 'Lokasi dapat dilihat pada detail kantin.'}</p>
                 </div>
                 <div>
                   <label htmlFor="pickup-note" className="text-xs text-slate-500 block mb-1">Catatan Pesanan untuk Kantin</label>
@@ -311,99 +486,143 @@ export const Checkout = () => {
               </div>
             )}
 
-            {/* 4. VERIFIKASI PENGAMBILAN (PICKUP) */}
-            <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-              <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
-                VERIFIKASI PENGAMBILAN (PICKUP)
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="customer-card flex items-center gap-3.5 bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                  <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-slate-200 shrink-0">
-                    <QrCode className="w-5 h-5 text-slate-700" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800">E-ticket QR</p>
-                    <p className="text-xs text-slate-500">Nomor antrean tampil setelah pembayaran</p>
-                  </div>
-                </div>
+            {/* 4. INFORMASI VERIFIKASI PICKUP */}
+{orderType === 'pickup' && (
+  <section className="customer-card space-y-4 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+      PENGAMBILAN DENGAN E-TICKET
+    </h2>
 
-                <div className="customer-card flex items-center gap-3.5 bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-200 shrink-0">
-                    <CreditCard className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800">QRIS Pengambilan</p>
-                    <p className="text-xs text-slate-500">Scan QRIS khusus untuk verifikasi pickup</p>
-                  </div>
-                </div>
-              </div>
+    <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+      <QrCode
+        aria-hidden="true"
+        className="mt-0.5 h-6 w-6 shrink-0 text-[#2152B7]"
+      />
 
-              <div className="customer-card bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-500">
-                <span className="font-bold text-slate-700 uppercase tracking-wide block mb-1">
-                  CATATAN PICKUP
-                </span>
-                {orderType === 'delivery'
-                  ? 'Metode verifikasi hanya digunakan bila mode pengambilan diubah ke Pickup. Pilihan aktif saat ini tetap Delivery.'
-                  : 'Tunjukkan E-ticket QR kepada kasir kantin saat mengambil pesanan Anda.'}
-              </div>
-            </div>
+      <div>
+        <p className="text-sm font-bold text-[#2152B7]">
+          Tiket tersedia setelah pesanan berhasil dibuat
+        </p>
+
+        <p className="mt-2 text-xs leading-relaxed text-slate-600">
+          Buka E-ticket melalui halaman detail pesanan. QR
+          pengambilan akan ditampilkan sesuai status pesanan
+          dan pembayaran.
+        </p>
+      </div>
+    </div>
+
+    <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-600">
+      <li>Konfirmasi pesanan dan buka E-ticket.</li>
+      <li>Tunggu sampai status pesanan siap diambil.</li>
+      <li>
+        Datang ke kantin dan lakukan pembayaran jika memilih tunai.
+      </li>
+      <li>
+        Tunjukkan QR E-ticket kepada petugas untuk diverifikasi
+        sebelum pesanan diserahkan.
+      </li>
+    </ol>
+
+    <p className="text-xs leading-relaxed text-slate-500">
+      QR pengambilan digunakan untuk verifikasi pesanan.
+      QR tersebut berbeda dari QRIS untuk pembayaran.
+    </p>
+  </section>
+)}
 
             {/* 5. METODE PEMBAYARAN */}
-            <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-              <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
-                METODE PEMBAYARAN
-              </h2>
+<div className="customer-card space-y-4 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+  <fieldset disabled={submitting} className="space-y-3">
+    <legend className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400">
+      METODE PEMBAYARAN
+    </legend>
 
-              <div
-                onClick={() => setPaymentMethod('gocan_pay')}
-                className={`customer-card flex items-center justify-between p-4 rounded-2xl border transition cursor-pointer ${
-                  paymentMethod === 'gocan_pay'
-                    ? 'border-[#2152B7] ring-1 ring-[#2152B7] bg-white'
-                    : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
-                }`}
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-200">
-                    <CreditCard className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800">Online – Gocan Pay / QRIS</p>
-                    <p className="text-xs text-slate-500">Saldo: Rp 50.000</p>
-                  </div>
-                </div>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  paymentMethod === 'gocan_pay' ? 'text-[#2152B7]' : 'text-slate-300'
-                }`}>
-                  <CheckCircle2 className="w-6 h-6" />
-                </div>
-              </div>
+    {[
+      {
+        value: 'cash',
+        title: 'Tunai',
+        description:
+          orderType === 'delivery'
+            ? 'Bayar kepada Campus Runner saat pesanan diterima.'
+            : 'Bayar di kasir kantin saat mengambil pesanan.',
+        Icon: Banknote,
+        available: true,
+      },
+      {
+  value: 'gocan_pay',
+  title: 'QRIS — Simulasi',
+  description:
+    'Menampilkan QR demo. Tidak dapat digunakan untuk pembayaran asli. Konfirmasi dilakukan admin.',
+  Icon: QrCode,
+  available: true,
+},
+     {
+  value: 'debit',
+  title: 'Kartu debit — Simulasi',
+  description:
+    'Demo pembayaran debit tanpa memasukkan data kartu dan tanpa pemotongan saldo. Konfirmasi dilakukan admin.',
+  Icon: CreditCard,
+  available: true,
+},
+    ].map(({ value, title, description, Icon, available }) => (
+      <label
+        key={value}
+        className={`flex items-start gap-3 rounded-2xl border p-4 transition ${
+          !available
+            ? 'cursor-not-allowed border-slate-200 bg-slate-50'
+            : paymentMethod === value
+              ? 'cursor-pointer border-[#2152B7] bg-blue-50 ring-1 ring-[#2152B7]'
+              : 'cursor-pointer border-slate-200 bg-white hover:bg-slate-50'
+        }`}
+      >
+        <input
+          type="radio"
+          name="paymentMethod"
+          value={value}
+          checked={paymentMethod === value}
+          disabled={!available}
+          onChange={() => {
+            setPaymentMethod(value);
+            setError(null);
+          }}
+          className="mt-1 h-4 w-4 shrink-0 accent-[#2152B7]"
+        />
 
-              <div
-                onClick={() => setPaymentMethod('cash')}
-                className={`customer-card flex items-center justify-between p-4 rounded-2xl border transition cursor-pointer ${
-                  paymentMethod === 'cash'
-                    ? 'border-[#2152B7] ring-1 ring-[#2152B7] bg-white'
-                    : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
-                }`}
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-200">
-                    <Banknote className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800">Tunai / COD</p>
-                    <p className="text-xs text-slate-500">
-                      {orderType === 'delivery' ? 'Bayar ke runner saat pesanan tiba' : 'Bayar langsung di kasir kantin'}
-                    </p>
-                  </div>
-                </div>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  paymentMethod === 'cash' ? 'text-[#2152B7]' : 'text-slate-300'
-                }`}>
-                  <CheckCircle2 className="w-6 h-6" />
-                </div>
-              </div>
-            </div>
+        <Icon
+          aria-hidden="true"
+          className={`mt-0.5 h-5 w-5 shrink-0 ${
+            available ? 'text-[#2152B7]' : 'text-slate-400'
+          }`}
+        />
+
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-bold text-slate-800">
+              {title}
+            </span>
+
+            {!available && (
+              <span className="rounded-full bg-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600">
+                Belum tersedia
+              </span>
+            )}
+          </span>
+
+          <span className="mt-1 block text-xs leading-relaxed text-slate-500">
+            {description}
+          </span>
+        </span>
+      </label>
+    ))}
+  </fieldset>
+
+  <p className="rounded-xl bg-blue-50 p-3 text-xs leading-relaxed text-blue-800">
+  {paymentMethod === 'cash'
+    ? 'Pembayaran tunai dilakukan saat pesanan diterima atau diambil. Konfirmasi pesanan belum berarti pembayaran lunas.'
+    : 'MODE SIMULASI: tidak ada pembayaran asli atau pemotongan saldo. Pesanan akan menunggu konfirmasi simulasi dari admin. Jangan memasukkan nomor kartu, PIN, atau CVV.'}
+</p>
+</div>
           </div>
 
           {/* Right Column (4 cols): Summary & CTA */}
@@ -422,11 +641,20 @@ export const Checkout = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Ongkir Flat Mahasiswa</span>
+                  <span>Biaya Pengantaran</span>
                   <span className="font-semibold text-slate-800">
                     {deliveryFee === 0 ? 'Rp 0' : `Rp ${deliveryFee.toLocaleString('id-ID')}`}
                   </span>
                 </div>
+                {deliveryDiscount > 0 && (
+  <div className="flex items-center justify-between gap-3 text-emerald-700">
+    <span>Potongan Ongkir</span>
+
+    <span className="font-semibold">
+      − Rp {deliveryDiscount.toLocaleString('id-ID')}
+    </span>
+  </div>
+)}
                 <div className="flex justify-between items-center">
                   <span>Biaya Layanan Aplikasi</span>
                   <span className="font-semibold text-slate-800">
@@ -443,21 +671,6 @@ export const Checkout = () => {
               </div>
             </div>
 
-            {/* APABILA PILIH PICKUP */}
-            <div className="customer-card bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm">
-              <p className="text-[11px] font-bold text-[#DC2626] uppercase tracking-wide mb-3">
-                APABILA PILIH PICKUP (AMBIL SENDIRI):
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center shrink-0">
-                  <QrCode className="w-7 h-7 text-slate-700" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-800">No Antrean Ambil: #P-042</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Tunjukkan QR di kasir Kantin Brazil</p>
-                </div>
-              </div>
-            </div>
 
             {/* CTA BUTTON: BOLD RED */}
             <button
@@ -470,7 +683,7 @@ export const Checkout = () => {
                   : 'bg-[#DC2626] hover:bg-[#B91C1C] active:scale-98'
               }`}
             >
-              {submitting ? 'Memproses Pesanan...' : 'Pesan & Bayar Sekarang'}
+              {submitting ? 'Memproses Pesanan...' : 'Konfirmasi Pesanan'}
             </button>
           </div>
         </div>

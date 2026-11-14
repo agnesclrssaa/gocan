@@ -1,3 +1,7 @@
+import { useAuth } from '../../context/AuthContext';
+import DemoPaymentPanel from '../../components/common/DemoPaymentPanel';
+import { formatOrderDate } from '../../lib/orderStatus';
+import PickupScanner from '../../components/common/PickupScanner';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { CheckCircle2, Clock3, FileText, RefreshCw, Utensils, X } from 'lucide-react';
@@ -29,6 +33,7 @@ const getItemSummary = (items) =>
     .join(', ');
 
 export default function CanteenOrders() {
+  const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('baru');
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -111,7 +116,7 @@ export default function CanteenOrders() {
           Segarkan
         </button>
       </header>
-
+<PickupScanner onVerified={fetchOrders} />
       <nav aria-label="Filter status pesanan" className="merchant-card-glow bg-white border border-slate-200 flex gap-1.5 overflow-x-auto rounded-xl p-2">
         {statusTabs.map((tab) => {
           const count = orders.filter((order) => tab.statuses.includes(order.status)).length;
@@ -191,6 +196,37 @@ export default function CanteenOrders() {
               {getItemSummary(order.items) || 'Detail item belum tersedia'}
             </div>
 
+{String(order.orderType).toUpperCase() === 'SCHEDULED' && (
+  <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+    <p className="flex items-center gap-2 text-sm font-bold text-[#2152B7]">
+      <Clock3 className="h-4 w-4 shrink-0" />
+      Pesanan terjadwal
+    </p>
+
+    <p className="mt-2 text-sm text-slate-700">
+      Mulai penyiapan: {formatOrderDate(order.scheduledTime)}
+    </p>
+
+    <p className="mt-2 text-xs leading-relaxed text-slate-500">
+      Pesanan mulai diproses oleh petugas sesuai jadwal.
+      Sistem menolak tindakan Terima Pesanan sebelum
+      waktu penyiapan tiba.
+    </p>
+  </div>
+)}
+
+{['admin', 'canteen'].includes(profile?.role) &&
+  ['QRIS', 'DEBIT'].includes(
+    String(order.paymentMethod).toUpperCase()
+  ) &&
+  String(order.paymentReference || '').startsWith('DEMO-') && (
+    <DemoPaymentPanel
+      key={`payment-${order.id}`}
+      orderId={order.id}
+      onConfirmed={fetchOrders}
+    />
+  )}
+
             {order.status === 'cancelled' && (
               <div className="merchant-card-glow rounded-xl border border-red-200 bg-white p-4">
                 <div className="flex items-center gap-2">
@@ -228,7 +264,37 @@ export default function CanteenOrders() {
                   onClick={() => updateOrderStatus(order.id, 'cooking')}
                   className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"
                 >
-                  {updatingOrderId === order.id ? 'Menyimpan...' : 'Terima Pesanan'}
+                 {order.status === 'pending' && (
+  <div className="space-y-2 text-right">
+    {['QRIS', 'DEBIT'].includes(
+      String(order.paymentMethod).toUpperCase()
+    ) &&
+      String(order.paymentStatus).toUpperCase() !== 'PAID' && (
+        <p className="text-xs font-semibold text-amber-800">
+          Menunggu konfirmasi pembayaran dari admin pusat.
+        </p>
+      )}
+
+    <button
+      type="button"
+      disabled={
+        updatingOrderId === order.id ||
+        (
+          ['QRIS', 'DEBIT'].includes(
+            String(order.paymentMethod).toUpperCase()
+          ) &&
+          String(order.paymentStatus).toUpperCase() !== 'PAID'
+        )
+      }
+      onClick={() => updateOrderStatus(order.id, 'cooking')}
+      className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {updatingOrderId === order.id
+        ? 'Menyimpan...'
+        : 'Terima Pesanan'}
+    </button>
+  </div>
+)}
                 </button>
               )}
               {order.status === 'cooking' && (
@@ -241,9 +307,21 @@ export default function CanteenOrders() {
                   {updatingOrderId === order.id ? 'Menyimpan...' : 'Siap Diambil'}
                 </button>
               )}
-              {order.status === 'ready' && (
-                <span className="text-xs font-semibold text-amber-700">Menunggu kurir mengambil pesanan</span>
-              )}
+{order.status === 'ready' && (
+  <div className="text-right">
+    <p className="text-xs font-semibold text-amber-700">
+      {String(order.fulfillmentType).toLowerCase() === 'pickup'
+        ? 'Menunggu pelanggan mengambil pesanan'
+        : 'Menunggu Campus Runner mengambil pesanan'}
+    </p>
+
+    {String(order.fulfillmentType).toLowerCase() === 'pickup' && (
+      <p className="mt-1 text-xs text-slate-500">
+        Gunakan scanner di atas untuk memverifikasi QR E-ticket pelanggan.
+      </p>
+    )}
+  </div>
+)}
             </div>
           </article>
         ))}
