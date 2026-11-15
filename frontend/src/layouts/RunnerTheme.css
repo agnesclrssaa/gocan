@@ -1,0 +1,166 @@
+.runner-theme {
+  --runner-background: #FFFFFF;
+  --runner-blue: #2152B7;
+  --runner-blue-dark: #193F91;
+  --runner-red: #ED2028;
+  --runner-yellow: #F7BD00;
+  position: relative;
+  isolation: isolate;
+  color: #17335D;
+  background: var(--runner-background);
+}
+
+.runner-theme .glass-card-dark {
+  border-color: #D6E2F0;
+  background: #FFFFFF;
+  color: #17335D;
+  box-shadow: 0 4px 14px rgb(33 82 183 / 0.08), 0 8px 24px rgb(33 82 183 / 0.06);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.runner-theme main > div > .relative.rounded-3xl {
+  border-color: #D6E2F0;
+  background-color: #FFFFFF;
+  background-image: linear-gradient(120deg, #FFFFFF 0%, #F8FAFF 100%) !important;
+  box-shadow: 0 8px 24px rgb(33 82 183 / 0.08);
+}
+
+.runner-theme main h1[class],
+.runner-theme main h2[class],
+.runner-theme main h3[class],
+.runner-theme main h4[class] {
+  color: var(--runner-blue) !important;
+}
+
+.runner-theme [class*="bg-slate-950"],
+.runner-theme [class*="bg-slate-900"],
+.runner-theme [class*="bg-slate-800"] {
+  background-color: #FFFFFF !important;
+}
+
+.runner-theme [class*="bg-emerald-950"],
+.runner-theme [class*="bg-indigo-950"],
+.runner-theme [class*="bg-teal-950"] {
+  background-color: #EEF3FC !important;
+}
+
+.runner-theme [class*="bg-emerald-500/"],
+.runner-theme [class*="bg-emerald-600/"],
+.runner-theme [class*="bg-emerald-400/"],
+.runner-theme [class*="bg-teal-500/"],
+.runner-theme [class*="bg-indigo-600/"] {
+  background-color: #EAF0FC !important;
+}
+
+.runner-theme [class~="bg-emerald-500"],
+.runner-theme [class~="bg-emerald-600"],
+.runner-theme [class~="bg-emerald-400"],
+.runner-theme [class~="bg-teal-400"],
+.runner-theme [class~="bg-teal-500"] {
+  background-color: var(--runner-blue) !important;
+}
+
+.runner-theme [class*="bg-amber-"] {
+  background-color: #FFF4CC !important;
+}
+
+.runner-theme [class*="bg-rose-"],
+.runner-theme [class*="bg-red-950"] {
+  background-color: #FFF0F0 !important;
+}
+
+.runner-theme [class*="border-white/"],
+.runner-theme [class*="border-slate-700"],
+.runner-theme [class*="border-slate-800"],
+.runner-theme [class*="border-emerald-"],
+.runner-theme [class*="border-teal-"],
+.runner-theme [class*="border-indigo-"] {
+  border-color: #D6E2F0 !important;
+}
+
+.runner-theme [class*="shadow-emerald-"] {
+  --tw-shadow-color: rgb(33 82 183 / 0.14);
+}
+
+.runner-theme [class~="text-white"],
+.runner-theme [class~="text-slate-100"],
+.runner-theme [class~="text-slate-200"] {
+  color: #17335D !important;
+}
+
+.runner-theme header [class~="text-white"] {
+  color: #FFFFFF !important;
+}
+
+.runner-theme [class~="text-slate-300"] {
+  color: #475569 !important;
+}
+
+.runner-theme [class~="text-slate-400"],
+.runner-theme [class~="text-slate-500"],
+.runner-theme [class~="text-slate-600"] {
+  color: #64748B !important;
+}
+
+.runner-theme [class*="text-emerald-"],
+.runner-theme [class*="text-teal-"],
+.runner-theme [class*="text-indigo-"] {
+  color: var(--runner-blue) !important;
+}
+
+.runner-theme [class*="text-amber-"] {
+  color: #8A6500 !important;
+}
+
+.runner-theme [class*="text-rose-"],
+.runner-theme [class*="text-red-"] {
+  color: #C51D24 !important;
+}
+
+.runner-theme button[class*="bg-gradient"],
+.runner-theme a[class*="bg-gradient"] {
+  background-image: linear-gradient(110deg, var(--runner-blue), var(--runner-blue-dark)) !important;
+}
+
+.runner-theme button[class*="bg-gradient"],
+.runner-theme a[class*="bg-gradient"],
+.runner-theme button[class~="bg-[#2152B7]"],
+.runner-theme a[class~="bg-[#2152B7]"],
+.runner-theme button[class~="bg-emerald-500"],
+.runner-theme button[class~="bg-emerald-600"],
+.runner-theme a[class~="bg-emerald-500"],
+.runner-theme a[class~="bg-emerald-600"] {
+  color: #FFFFFF !important;
+}
+
+.runner-theme button[class*="bg-emerald-500"] [class~="bg-slate-950"] {
+  background-color: #FFFFFF !important;
+}
+
+.runner-theme .fixed.inset-0[class*="bg-slate-950/"] {
+  background-color: rgb(15 23 42 / 0.56) !important;
+}
+
+.runner-theme .antigravity-hover {
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.runner-theme .antigravity-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgb(33 82 183 / 0.1);
+}
+
+@media (max-width: 640px) {
+  .runner-theme main {
+    padding-inline: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runner-theme .antigravity-hover,
+  .runner-theme .antigravity-hover:hover {
+    transition: none;
+    transform: none;
+  }
+}

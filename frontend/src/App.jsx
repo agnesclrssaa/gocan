@@ -27,6 +27,7 @@ import OrderSuccess from './pages/customer/OrderSuccess';
 import OrderTracking from './pages/customer/OrderTracking';
 import History from './pages/customer/History';
 import MenuPreview from './pages/customer/MenuPreview';
+import Profile from './pages/Profile';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -260,6 +261,10 @@ export function App() {
             </Route>
             <Route path="/menu-preview" element={<CustomerLayout><MenuPreview /></CustomerLayout>} />
 
+            <Route element={<ProtectedRoute requireApproval={false} />}>
+              <Route path="/profile" element={<Profile />} />
+            </Route>
+
             {/* Customer Routes */}
             <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
               <Route element={<CustomerLayout />}>
@@ -272,6 +277,16 @@ export function App() {
                 <Route path="/orders/:orderId" element={<OrderTracking />} />
                 <Route path="/order/:orderId" element={<OrderTracking />} />
                 <Route path="/history" element={<History />} />
+                <Route path="/customer-preview">
+                  <Route index element={<Home />} />
+                  <Route path="canteen/:canteenId" element={<CanteenDetail />} />
+                  <Route path="cart" element={<Cart />} />
+                  <Route path="checkout" element={<Checkout />} />
+                  <Route path="order-success/:orderId" element={<OrderSuccess />} />
+                  <Route path="orders/:orderId" element={<OrderTracking />} />
+                  <Route path="order/:orderId" element={<OrderTracking />} />
+                  <Route path="history" element={<History />} />
+                </Route>
               </Route>
             </Route>
 

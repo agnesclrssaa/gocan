@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
+import RunnerBackgroundDecoration from '../../components/common/RunnerBackgroundDecoration';
 
 const bankOptions = [
   'BCA',
@@ -126,8 +127,9 @@ export default function RunnerProfile() {
   const imageUrl = previewUrl;
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-800 sm:px-6">
-      <div className="mx-auto max-w-2xl space-y-5">
+    <main className="runner-theme relative min-h-screen overflow-hidden bg-white px-4 py-8 text-slate-800 sm:px-6">
+      <RunnerBackgroundDecoration />
+      <div className="relative z-10 mx-auto max-w-2xl space-y-5">
         <Link to="/runner-portal" className="text-sm font-bold text-blue-800 hover:underline">
           Kembali ke Portal Runner
         </Link>
@@ -200,7 +202,7 @@ export default function RunnerProfile() {
             </label>
           </section>
 
-          <button type="submit" disabled={saving || uploading} className="w-full rounded-xl bg-[#0A2E6E] px-4 py-3 text-sm font-bold text-white hover:bg-[#082457] disabled:opacity-60">
+          <button type="submit" disabled={saving || uploading} className="w-full rounded-xl bg-[#2152B7] px-4 py-3 text-sm font-bold text-white hover:bg-[#193F91] disabled:opacity-60">
             {saving ? 'Menyimpan...' : 'Simpan dan Ajukan Verifikasi'}
           </button>
         </form>

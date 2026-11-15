@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
+import { getCustomerRoute, useCustomerPreview } from '../../lib/customerRoutes';
 
 import {
   formatOrderDate,
@@ -20,7 +21,7 @@ import {
   ORDER_TONES,
 } from '../../lib/orderStatus';
 
-const OrderCard = ({ order }) => {
+const OrderCard = ({ order, preview }) => {
   const items = Array.isArray(order.items) ? order.items : [];
 
   const itemCount = items.reduce(
@@ -63,12 +64,12 @@ const OrderCard = ({ order }) => {
           </span>
 
           <Link
-            to={`/order/${order.id}`}
-            aria-label={`Lihat detail pesanan ${order.id}`}
-            className="rounded-full border border-blue-200 px-4 py-2 text-sm font-bold text-[#2152B7] transition hover:bg-blue-50"
-          >
-            Detail
-          </Link>
+  to={getCustomerRoute(`/order/${order.id}`, preview)}
+  aria-label={`Lihat detail pesanan ${order.id}`}
+  className="rounded-full border border-blue-200 px-4 py-2 text-sm font-bold text-[#2152B7] transition hover:bg-blue-50"
+>
+  Detail
+</Link>
         </div>
       </div>
 
@@ -119,6 +120,7 @@ const OrderCard = ({ order }) => {
 };
 
 export const History = () => {
+  const preview = useCustomerPreview();
   const { user } = useAuth();
   const userId = user?.id;
 
@@ -311,14 +313,18 @@ export const History = () => {
               Memuat pesanan...
             </p>
           ) : activeOrders.length > 0 ? (
-            activeOrders.map((order) => (
-              <OrderCard key={order.id} order={order} />
-            ))
-          ) : error && !currentOrders.length ? (
-            <p className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
-              Pesanan belum dapat ditampilkan. Tekan Perbarui
-              untuk mencoba lagi.
-            </p>
+activeOrders.map((order) => (
+  <OrderCard
+    key={order.id}
+    order={order}
+    preview={preview}
+  />
+))
+) : error && !currentOrders.length ? (
+  <p className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
+    Pesanan belum dapat ditampilkan. Tekan Perbarui
+    untuk mencoba lagi.
+  </p>
           ) : (
             <div className="customer-card rounded-2xl border border-slate-200 bg-white p-8 text-center">
               <ShoppingBag className="mx-auto mb-2 h-12 w-12 text-slate-300" />
@@ -328,7 +334,7 @@ export const History = () => {
               </p>
 
               <Link
-                to="/"
+                to={getCustomerRoute('/', preview)}
                 className="mt-4 inline-flex rounded-full bg-[#DC2626] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-700"
               >
                 Mulai Pesan Makanan
@@ -348,10 +354,14 @@ export const History = () => {
               Memuat riwayat...
             </p>
           ) : pastOrders.length > 0 ? (
-            pastOrders.map((order) => (
-              <OrderCard key={order.id} order={order} />
-            ))
-          ) : error && !currentOrders.length ? null : (
+pastOrders.map((order) => (
+  <OrderCard
+    key={order.id}
+    order={order}
+    preview={preview}
+  />
+))
+) : error && !currentOrders.length ? null : (
             <div className="customer-card rounded-2xl border border-slate-200 bg-white p-8 text-center">
               <ShoppingBag className="mx-auto mb-2 h-12 w-12 text-slate-300" />
 
@@ -360,7 +370,7 @@ export const History = () => {
               </p>
 
               <Link
-                to="/"
+                to={getCustomerRoute('/', preview)}
                 className="mt-4 inline-flex rounded-full bg-[#DC2626] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-700"
               >
                 Mulai Pesan Makanan

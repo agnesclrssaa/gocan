@@ -14,7 +14,7 @@ import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 import MenuCard from '../../components/customer/MenuCard';
 import './Home.css';
-import './Home.css';
+import SearchInput from '../../components/common/SearchInput';
 
 const categoryAliases = {
   Snack: ['snack', 'cemilan', 'camilan'],
@@ -306,9 +306,13 @@ export const Home = () => {
       return canteenMenuList.map((menu) => ({
         ...menu,
         canteenId: canteen.id,
-        canteenName: canteen.name,
-        canteenLocation: canteen.location,
-canteenDescription: canteen.description,
+canteen: menu.canteen || canteen,
+canteenName:
+  menu.canteen?.name || menu.canteenName || canteen.name,
+canteenLocation:
+  menu.canteen?.location || canteen.location,
+canteenDescription:
+  menu.canteen?.description || canteen.description,
         imageUrl:
           menu.imageUrl ||
           menu.image_url ||
@@ -393,19 +397,10 @@ canteenDescription: canteen.description,
 
         <div className="customer-card bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center justify-between gap-3">
 
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-
-            <Search className="w-5 h-5 text-slate-400 shrink-0" />
-
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari Siomay, Kopi, Ayam Geprek..."
-              className="w-full text-sm font-medium text-slate-900 bg-transparent placeholder-slate-400 focus:outline-none"
-            />
-
-          </div>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
 
           <button
             type="button"
@@ -870,14 +865,14 @@ canteenDescription: canteen.description,
 
                     <MenuCard
                       menu={menu}
-                      canteen={canteen}
+                      canteen={menu.canteen || canteen}
                     />
 
                     <Link
                       to={`/canteen/${menu.canteenId}`}
                       className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-slate-500 hover:text-[#2152B7] transition"
                     >
-                      Dari {menu.canteenName}
+                      Dari {menu.canteen?.name || menu.canteenName}
                     </Link>
 
                   </div>

@@ -184,38 +184,30 @@ const deleteMenu = async (req, res, next) => {
       });
     }
 
-    if (req.auth.role === 'canteen') {
-      const user = await prisma.user.findUnique({
-        where: { id: req.auth.userId },
-        select: { canteenId: true },
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      select: { canteenId: true },
+    });
+    if (!user?.canteenId || user.canteenId !== menu.canteenId) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN_ACCESS',
+        message: 'Anda tidak memiliki hak akses untuk menghapus menu stan lain.',
       });
-      if (!user?.canteenId || user.canteenId !== menu.canteenId) {
-        return res.status(403).json({
-          success: false,
-          code: 'FORBIDDEN_ACCESS',
-          message: 'Anda tidak memiliki hak akses untuk menghapus menu stan lain.',
-        });
-      }
     }
 
-    const result = await prisma.menu.updateMany({
-      where: {
-        id: menu.id,
-        canteenId: menu.canteenId,
-        isDeleted: false,
+    await prisma.menu.update({
+      where: { id: menu.id },
+      data: {
+        isActive: false,
+        isDeleted: true,
+        isAvailable: false,
+        deletedAt: new Date(),
       },
-      data: { isDeleted: true, isActive: false, isAvailable: false, deletedAt: new Date() },
     });
-    if (result.count !== 1) {
-      return res.status(404).json({
-        success: false,
-        code: 'MENU_NOT_FOUND',
-        message: 'Menu tidak ditemukan.',
-      });
-    }
     return res.status(200).json({
       success: true,
-      message: 'Menu berhasil dihapus dari daftar jualan kantin.',
+      message: 'Menu berhasil dihapus',
     });
   } catch (error) {
     return next(error);
@@ -237,7 +229,13 @@ const listCanteenMenus = async (req, res, next) => {
   try {
     const canteen = await prisma.canteen.findUnique({
       where: { id: req.params.id },
-      select: { id: true },
+      select: {
+        id: true,
+        name: true,
+        building: true,
+        location: true,
+        imageUrl: true,
+      },
     });
 
     if (!canteen) {
@@ -246,9 +244,23 @@ const listCanteenMenus = async (req, res, next) => {
 
     const menus = await prisma.menu.findMany({
       where: { canteenId: canteen.id, isDeleted: false, isActive: true },
+      include: {
+        canteen: {
+          select: {
+            id: true,
+            name: true,
+            building: true,
+            location: true,
+            imageUrl: true,
+          },
+        },
+      },
       orderBy: { name: 'asc' },
     });
-    return res.json(menus);
+    return res.json(menus.map((menu) => ({
+      ...menu,
+      canteenName: menu.canteen.name,
+    })));
   } catch (error) {
     return next(error);
   }

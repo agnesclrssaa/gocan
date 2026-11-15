@@ -64,16 +64,16 @@ const MenuCard = ({ menu, canteen }) => {
         <div className="flex flex-1 flex-col justify-between p-4">
 
           <div>
-            <p className="text-[13px] font-medium text-slate-500">
-              {canteen?.name || menu.canteenName || 'Kantin GoCan'}
+            <p className="text-sm font-medium text-slate-500">
+              {menu.canteen?.name || menu.canteenName || canteen?.name || 'Kantin GoCan'}
             </p>
 
             <h3 className="mt-2 text-sm sm:text-base font-extrabold leading-snug text-slate-800 transition-colors duration-200 group-hover:text-[#2152B7]">
               {menu.name}
             </h3>
 
-            <p className="mt-2 min-h-[40px] text-[13px] leading-relaxed text-slate-500">
-              {menu.description || `${menu.category || 'Menu'} pilihan dari ${canteen?.name || 'kantin kampus'}.`}
+            <p className="mt-3 min-h-[48px] text-sm leading-relaxed text-slate-500">
+              {menu.description || `${menu.category || 'Menu'} pilihan dari ${menu.canteen?.name || menu.canteenName || canteen?.name || 'kantin kampus'}.`}
             </p>
           </div>
 

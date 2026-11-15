@@ -131,6 +131,19 @@ export const AuthProvider = ({ children }) => {
     return fetchProfile();
   }, [fetchProfile]);
 
+  const updateProfile = useCallback(async (updates) => {
+    const result = await api.put('/users/profile', updates);
+    if (!result?.data) {
+      throw new Error('Respons pembaruan profil dari server tidak lengkap.');
+    }
+
+    setUser((currentUser) => ({ ...currentUser, ...result.data }));
+    setProfile((currentProfile) =>
+      normalizeProfile({ ...currentProfile, ...result.data })
+    );
+    return result.data;
+  }, []);
+
   useEffect(() => {
     const handleApiAuthError = (event) => {
       if (event.detail?.status === 401) {
@@ -237,6 +250,7 @@ export const AuthProvider = ({ children }) => {
         signIn: login,
         signOut,
         refreshProfile,
+        updateProfile,
       }}
     >
       {children}
