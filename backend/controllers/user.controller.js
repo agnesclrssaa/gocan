@@ -49,6 +49,8 @@ const getProfile = async (req, res, next) => {
 const updateProfile = async (req, res, next) => {
   try {
     const body = req.body;
+    const avatarFile = req.files?.avatar?.[0];
+    const canteenImageFile = req.files?.canteenImage?.[0];
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return res.status(400).json({
         success: false,
@@ -56,17 +58,10 @@ const updateProfile = async (req, res, next) => {
       });
     }
 
-    if (Object.prototype.hasOwnProperty.call(body, 'email')) {
-      return res.status(400).json({
-        success: false,
-        code: 'EMAIL_UPDATE_NOT_ALLOWED',
-        message: 'Alamat email tidak dapat diubah melalui endpoint profil.',
-      });
-    }
-
     const allowedFields = new Set([
       'name',
       'phoneNumber',
+      'email',
       'avatarUrl',
       'defaultBuilding',
       'defaultRoom',
@@ -81,7 +76,7 @@ const updateProfile = async (req, res, next) => {
       });
     }
 
-    if (Object.keys(body).length === 0 && !req.file) {
+    if (Object.keys(body).length === 0 && !avatarFile && !canteenImageFile) {
       return res.status(400).json({
         success: false,
         message: 'Masukkan setidaknya satu data profil untuk diperbarui.',
@@ -96,6 +91,37 @@ const updateProfile = async (req, res, next) => {
         success: false,
         message: 'Nama wajib berupa teks dengan panjang 2 hingga 100 karakter.',
       });
+    }
+
+    if (
+      body.email !== undefined &&
+      (
+        typeof body.email !== 'string' ||
+        body.email.trim().length > 254 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Alamat email tidak valid.',
+      });
+    }
+
+    if (body.email !== undefined) {
+      const email = body.email.trim().toLowerCase();
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email,
+          id: { not: req.auth.userId },
+        },
+        select: { id: true },
+      });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email sudah digunakan oleh akun lain',
+        });
+      }
     }
 
     if (
@@ -140,6 +166,7 @@ const updateProfile = async (req, res, next) => {
 
     const data = {};
     if (body.name !== undefined) data.name = body.name.trim();
+    if (body.email !== undefined) data.email = body.email.trim().toLowerCase();
     if (body.phoneNumber !== undefined) {
       data.phoneNumber = typeof body.phoneNumber === 'string' && body.phoneNumber.trim()
         ? body.phoneNumber.trim()
@@ -150,8 +177,8 @@ const updateProfile = async (req, res, next) => {
         data[field] = typeof body[field] === 'string' ? body[field].trim() || null : null;
       }
     }
-    if (req.file) {
-      data.avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    if (avatarFile) {
+      data.avatarUrl = `/uploads/${avatarFile.filename}`;
     }
 
     const user = await prisma.$transaction(async (transaction) => {
@@ -161,10 +188,18 @@ const updateProfile = async (req, res, next) => {
         select: profileSelect,
       });
 
-      if (req.auth.role === 'canteen' && body.name !== undefined && updatedUser.canteen) {
+      if (
+        req.auth.role === 'canteen' &&
+        (body.name !== undefined || canteenImageFile) &&
+        updatedUser.canteen
+      ) {
+        const canteenData = {};
+        if (body.name !== undefined) canteenData.name = data.name;
+        if (canteenImageFile) canteenData.imageUrl = `/uploads/${canteenImageFile.filename}`;
+
         const canteen = await transaction.canteen.update({
           where: { id: updatedUser.canteen.id },
-          data: { name: data.name },
+          data: canteenData,
           select: {
             id: true,
             name: true,

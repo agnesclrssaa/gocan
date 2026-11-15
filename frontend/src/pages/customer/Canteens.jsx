@@ -221,7 +221,10 @@ export const Canteens = () => {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {filteredCanteens.map((canteen) => {
                 const isOpen = canteen.isOpen ?? canteen.is_open;
-                const image = canteen.imageUrl || canteen.image_url || FALLBACK_IMAGE;
+                const image = canteen.imageUrl || canteen.image_url;
+                const imageSrc = image?.startsWith('/uploads')
+                  ? api.assetUrl(image)
+                  : image || FALLBACK_IMAGE;
 
                 return (
                   <article
@@ -234,7 +237,7 @@ export const Canteens = () => {
                       className="relative block h-48 overflow-hidden bg-slate-100"
                     >
                       <img
-                        src={image}
+                        src={imageSrc}
                         alt={canteen.name || 'Foto kantin'}
                         loading="lazy"
                         onError={(event) => {

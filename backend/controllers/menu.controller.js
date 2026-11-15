@@ -218,8 +218,18 @@ const listCanteens = async (_req, res, next) => {
   try {
     const canteens = await prisma.canteen.findMany({
       orderBy: { name: 'asc' },
+      include: {
+        users: {
+          where: { role: 'canteen' },
+          select: { avatarUrl: true },
+          take: 1,
+        },
+      },
     });
-    res.json(canteens);
+    res.json(canteens.map(({ users, ...canteen }) => ({
+      ...canteen,
+      imageUrl: canteen.imageUrl || users[0]?.avatarUrl || null,
+    })));
   } catch (error) {
     next(error);
   }

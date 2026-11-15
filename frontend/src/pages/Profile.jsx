@@ -7,12 +7,19 @@ import { api } from '../lib/api';
 const emptyForm = {
   name: '',
   phoneNumber: '',
+  email: '',
   defaultBuilding: '',
   defaultRoom: '',
   bankName: '',
   accountNumber: '',
   accountHolderName: '',
 };
+
+const canteenProfileFields = [
+  { name: 'name', label: 'Nama Mitra', required: true, maxLength: 100 },
+  { name: 'phoneNumber', label: 'Nomor Telepon', type: 'tel', maxLength: 14 },
+  { name: 'email', label: 'Email', type: 'email', required: true, maxLength: 254 },
+];
 
 const profileFields = [
   { name: 'name', label: 'Nama lengkap', required: true, maxLength: 100 },
@@ -38,17 +45,22 @@ const roleHome = {
 };
 
 export default function Profile() {
-  const { profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile } = useAuth();
+  const isCanteen = user?.role === 'canteen';
   const [form, setForm] = useState(() => createForm(profile));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('');
+  const [canteenImageFile, setCanteenImageFile] = useState(null);
+  const [canteenImagePreview, setCanteenImagePreview] = useState('');
   const avatarPreviewRef = useRef('');
+  const canteenImagePreviewRef = useRef('');
 
   useEffect(() => () => {
     if (avatarPreviewRef.current) URL.revokeObjectURL(avatarPreviewRef.current);
+    if (canteenImagePreviewRef.current) URL.revokeObjectURL(canteenImagePreviewRef.current);
   }, []);
 
   const handleAvatarChange = (event) => {
@@ -74,6 +86,29 @@ export default function Profile() {
     setNotice('');
   };
 
+  const handleCanteenImageChange = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setError('Foto tempat harus berformat JPEG, PNG, atau WebP.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Ukuran foto tempat maksimal 5 MB.');
+      return;
+    }
+
+    if (canteenImagePreviewRef.current) URL.revokeObjectURL(canteenImagePreviewRef.current);
+    const preview = URL.createObjectURL(file);
+    canteenImagePreviewRef.current = preview;
+    setCanteenImagePreview(preview);
+    setCanteenImageFile(file);
+    setError('');
+    setNotice('');
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -82,8 +117,12 @@ export default function Profile() {
 
     try {
       const formData = new FormData();
-      Object.entries(form).forEach(([field, value]) => formData.append(field, value));
+      const fieldsToSubmit = isCanteen
+        ? ['name', 'phoneNumber', 'email']
+        : Object.keys(form).filter((field) => field !== 'email');
+      fieldsToSubmit.forEach((field) => formData.append(field, form[field]));
       if (avatarFile) formData.append('avatar', avatarFile);
+      if (isCanteen && canteenImageFile) formData.append('canteenImage', canteenImageFile);
 
       await updateProfile(formData);
       if (avatarPreviewRef.current) {
@@ -92,6 +131,12 @@ export default function Profile() {
       }
       setAvatarPreview('');
       setAvatarFile(null);
+      if (canteenImagePreviewRef.current) {
+        URL.revokeObjectURL(canteenImagePreviewRef.current);
+        canteenImagePreviewRef.current = '';
+      }
+      setCanteenImagePreview('');
+      setCanteenImageFile(null);
       setNotice('Profil berhasil diperbarui.');
     } catch (saveError) {
       setError(saveError.message || 'Gagal menyimpan profil.');
@@ -99,6 +144,37 @@ export default function Profile() {
       setSaving(false);
     }
   };
+
+  const avatarPicker = (
+    <div className="relative h-16 w-16 shrink-0">
+      {avatarPreview || profile?.avatarUrl ? (
+        <img
+          src={avatarPreview || api.assetUrl(profile.avatarUrl)}
+          alt="Foto profil"
+          className="h-16 w-16 rounded-full border border-slate-200 object-cover"
+        />
+      ) : (
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-800">
+          <UserRound className="h-8 w-8" />
+        </div>
+      )}
+      <label
+        htmlFor="profile-avatar"
+        className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#0A2E6E] text-white shadow-sm transition hover:bg-[#082457]"
+        title="Pilih foto profil"
+      >
+        <ImageUp className="h-4 w-4" />
+        <input
+          id="profile-avatar"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleAvatarChange}
+          disabled={saving}
+          className="sr-only"
+        />
+      </label>
+    </div>
+  );
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-800 sm:px-6">
@@ -112,43 +188,18 @@ export default function Profile() {
         </Link>
 
         <header className="flex items-center gap-4">
-          <div className="relative h-16 w-16 shrink-0">
-            {avatarPreview || profile?.avatarUrl ? (
-              <img
-                src={avatarPreview || api.assetUrl(profile.avatarUrl)}
-                alt="Foto profil"
-                className="h-16 w-16 rounded-full border border-slate-200 object-cover"
-              />
-            ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-800">
-                <UserRound className="h-8 w-8" />
-              </div>
-            )}
-            <label
-              htmlFor="profile-avatar"
-              className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#0A2E6E] text-white shadow-sm transition hover:bg-[#082457]"
-              title="Pilih foto profil"
-            >
-              <ImageUp className="h-4 w-4" />
-              <input
-                id="profile-avatar"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleAvatarChange}
-                disabled={saving}
-                className="sr-only"
-              />
-            </label>
-          </div>
+          {!isCanteen && avatarPicker}
           <div>
             <h1 className="text-2xl font-black">Edit Profil</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Perbarui informasi akun dan data pengantaran Anda.
+              {isCanteen ? 'Perbarui informasi akun Anda.' : 'Perbarui informasi akun dan data pengantaran Anda.'}
             </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Foto profil JPEG, PNG, atau WebP (maks. 5 MB)
-              {avatarFile ? ` · ${avatarFile.name}` : ''}
-            </p>
+            {!isCanteen && (
+              <p className="mt-1 text-xs text-slate-500">
+                Foto profil JPEG, PNG, atau WebP (maks. 5 MB)
+                {avatarFile ? ` · ${avatarFile.name}` : ''}
+              </p>
+            )}
           </div>
         </header>
 
@@ -169,7 +220,57 @@ export default function Profile() {
           onSubmit={handleSubmit}
           className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"
         >
-          {profileFields.map(({ name, label, type = 'text', required, maxLength }) => (
+          {isCanteen && (
+            <>
+              <div className="flex items-center gap-4">
+                {avatarPicker}
+                <div className="text-sm">
+                  <p className="font-semibold">Foto Profil</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    JPEG, PNG, atau WebP (maks. 5 MB)
+                    {avatarFile ? ` · ${avatarFile.name}` : ''}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Foto Tempat / Banner Kantin</p>
+                <label
+                  htmlFor="canteen-banner"
+                  className="mt-1 block cursor-pointer overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 transition hover:border-blue-500"
+                >
+                  {canteenImagePreview || profile?.canteen?.imageUrl ? (
+                    <img
+                      src={
+                        canteenImagePreview ||
+                        api.assetUrl(profile.canteen.imageUrl)
+                      }
+                      alt="Pratinjau banner kantin"
+                      className="aspect-[16/7] w-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex aspect-[16/7] flex-col items-center justify-center gap-2 text-sm text-slate-500">
+                      <ImageUp className="h-6 w-6" />
+                      Pilih foto banner kantin
+                    </span>
+                  )}
+                  <input
+                    id="canteen-banner"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleCanteenImageChange}
+                    disabled={saving}
+                    className="sr-only"
+                  />
+                </label>
+                <p className="mt-1 text-xs text-slate-500">
+                  JPEG, PNG, atau WebP (maks. 5 MB)
+                  {canteenImageFile ? ` · ${canteenImageFile.name}` : ''}
+                </p>
+              </div>
+            </>
+          )}
+
+          {(isCanteen ? canteenProfileFields : profileFields).map(({ name, label, type = 'text', required, maxLength }) => (
             <label key={name} className="block text-sm font-semibold">
               {label}
               <input
@@ -181,7 +282,15 @@ export default function Profile() {
                 }))}
                 required={required}
                 maxLength={maxLength}
-                autoComplete={name === 'name' ? 'name' : name === 'phoneNumber' ? 'tel' : undefined}
+                autoComplete={
+                  name === 'name'
+                    ? 'name'
+                    : name === 'phoneNumber'
+                      ? 'tel'
+                      : name === 'email'
+                        ? 'email'
+                        : undefined
+                }
                 className="mt-1 w-full rounded-lg border border-slate-200 p-2.5 font-normal outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
               />
             </label>
