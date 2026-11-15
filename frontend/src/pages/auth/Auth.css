@@ -742,3 +742,128 @@ transform: translateY(-10px);
   min-height: 38px;
   font-size: 13px;
 }
+
+.auth-reset-notice,
+.auth-reset-dev-otp {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.auth-reset-dev-otp {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.auth-reset-dev-otp strong {
+  margin-left: 4px;
+  font-size: 16px;
+  letter-spacing: 0.12em;
+}
+
+.auth-reset-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 20px;
+  background: rgb(15 23 42 / 65%);
+  backdrop-filter: blur(5px);
+}
+
+.auth-reset-modal {
+  position: relative;
+  width: min(100%, 460px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 30px;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgb(15 23 42 / 25%);
+}
+
+.auth-reset-modal .auth-heading h2 {
+  margin: 0 36px 8px 0;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.auth-reset-modal .auth-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.auth-reset-modal .gocan-auth-form > label {
+  color: #334155;
+}
+
+.auth-reset-modal .gocan-auth-form input:not([type="checkbox"]) {
+  border-color: #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+}
+
+.auth-reset-modal .gocan-auth-form input::placeholder {
+  color: #94a3b8;
+}
+
+.auth-reset-modal .gocan-auth-form input:focus {
+  border-color: #0755b5;
+  box-shadow: 0 0 0 3px rgb(7 85 181 / 12%);
+}
+
+.auth-reset-modal .auth-text-button {
+  color: #0755b5;
+}
+
+.auth-reset-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.auth-reset-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.auth-reset-modal .auth-text-button {
+  align-self: center;
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .auth-reset-backdrop {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .auth-reset-modal {
+    max-height: calc(100vh - 24px);
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+}

@@ -35,11 +35,13 @@ const createUploader = (directory, prefix) => multer({
 });
 
 const upload = createUploader(uploadDirectory, 'menu');
+const uploadProfile = createUploader(uploadDirectory, 'profile');
 const uploadAvatar = createUploader(avatarUploadDirectory, 'avatar');
 const uploadKtm = createUploader(privateUploadDirectory, 'ktm');
 
 module.exports = {
   upload,
+  uploadProfile,
   uploadAvatar,
   uploadKtm,
   multer,

@@ -5,18 +5,21 @@ const {
   updateProfile,
 } = require('../controllers/user.controller');
 const requireAuth = require('../middlewares/requireAuth');
-const { uploadAvatar, multer } = require('../middlewares/upload.middleware');
+const { uploadProfile, multer } = require('../middlewares/upload.middleware');
 
 const router = Router();
 
-const uploadSingleAvatar = (req, res, next) => {
-  uploadAvatar.single('avatar')(req, res, (error) => {
+const uploadProfileImages = (req, res, next) => {
+  uploadProfile.fields([
+    { name: 'avatar', maxCount: 1 },
+    { name: 'canteenImage', maxCount: 1 },
+  ])(req, res, (error) => {
     if (!error) return next();
 
     if (error instanceof multer.MulterError) {
       const message = error.code === 'LIMIT_FILE_SIZE'
-        ? 'Ukuran foto profil maksimal 5 MB.'
-        : 'Unggah satu file gambar menggunakan field "avatar".';
+        ? 'Ukuran setiap foto maksimal 5 MB.'
+        : 'Unggah maksimal satu foto profil dan satu foto banner kantin.';
       return res.status(400).json({ success: false, message });
     }
 
@@ -30,7 +33,7 @@ const uploadSingleAvatar = (req, res, next) => {
 
 router.use(requireAuth);
 router.get('/profile', getProfile);
-router.put('/profile', uploadSingleAvatar, updateProfile);
+router.put('/profile', uploadProfileImages, updateProfile);
 router.put('/change-password', changePassword);
 
 module.exports = router;

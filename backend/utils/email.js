@@ -44,4 +44,27 @@ const sendRunnerApprovalEmail = async ({ name, email, status, reason }) => {
   return { sent: true, message: 'Email notifikasi berhasil dikirim.' };
 };
 
-module.exports = { sendRunnerApprovalEmail };
+const sendPasswordResetEmail = async ({ name, email, otp }) => {
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM } = process.env;
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD || !SMTP_FROM) {
+    return { sent: false, message: 'Konfigurasi email belum tersedia.' };
+  }
+
+  const transport = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: Number(SMTP_PORT) || 587,
+    secure: Number(SMTP_PORT) === 465,
+    auth: { user: SMTP_USER, pass: SMTP_PASSWORD },
+  });
+  const safeName = escapeHtml(name);
+  await transport.sendMail({
+    from: SMTP_FROM,
+    to: email,
+    subject: 'Kode OTP reset password GoCan',
+    text: `Halo ${name}, kode OTP untuk reset password GoCan Anda adalah ${otp}. Kode ini berlaku selama 15 menit. Jika Anda tidak meminta reset password, abaikan email ini.`,
+    html: `<p>Halo ${safeName},</p><p>Kode OTP untuk reset password GoCan Anda:</p><p style="font-size:28px;font-weight:bold;letter-spacing:6px">${otp}</p><p>Kode ini berlaku selama 15 menit. Jika Anda tidak meminta reset password, abaikan email ini.</p>`,
+  });
+  return { sent: true, message: 'Email OTP berhasil dikirim.' };
+};
+
+module.exports = { sendPasswordResetEmail, sendRunnerApprovalEmail };
