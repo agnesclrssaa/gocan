@@ -27,7 +27,7 @@ migrateLegacyToken();
 const client = axios.create({ baseURL: API_BASE_URL });
 
 const isPublicAuthRequest = (url = '') =>
-  /\/auth\/(login|register)\/?$/.test(url.split('?')[0]);
+  /\/auth\/(login|register|forgot-password|reset-password)\/?$/.test(url.split('?')[0]);
 
 const getErrorMessage = (requestError) => {
   const status = requestError.response?.status;

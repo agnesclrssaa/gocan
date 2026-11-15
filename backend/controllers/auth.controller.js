@@ -1,7 +1,8 @@
 const bcrypt = require('bcryptjs');
-const { randomUUID } = require('crypto');
+const { randomInt, randomUUID } = require('crypto');
 const jwt = require('jsonwebtoken');
 const prisma = require('../src/lib/prisma');
+const { sendPasswordResetEmail } = require('../utils/email');
 
 const createToken = (user) =>
   jwt.sign(
@@ -254,4 +255,118 @@ const login = async (req, res, next) => {
   }
 };
 
-module.exports = { getMe, login, register, updateRunnerProfile };
+const forgotPassword = async (req, res, next) => {
+  try {
+    const email = typeof req.body?.email === 'string'
+      ? req.body.email.trim().toLowerCase()
+      : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, message: 'Email tidak valid.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, name: true, email: true },
+    });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Email tidak terdaftar.' });
+    }
+
+    const resetOtp = randomInt(0, 1_000_000).toString().padStart(6, '0');
+    const resetOtpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetOtp, resetOtpExpiresAt },
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Password reset OTP for ${user.email}: ${resetOtp}`);
+    }
+
+    await sendPasswordResetEmail({
+      name: user.name,
+      email: user.email,
+      otp: resetOtp,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Kode OTP telah dikirim ke email Anda.',
+      ...(process.env.NODE_ENV !== 'production' ? { devOtp: resetOtp } : {}),
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const email = typeof req.body?.email === 'string'
+      ? req.body.email.trim().toLowerCase()
+      : '';
+    const { otp, newPassword } = req.body || {};
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      typeof otp !== 'string' ||
+      !/^\d{6}$/.test(otp) ||
+      typeof newPassword !== 'string' ||
+      newPassword.length < 8 ||
+      newPassword.length > 128
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, kode OTP 6 digit, dan password baru minimal 8 karakter wajib diisi.',
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, resetOtp: true, resetOtpExpiresAt: true },
+    });
+    const now = new Date();
+    if (
+      !user ||
+      user.resetOtp !== otp ||
+      !user.resetOtpExpiresAt ||
+      now >= user.resetOtpExpiresAt
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Kode OTP tidak valid atau sudah kedaluwarsa.',
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    const updated = await prisma.user.updateMany({
+      where: {
+        id: user.id,
+        resetOtp: otp,
+        resetOtpExpiresAt: { gt: now },
+      },
+      data: {
+        password: hashedPassword,
+        resetOtp: null,
+        resetOtpExpiresAt: null,
+      },
+    });
+    if (updated.count !== 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Kode OTP tidak valid atau sudah kedaluwarsa.',
+      });
+    }
+
+    return res.json({ success: true, message: 'Password berhasil diperbarui' });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = {
+  forgotPassword,
+  getMe,
+  login,
+  register,
+  resetPassword,
+  updateRunnerProfile,
+};

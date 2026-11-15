@@ -24,6 +24,8 @@ model User {
   bankName          String?  @map("bank_name")
   accountNumber     String?  @map("account_number")
   accountHolderName String?  @map("account_holder_name")
+  resetOtp          String?
+  resetOtpExpiresAt DateTime?
   canteenId         String?
   canteen           Canteen? @relation(fields: [canteenId], references: [id], onDelete: SetNull)
   orders            Order[]
