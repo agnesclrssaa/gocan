@@ -1,0 +1,9 @@
+node_modules
+/uploads/
+/private-uploads/
+# Keep environment variables out of version control
+.env
+/prisma/*.db
+/prisma/*.db-journal
+
+/generated/prisma
