@@ -211,7 +211,6 @@ scheduledTime,
         meetingPoint: orderType === 'delivery' ? meetingPoint.trim() : null,
         classInfo: orderType === 'delivery' ? classInfo.trim() : null,
         deliveryNote: orderType === 'delivery' ? additionalNote.trim() : pickupNote.trim(),
->>>>>>> 8466e8d987e5d2648f68fd3799c0a99c630dbd0a
       });
 
     const confirmedOrderId = Number(order?.id);

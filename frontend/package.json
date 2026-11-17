@@ -8,18 +8,9 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-<<<<<<< HEAD
-    "create:test-user": "node scripts/create-test-user.mjs",
-    "create:test-canteen-user": "node scripts/create-test-canteen-user.mjs"
-  },
-  "dependencies": {
-    "@supabase/server": "^1.9.2",
-    "@supabase/supabase-js": "^2.117.2",
-=======
     "test:e2e": "playwright test"
   },
   "dependencies": {
->>>>>>> 8466e8d987e5d2648f68fd3799c0a99c630dbd0a
     "axios": "^1.21.0",
     "html5-qrcode": "^2.3.8",
     "jsqr": "^1.4.0",

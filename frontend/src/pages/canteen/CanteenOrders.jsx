@@ -23,6 +23,10 @@ const getDisplayStatus = (status) => {
   return 'lainnya';
 };
 
+const isDigitalPaymentPending = (order) =>
+  ['QRIS', 'DEBIT'].includes(String(order.paymentMethod || '').toUpperCase()) &&
+  String(order.paymentStatus || '').toUpperCase() !== 'PAID';
+
 const getItemSummary = (items) =>
   (Array.isArray(items) ? items : [])
     .map((item) => {
@@ -258,44 +262,26 @@ export default function CanteenOrders() {
 
             <div className="flex justify-end border-t border-slate-100 pt-3">
               {order.status === 'pending' && (
-                <button
-                  type="button"
-                  disabled={updatingOrderId === order.id}
-                  onClick={() => updateOrderStatus(order.id, 'cooking')}
-                  className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60"
-                >
-                 {order.status === 'pending' && (
-  <div className="space-y-2 text-right">
-    {['QRIS', 'DEBIT'].includes(
-      String(order.paymentMethod).toUpperCase()
-    ) &&
-      String(order.paymentStatus).toUpperCase() !== 'PAID' && (
-        <p className="text-xs font-semibold text-amber-800">
-          Menunggu konfirmasi pembayaran dari admin pusat.
-        </p>
-      )}
-
-    <button
-      type="button"
-      disabled={
-        updatingOrderId === order.id ||
-        (
-          ['QRIS', 'DEBIT'].includes(
-            String(order.paymentMethod).toUpperCase()
-          ) &&
-          String(order.paymentStatus).toUpperCase() !== 'PAID'
-        )
-      }
-      onClick={() => updateOrderStatus(order.id, 'cooking')}
-      className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {updatingOrderId === order.id
-        ? 'Menyimpan...'
-        : 'Terima Pesanan'}
-    </button>
-  </div>
-)}
-                </button>
+                <div className="space-y-2 text-right">
+                  {isDigitalPaymentPending(order) && (
+                    <p className="text-xs font-semibold text-amber-800">
+                      Menunggu konfirmasi pembayaran. Pesanan belum dapat diproses.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    disabled={
+                      updatingOrderId === order.id ||
+                      isDigitalPaymentPending(order)
+                    }
+                    onClick={() => updateOrderStatus(order.id, 'cooking')}
+                    className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {updatingOrderId === order.id
+                      ? 'Menyimpan...'
+                      : 'Terima Pesanan'}
+                  </button>
+                </div>
               )}
               {order.status === 'cooking' && (
                 <button
