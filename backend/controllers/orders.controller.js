@@ -54,6 +54,7 @@ const listOrders = async (req, res, next) => {
         courier: { select: { id: true, name: true } },
         runner: { select: { id: true, name: true } },
       },
+>>>>>>> 8466e8d987e5d2648f68fd3799c0a99c630dbd0a
       orderBy: { createdAt: 'desc' },
     });
     return res.status(200).json(orders.map((order) => {
@@ -76,6 +77,9 @@ const listOrders = async (req, res, next) => {
   }
 };
 
+<<<<<<< HEAD
+module.exports = { listOrders };
+=======
 const getOrder = async (req, res, next) => {
   try {
     const orderId = Number(req.params.id);

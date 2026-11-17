@@ -119,6 +119,7 @@ const OrderCard = ({ order, preview }) => {
   );
 };
 
+>>>>>>> 8466e8d987e5d2648f68fd3799c0a99c630dbd0a
 export const History = () => {
   const preview = useCustomerPreview();
   const { user } = useAuth();
@@ -378,6 +379,7 @@ pastOrders.map((order) => (
             </div>
           )}
         </section>
+>>>>>>> 8466e8d987e5d2648f68fd3799c0a99c630dbd0a
       </main>
     </div>
   );

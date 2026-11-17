@@ -51,6 +51,9 @@ const isValidScheduledTime = (scheduledTime, createdAt) => {
 
 const createOrder = async (req, res, next) => {
   try {
+<<<<<<< HEAD
+    let { items, totalPrice, canteenId } = req.body || {};
+=======
     let {
       items,
       canteenId,
@@ -111,6 +114,7 @@ const createOrder = async (req, res, next) => {
           value !== null &&
           (typeof value !== 'string' || value.length > 500)
       )
+>>>>>>> 8466e8d987e5d2648f68fd3799c0a99c630dbd0a
     ) {
       return res.status(400).json({
         error: 'Item pesanan, tipe pesanan, metode pembayaran, dan lokasi tujuan harus valid.',
