@@ -2,7 +2,7 @@
   "name": "gocan-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "GoCan Express API with Prisma and SQLite",
+  "description": "GoCan Express API with Prisma and PostgreSQL",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

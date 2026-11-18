@@ -45,7 +45,7 @@ export default function SplashScreen({ onComplete, onSkip }) {
 
         <div className="splash-logo-wrapper">
           <img
-            src="/gocan-logo.png"
+            src={`${import.meta.env.BASE_URL}gocan-logo.png`}
             alt="GoCan"
             className="splash-logo"
           />

@@ -35,29 +35,13 @@ const uploadRoutes = require('./routes/upload.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
-const port = Number(process.env.PORT) || 5001;
-const allowedOrigins = new Set([
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-]);
-
-if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.add('http://127.0.0.1:4174');
-}
+const PORT = process.env.PORT || 5000;
 
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   throw new Error('JWT_SECRET harus diatur dan memiliki panjang minimal 32 karakter.');
 }
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.has(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error(`Origin tidak diizinkan oleh CORS: ${origin}`));
-    },
-  })
-);
+app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json({ limit: '1mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -110,7 +94,7 @@ process.once('SIGTERM', () => shutdown('SIGTERM'));
 function logStartupReady() {
   if (databaseReady && listenerReady && !startupLogged) {
     startupLogged = true;
-    console.log(`GoCan API listening on http://localhost:${port}`);
+    console.log(`GoCan API listening on port ${PORT}`);
   }
 }
 
@@ -121,12 +105,12 @@ prisma
     logStartupReady();
   })
   .catch(async (error) => {
-    console.error('Could not connect to the SQLite database:', error);
+    console.error('Could not connect to the database:', error);
     process.exitCode = 1;
     await shutdown('database connection failure');
   });
 
-server = app.listen(port);
+server = app.listen(Number(PORT));
 server.on('listening', () => {
   listenerReady = true;
   logStartupReady();

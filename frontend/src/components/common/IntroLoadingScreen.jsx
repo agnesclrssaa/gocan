@@ -7,7 +7,7 @@ export default function IntroLoadingScreen() {
     <div className="relative flex min-h-screen min-h-[100svh] flex-col overflow-hidden bg-[#F8F7F2] font-sans text-slate-900">
       <div className="absolute inset-0">
         <img
-          src="/background_landing_page - GoCan.jpeg"
+          src={`${import.meta.env.BASE_URL}background_landing_page - GoCan.jpeg`}
           alt=""
           aria-hidden="true"
           className="h-full w-full object-cover object-center"

@@ -604,7 +604,12 @@ canteenDescription:
         {/* 3. PROMO BANNER */}
         {/* ================================== */}
 
-        <div className="customer-card promo-banner text-white rounded-2xl md:rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+        <div
+          className="customer-card promo-banner text-white rounded-2xl md:rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6"
+          style={{
+            backgroundImage: `url("${import.meta.env.BASE_URL}assets/promo-banner-bg.png")`,
+          }}
+        >
 
           <div className="promo-banner-copy space-y-3 max-w-lg z-10">
 
@@ -627,7 +632,7 @@ canteenDescription:
 
           <div className="promo-banner-art">
             <img
-              src="/assets/promo-food.png"
+              src={`${import.meta.env.BASE_URL}assets/promo-food.png`}
               alt="Makanan dan minuman promo"
               className="promo-food-image"
             />

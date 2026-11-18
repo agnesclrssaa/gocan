@@ -159,7 +159,7 @@ const filteredCanteens = useMemo(() => {
           </div>
           <div className="explore-canteens-art">
             <img
-              src="/assets/happy-mascot.png"
+              src={`${import.meta.env.BASE_URL}assets/happy-mascot.png`}
               alt="Maskot GoCan"
               className="explore-canteens-mascot"
             />

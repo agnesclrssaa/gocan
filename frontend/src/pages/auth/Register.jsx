@@ -130,7 +130,7 @@ export default function Register() {
       <section className="gocan-auth-visual">
 
         <Link to="/" className="gocan-auth-logo">
-          <img src="/assets/gocan.png" alt="GoCan" />
+          <img src={`${import.meta.env.BASE_URL}assets/gocan.png`} alt="GoCan" />
         </Link>
 
         <div className="gocan-mascot-wrap">
@@ -140,7 +140,7 @@ export default function Register() {
           <span className="mascot-spark spark-three" />
 
           <img
-            src="/assets/mascot-gocan-transparent.png"
+            src={`${import.meta.env.BASE_URL}assets/mascot-gocan-transparent.png`}
             alt="Maskot GoCan"
             className="gocan-mascot"
           />

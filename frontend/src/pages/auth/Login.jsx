@@ -149,7 +149,7 @@ export default function Login() {
 
         <Link to="/" className="gocan-auth-logo">
           <img
-            src="/gocan-logo.png"
+            src={`${import.meta.env.BASE_URL}gocan-logo.png`}
             alt="GoCan Logo"
             className="gocan-logo-image"
           />
@@ -161,7 +161,7 @@ export default function Login() {
           <span className="mascot-spark spark-two" />
           <span className="mascot-spark spark-three" />
           <img
-            src="/assets/mascot-gocan-transparent.png"
+            src={`${import.meta.env.BASE_URL}assets/mascot-gocan-transparent.png`}
             alt="Maskot GoCan"
             className="gocan-mascot"
           />
