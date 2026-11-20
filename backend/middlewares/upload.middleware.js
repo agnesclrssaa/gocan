@@ -3,9 +3,14 @@ const path = require('path');
 const multer = require('multer');
 const { randomBytes } = require('crypto');
 
-const uploadDirectory = path.join(__dirname, '..', 'uploads');
+const isServerless = Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production';
+const uploadDirectory = isServerless
+  ? '/tmp/uploads'
+  : path.join(__dirname, '..', 'uploads');
 const avatarUploadDirectory = path.join(uploadDirectory, 'avatars');
-const privateUploadDirectory = path.join(__dirname, '..', 'private-uploads');
+const privateUploadDirectory = isServerless
+  ? '/tmp/private-uploads'
+  : path.join(__dirname, '..', 'private-uploads');
 const allowedImageTypes = new Map([
   ['image/jpeg', '.jpg'],
   ['image/png', '.png'],

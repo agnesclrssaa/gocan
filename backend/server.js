@@ -43,7 +43,15 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json({ limit: '1mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(
+  '/uploads',
+  express.static(
+    process.env.VERCEL || process.env.NODE_ENV === 'production'
+      ? '/tmp/uploads'
+      : path.join(__dirname, 'uploads'),
+  ),
+);
+app.get('/', (_req, res) => res.json({ status: 'GoCan API is running' }));
 
 app.use((_req, res, next) => {
   if (!databaseReady) {
@@ -88,9 +96,6 @@ async function shutdown(signal) {
   }
 }
 
-process.once('SIGINT', () => shutdown('SIGINT'));
-process.once('SIGTERM', () => shutdown('SIGTERM'));
-
 function logStartupReady() {
   if (databaseReady && listenerReady && !startupLogged) {
     startupLogged = true;
@@ -110,16 +115,23 @@ prisma
     await shutdown('database connection failure');
   });
 
-server = app.listen(Number(PORT));
-server.on('listening', () => {
-  listenerReady = true;
-  logStartupReady();
-});
-server.on('error', (error) => {
-  console.error('GoCan API listener error:', error);
-  process.exitCode = 1;
-  void shutdown('listener error');
-});
-server.on('close', () => {
-  console.error('GoCan API listener closed.');
-});
+if (require.main === module) {
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+
+  server = app.listen(Number(PORT));
+  server.on('listening', () => {
+    listenerReady = true;
+    logStartupReady();
+  });
+  server.on('error', (error) => {
+    console.error('GoCan API listener error:', error);
+    process.exitCode = 1;
+    void shutdown('listener error');
+  });
+  server.on('close', () => {
+    console.error('GoCan API listener closed.');
+  });
+}
+
+module.exports = app;
