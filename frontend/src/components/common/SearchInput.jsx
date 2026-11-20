@@ -195,7 +195,7 @@ export default function SearchInput({ value, onChange, className = '' }) {
                         {menu.canteen?.name || 'Kantin GoCan'}
                       </span>
                     </span>
-                    <span className="shrink-0 text-xs font-bold text-blue-800">
+                    <span className="gocan-price shrink-0 text-xs font-bold">
                       Rp {Number(menu.price).toLocaleString('id-ID')}
                     </span>
                   </Link>

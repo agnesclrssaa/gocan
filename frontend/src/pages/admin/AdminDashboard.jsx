@@ -174,7 +174,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="font-bold text-slate-900">Pesanan #{order?.id ?? '—'} · {order?.canteen?.name || 'Kantin'}</p>
                     <p className="mt-1 text-xs text-slate-500">
-                      {order?.user?.name || 'Pemesan'} · {Array.isArray(order?.items) ? order.items.length : 0} item · {currency.format(safeNumber(order?.totalPrice))}
+                      {order?.user?.name || 'Pemesan'} · {Array.isArray(order?.items) ? order.items.length : 0} item · <span className="gocan-price">{currency.format(safeNumber(order?.totalPrice))}</span>
                     </p>
                     <p className="mt-1 text-xs text-slate-500">{order?.buildingName || order?.meetingPoint || 'Lokasi belum dicantumkan'}</p>
                   </div>

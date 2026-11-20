@@ -28,6 +28,7 @@ import OrderTracking from './pages/customer/OrderTracking';
 import History from './pages/customer/History';
 import MenuPreview from './pages/customer/MenuPreview';
 import Profile from './pages/Profile';
+import Chat from './pages/customer/Chat';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -316,6 +317,8 @@ export function App() {
                 <Route path="/orders/:orderId" element={<OrderTracking />} />
                 <Route path="/order/:orderId" element={<OrderTracking />} />
                 <Route path="/history" element={<History />} />
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/chat/:conversationId" element={<Chat />} />
                 <Route path="/customer-preview">
                   <Route index element={<Home />} />
                   <Route path="canteen/:canteenId" element={<CanteenDetail />} />

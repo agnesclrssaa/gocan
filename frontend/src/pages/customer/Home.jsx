@@ -53,6 +53,8 @@ export const Home = () => {
   const [canteens, setCanteens] = useState([]);
   const [canteenMenus, setCanteenMenus] = useState({});
   const [bestSellerItems, setBestSellerItems] = useState([]);
+  const [showAllBestSellers, setShowAllBestSellers] = useState(false);
+  const [showAllMenuCards, setShowAllMenuCards] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -359,6 +361,17 @@ canteenDescription:
     appliedCategory,
     appliedSortBy,
   ]);
+
+  const filteredBestSellerItems = useMemo(
+    () => bestSellerItems.filter((item) => matchesMenuCategory(item, activeCategory)),
+    [bestSellerItems, activeCategory]
+  );
+  const displayedBestSellerItems = showAllBestSellers
+    ? filteredBestSellerItems
+    : filteredBestSellerItems.slice(0, 6);
+  const displayedMenus = showAllMenuCards
+    ? filteredMenus
+    : filteredMenus.slice(0, 6);
 
   // ==========================================
   // 8. TOMBOL FILTER BIRU GOCAN
@@ -704,29 +717,11 @@ canteenDescription:
               <span>Best Seller Kampus</span>
             </h2>
 
-            <button
-              type="button"
-              onClick={() => {
-                document
-                  .getElementById('daftar-menu')
-                  ?.scrollIntoView({
-                    behavior: 'smooth',
-                  });
-              }}
-              className="text-xs font-bold text-[#2152B7] hover:underline"
-            >
-              Lihat Semua
-            </button>
-
           </div>
 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {bestSellerItems
-              .filter((item) =>
-                matchesMenuCategory(item, activeCategory)
-              )
-              .map((item) => (
+            {displayedBestSellerItems.map((item) => (
                 <Link
                   key={item.id}
                   to={`/canteen/${item.canteenId}`}
@@ -749,7 +744,7 @@ canteenDescription:
                     </h3>
 
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-sm font-extrabold text-[#DC2626]">
+                      <span className="gocan-price text-sm font-extrabold">
                         Rp {Number(item.price).toLocaleString('id-ID')}
                       </span>
 
@@ -763,9 +758,7 @@ canteenDescription:
                 </Link>
               ))}
 
-            {bestSellerItems.filter((item) =>
-              matchesMenuCategory(item, activeCategory)
-            ).length === 0 && (
+            {filteredBestSellerItems.length === 0 && (
               <div className="customer-card sm:col-span-2 lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-8 text-center">
                 <PackageX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="font-bold text-slate-700 text-sm">
@@ -781,6 +774,17 @@ canteenDescription:
               </div>
             )}
           </div>
+
+          {filteredBestSellerItems.length > 6 && (
+            <button
+              type="button"
+              onClick={() => setShowAllBestSellers((current) => !current)}
+              className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+              aria-expanded={showAllBestSellers}
+            >
+              {showAllBestSellers ? 'Lihat Lebih Sedikit' : 'Lihat Semua'}
+            </button>
+          )}
 
         </div>
 
@@ -855,7 +859,7 @@ canteenDescription:
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-              {filteredMenus.map((menu) => {
+              {displayedMenus.map((menu) => {
 
                 const canteen = canteens.find(
                   (item) => item.id === menu.canteenId
@@ -888,6 +892,17 @@ canteenDescription:
 
             </div>
 
+          )}
+
+          {!loading && !error && filteredMenus.length > 6 && (
+            <button
+              type="button"
+              onClick={() => setShowAllMenuCards((current) => !current)}
+              className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+              aria-expanded={showAllMenuCards}
+            >
+              {showAllMenuCards ? 'Lihat Lebih Sedikit' : 'Lihat Semua'}
+            </button>
           )}
 
 

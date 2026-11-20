@@ -20,7 +20,7 @@ const sanitizeCartItem = (item) => {
     name: item.name || 'Menu',
     price: isNaN(rawPrice) || rawPrice < 0 ? 0 : rawPrice,
     quantity: isNaN(rawQty) || rawQty <= 0 ? 1 : rawQty,
-    notes: typeof item.notes === 'string' ? item.notes.trim() : '',
+    notes: typeof item.notes === 'string' ? item.notes : '',
     canteen_id: item.canteenId || item.canteen_id || null,
   };
 };
@@ -209,15 +209,11 @@ export const CartProvider = ({ children }) => {
    */
   const updateNotes = (cartItemId, newNotes) => {
     setCartItems((prev) => {
-      const target = prev.find((i) => i.cartItemId === cartItemId);
-      if (!target) return prev;
-
-      const trimmedNotes = (newNotes || '').trim();
-      const newCartItemId = `${target.id}-${trimmedNotes}`;
+      const notes = typeof newNotes === 'string' ? newNotes : '';
 
       return prev.map((i) =>
         i.cartItemId === cartItemId
-          ? { ...i, cartItemId: newCartItemId, notes: trimmedNotes }
+          ? { ...i, notes }
           : i
       );
     });

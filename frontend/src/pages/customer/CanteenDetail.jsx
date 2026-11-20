@@ -13,6 +13,7 @@ export const CanteenDetail = ({ preview = false }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState('Semua');
+  const [showAllMenus, setShowAllMenus] = useState(false);
 
   useEffect(() => {
     const fetchCanteenAndMenus = async () => {
@@ -20,6 +21,7 @@ export const CanteenDetail = ({ preview = false }) => {
         setLoading(true);
         setError(null);
         setActiveCategory('Semua');
+        setShowAllMenus(false);
 
         let selectedCanteen;
         let menuData;
@@ -67,6 +69,7 @@ export const CanteenDetail = ({ preview = false }) => {
     if (activeCategory === 'Semua') return menus;
     return menus.filter((item) => item.category?.trim() === activeCategory);
   }, [menus, activeCategory]);
+  const displayedMenus = showAllMenus ? filteredMenus : filteredMenus.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-[#F0F4F9] text-slate-800 font-sans selection:bg-[#2152B7] selection:text-white pb-32">
@@ -183,7 +186,7 @@ export const CanteenDetail = ({ preview = false }) => {
 
           {/* Menu grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredMenus.map((menu) => (
+            {displayedMenus.map((menu) => (
               <MenuCard
                 key={menu.id}
                 menu={menu}
@@ -191,6 +194,16 @@ export const CanteenDetail = ({ preview = false }) => {
               />
             ))}
           </div>
+          {filteredMenus.length > 6 && (
+            <button
+              type="button"
+              onClick={() => setShowAllMenus((current) => !current)}
+              className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+              aria-expanded={showAllMenus}
+            >
+              {showAllMenus ? 'Lihat Lebih Sedikit' : 'Lihat Semua'}
+            </button>
+          )}
           {filteredMenus.length === 0 && (
             <div className="customer-card rounded-2xl border border-slate-200 bg-white px-5 py-10 text-center">
               <p className="font-bold text-slate-700">

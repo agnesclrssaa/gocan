@@ -452,7 +452,7 @@ export default function OrderSuccess() {
                     )}
                   </div>
 
-                  <p className="shrink-0 font-semibold">
+                  <p className="gocan-price shrink-0 font-semibold">
                     {formatRupiah(
                       (Number(item.price) || 0) *
                         (Number(item.quantity) || 1)
@@ -470,7 +470,7 @@ export default function OrderSuccess() {
               <div className="flex justify-between gap-4 border-t border-dashed border-slate-200 pt-4 font-bold">
                 <span>Total pesanan</span>
 
-                <span className="text-[#2152B7]">
+                <span className="gocan-price">
                   {formatRupiah(getOrderTotal(currentOrder))}
                 </span>
               </div>

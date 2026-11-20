@@ -79,7 +79,7 @@ export default function CanteenMenu() {
                     <span>{item.name}</span>
                   </td>
                   <td className="py-3 px-4 text-slate-500 font-medium">{item.category}</td>
-                  <td className="py-3 px-4 font-bold text-slate-900">{item.price}</td>
+                  <td className="gocan-price py-3 px-4 font-bold">{item.price}</td>
                   <td className="py-3 px-4 text-slate-600">{item.soldCount} porsi</td>
                   <td className="py-3 px-4">
                     <button

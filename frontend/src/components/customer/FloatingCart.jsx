@@ -34,7 +34,8 @@ export const FloatingCart = () => {
             Berhasil ditambahkan ke keranjang
           </div>
           <div className="mt-0.5 truncate text-[11px] text-emerald-700">
-            {currentCanteen?.name || `${totalItems} menu`} · Rp {totalFoodPrice.toLocaleString('id-ID')}
+            {currentCanteen?.name || `${totalItems} menu`} ·{' '}
+            <span className="gocan-price">Rp {totalFoodPrice.toLocaleString('id-ID')}</span>
           </div>
         </div>
       )}

@@ -214,7 +214,7 @@ export default function DemoPaymentPanel({
 
             <div className="flex justify-between gap-3">
               <dt className="text-slate-500">Total demo</dt>
-              <dd className="font-bold">
+              <dd className="gocan-price font-bold">
                 {formatRupiah(data.totalAmount)}
               </dd>
             </div>

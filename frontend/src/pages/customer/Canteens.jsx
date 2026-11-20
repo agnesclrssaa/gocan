@@ -145,7 +145,12 @@ const filteredCanteens = useMemo(() => {
       <Navbar />
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 pt-6 sm:px-6 lg:px-8">
-        <section className="customer-card promo-banner explore-canteens-banner relative flex flex-col items-center justify-between gap-4 overflow-hidden p-6 text-white sm:flex-row sm:gap-6 sm:p-8">
+        <section
+          className="customer-card promo-banner explore-canteens-banner relative flex flex-col items-center justify-between gap-4 overflow-hidden p-6 text-white sm:flex-row sm:gap-6 sm:p-8"
+          style={{
+            backgroundImage: `url("${import.meta.env.BASE_URL}assets/promo-banner-bg.png")`,
+          }}
+        >
           <div className="promo-banner-copy z-10 max-w-lg space-y-3 text-center sm:text-left">
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/90">
               GOCAN

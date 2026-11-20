@@ -71,9 +71,11 @@ object-fit: contain;
 .gocan-mascot-wrap {
 position: absolute;
 z-index: 2;
-width: min(410px, 70%);
+width: clamp(320px, 27vw, 350px);
+height: clamp(320px, 27vw, 350px);
+max-width: 76%;
 aspect-ratio: 1;
-top: 15%;
+top: clamp(150px, 18vh, 170px);
 left: 50%;
 transform: translateX(-50%);
 display: grid;
@@ -161,7 +163,7 @@ height: 22px;
 position: absolute;
 z-index: 3;
 left: 12%;
-bottom: 7%;
+bottom: 5%;
 text-align: left;
 max-width: 480px;
 }
@@ -615,8 +617,8 @@ transform: translateY(-10px);
   }
 
   .gocan-auth-visual {
-    min-height: 620px;
-    padding: 95px 25px 180px;
+    min-height: 680px;
+    padding: 20px 25px 28px;
     overflow: hidden;
   }
 
@@ -627,14 +629,15 @@ transform: translateY(-10px);
   }
 
   .gocan-mascot-wrap {
-    width: 300px;
-    max-width: 70%;
-    top: 12%;
+    width: clamp(250px, 35vw, 300px);
+    height: clamp(250px, 35vw, 300px);
+    max-width: calc(100% - 50px);
+    top: 21%;
   }
 
   .gocan-visual-copy {
     left: 30px;
-    bottom: 35px;
+    bottom: 32px;
   }
 
   .gocan-auth-panel {
@@ -651,12 +654,19 @@ transform: translateY(-10px);
 
 @media (max-width: 480px) {
   .gocan-auth-visual {
-    min-height: 540px;
+    min-height: 680px;
   }
 
   .gocan-mascot-wrap {
-    width: 230px;
-    top: 13%;
+    width: clamp(220px, 70vw, 280px);
+    height: clamp(220px, 70vw, 280px);
+    max-width: calc(100% - 40px);
+    top: 24%;
+  }
+
+  .gocan-visual-copy {
+    left: clamp(20px, 7vw, 30px);
+    bottom: 28px;
   }
 
   .gocan-visual-copy h2 {

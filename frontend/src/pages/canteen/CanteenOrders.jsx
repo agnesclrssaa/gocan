@@ -198,7 +198,7 @@ export default function CanteenOrders() {
               </div>
               <div className="text-right">
                 <p className="font-black text-blue-700">
-                  Rp {formatPrice(order?.totalPrice)}
+                  <span className="gocan-price">Rp {formatPrice(order?.totalPrice)}</span>
                 </p>
                 {order?.status === 'cancelled' ? (
                   <span className="mt-1 inline-flex rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">

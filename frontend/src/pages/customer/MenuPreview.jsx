@@ -70,7 +70,7 @@ export default function MenuPreview() {
                 <div className="p-5">
                   <h2 className="font-extrabold text-slate-900">{item.name}</h2>
                   <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="font-extrabold text-[#DC2626]">{item.price}</span>
+                    <span className="gocan-price font-extrabold">{item.price}</span>
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
                       <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
                       {item.rating} ({item.orders})

@@ -7,16 +7,33 @@
 }
 
 .customer-background-decoration {
-  position: absolute;
+  position: fixed;
   z-index: 0;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
 
+.customer-navbar {
+  z-index: 100;
+  background-color: #F0F4F9;
+}
+
 .customer-background-shape {
   position: absolute;
   display: block;
+  --customer-rendered-size: min(var(--customer-background-size), calc(100vh - 64px));
+  width: var(--customer-rendered-size);
+  left: clamp(
+    calc(var(--customer-rendered-size) / 2 + 32px),
+    var(--customer-background-left),
+    calc(100% - var(--customer-rendered-size) / 2 - 32px)
+  );
+  top: clamp(
+    calc(var(--customer-rendered-size) / 2 + 32px),
+    var(--customer-background-top),
+    calc(100% - var(--customer-rendered-size) / 2 - 32px)
+  );
   translate: -50% -50%;
 }
 
@@ -138,9 +155,13 @@
   animation: customerBackgroundDotPulse var(--customer-animation-duration, 2.7s) ease-in-out var(--customer-animation-delay, 0s) infinite var(--customer-animation-direction, normal);
 }
 
-.customer-layout-content > .min-h-screen {
+.customer-layout-content {
   position: relative;
   z-index: 1;
+}
+
+.customer-layout-content > .min-h-screen {
+  position: relative;
   background-color: transparent;
 }
 
@@ -175,9 +196,11 @@
 }
 
 @media (max-width: 640px) {
-  .customer-background-blob { max-width: 56vw; }
+  .customer-background-shape {
+    --customer-rendered-size: min(var(--customer-background-size), 56vw, calc(100vh - 64px));
+  }
+
   .customer-background-ring { border-width: 6px; }
-  .customer-background-shape { translate: -50% -50%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

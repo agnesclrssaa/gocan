@@ -550,7 +550,7 @@ export const OrderTracking = () => {
                       {item.name || item.menu_name || 'Menu'}
                     </span>
 
-                    <span className="shrink-0 font-semibold">
+                    <span className="gocan-price shrink-0 font-semibold">
                       {formatRupiah(
                         (Number(item.price) || 0) *
                           (Number(item.quantity) || 1)
@@ -561,7 +561,7 @@ export const OrderTracking = () => {
 
                 <div className="flex justify-between border-t border-slate-100 pt-3 font-bold">
                   <span>Total</span>
-                  <span>
+                  <span className="gocan-price">
                     {formatRupiah(getOrderTotal(order))}
                   </span>
                 </div>
@@ -728,6 +728,24 @@ export const OrderTracking = () => {
                   </div>
                 )}
               </dl>
+
+<div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
+  <Link
+    to={`/chat/canteen-${encodeURIComponent(order.id)}?orderId=${encodeURIComponent(order.id)}&role=canteen`}
+    className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-[#dc0413] transition hover:bg-red-100"
+  >
+    Chat dengan Kantin
+  </Link>
+
+  {!isPickup && (order.courier || order.runner) && (
+    <Link
+      to={`/chat/courier-${encodeURIComponent(order.id)}?orderId=${encodeURIComponent(order.id)}&role=courier`}
+      className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-[#116aa5] transition hover:bg-blue-100"
+    >
+      Chat dengan Kurir
+    </Link>
+  )}
+</div>
 
 <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50 p-4">
   <h3 className="text-sm font-bold text-[#2152B7]">

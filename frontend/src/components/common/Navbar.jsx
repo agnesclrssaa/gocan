@@ -14,6 +14,7 @@ import {
   MapPin,
   ChevronDown,
   UserRound,
+  MessageCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -98,11 +99,12 @@ const handleSaveLocation = (event) => {
 
   const isHomeActive = location.pathname === '/';
   const isHistoryActive = location.pathname === '/history';
+  const isChatActive = location.pathname.startsWith('/chat');
   const isCartActive = location.pathname === '/cart';
   const isCustomer = profile?.role === 'customer';
 
   return (
-    <header className="px-3 sm:px-6 pt-3 sm:pt-4 sticky top-0 z-40 bg-[#F0F4F9]/90 backdrop-blur-md font-sans">
+    <header className={`${isCustomer ? 'customer-navbar' : ''} px-3 sm:px-6 pt-3 sm:pt-4 sticky top-0 z-40 bg-[#F0F4F9]/90 backdrop-blur-md font-sans`}>
       <div className={`${profile?.role === 'customer' ? 'customer-card' : ''} max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 shadow-xs px-4 sm:px-6 py-3 flex items-center justify-between gap-4`}>
         {/* Brand Logo GoCan */}
         <Link to="/" className="flex items-center gap-2.5 group">
@@ -138,6 +140,19 @@ const handleSaveLocation = (event) => {
           >
             Pesanan
           </Link>
+
+          {isCustomer && (
+            <Link
+              to="/chat"
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
+                isChatActive
+                  ? 'bg-[#2152B7] text-white shadow-xs'
+                  : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50'
+              }`}
+            >
+              Chat
+            </Link>
+          )}
 
           <Link
             to={profile?.role === 'customer' ? '/canteens' : '/canteen/canteen-pak-brazil'}
@@ -233,6 +248,21 @@ const handleSaveLocation = (event) => {
           </div>
 
           {/* Customer cart access is rendered as a fixed floating button outside the navbar. */}
+          {isCustomer && (
+            <Link
+              to="/chat"
+              className={`relative flex h-10 w-10 items-center justify-center rounded-full border transition md:hidden ${
+                isChatActive
+                  ? 'border-[#2152B7] bg-[#2152B7] text-white'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+              }`}
+              aria-label="Live chat"
+              title="Live chat"
+            >
+              <MessageCircle className="h-4.5 w-4.5" />
+              <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full border-2 border-white bg-[#dc0413]" />
+            </Link>
+          )}
           {profile?.role !== 'customer' && (
             <Link
               to="/cart"

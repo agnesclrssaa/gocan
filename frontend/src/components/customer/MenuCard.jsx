@@ -80,7 +80,7 @@ const MenuCard = ({ menu, canteen }) => {
           {/* PRICE AND BUTTON */}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5">
 
-            <span className="text-[17px] font-extrabold text-[#ED2028]">
+            <span className="gocan-price text-[17px] font-extrabold">
               Rp {Number(menu.price).toLocaleString('id-ID')}
             </span>
 
@@ -140,7 +140,7 @@ const MenuCard = ({ menu, canteen }) => {
 
               <div>
                 <p className="font-bold text-slate-900">{menu.name}</p>
-                <p className="mt-1 font-extrabold text-[#DC2626]">
+                <p className="gocan-price mt-1 font-extrabold">
                   Rp {Number(menu.price).toLocaleString('id-ID')}
                 </p>
               </div>
@@ -189,7 +189,7 @@ const MenuCard = ({ menu, canteen }) => {
             <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
               <span className="text-sm text-slate-500">Subtotal</span>
 
-              <span className="text-lg font-extrabold text-[#2152B7]">
+              <span className="gocan-price text-lg font-extrabold">
                 Rp {(Number(menu.price) * quantity).toLocaleString('id-ID')}
               </span>
             </div>

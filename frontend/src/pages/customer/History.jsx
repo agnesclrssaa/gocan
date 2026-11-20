@@ -59,7 +59,7 @@ const OrderCard = ({ order, preview }) => {
         </div>
 
         <div className="flex items-center justify-between gap-4 sm:justify-end">
-          <span className="font-bold text-[#DC2626]">
+          <span className="gocan-price font-bold">
             {formatRupiah(getOrderTotal(order))}
           </span>
 

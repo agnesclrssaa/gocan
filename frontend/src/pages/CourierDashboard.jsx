@@ -18,7 +18,7 @@ function OrderCard({ order, actionLabel, onAction, busy }) {
           <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
             Pesanan #{order.id}
           </p>
-          <p className="mt-1 text-lg font-extrabold text-[#0A2E6E]">
+          <p className="gocan-price mt-1 text-lg font-extrabold">
             {formatRupiah(order.totalPrice)}
           </p>
         </div>
@@ -32,7 +32,7 @@ function OrderCard({ order, actionLabel, onAction, busy }) {
           ? items.map((item, index) => (
               <li key={`${item.id || item.name}-${index}`} className="flex justify-between gap-3">
                 <span>{item.quantity || 1}× {item.name || 'Menu'}</span>
-                <span className="shrink-0 font-semibold">
+                <span className="gocan-price shrink-0 font-semibold">
                   {formatRupiah((Number(item.price) || 0) * (Number(item.quantity) || 1))}
                 </span>
               </li>

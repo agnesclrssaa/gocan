@@ -88,30 +88,13 @@ export const Cart = () => {
                     <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                       {previewItem.description || 'Pilihan lezat dan segar untuk menemani jam istirahat kuliahmu di UKWMS.'}
                     </p>
-                    <p className="text-2xl font-bold text-[#DC2626] mt-4">
+                    <p className="gocan-price mt-4 text-2xl font-bold">
                       Rp {Number(previewItem.price).toLocaleString('id-ID')}
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Catatan untuk Penjual (Opsional) */}
-              <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-2">
-                <label className="text-xs font-bold text-slate-700 block">
-                  Catatan untuk Penjual (Opsional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Es sedikit aja, manis sedang..."
-                  value={previewItem?.notes || ''}
-                  onChange={(e) => {
-                    if (previewItem) {
-                      updateNotes(previewItem.cartItemId, e.target.value);
-                    }
-                  }}
-                  className="w-full bg-slate-50 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 border border-slate-200 outline-none focus:border-[#2152B7]"
-                />
-              </div>
             </div>
 
             {/* Right Column (5 cols): RINGKASAN KERANJANG */}
@@ -119,17 +102,17 @@ export const Cart = () => {
               <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                 RINGKASAN KERANJANG
               </h2>
+              <p className="text-xs leading-relaxed text-slate-500">
+                Catatan tiap menu tersimpan sementara di keranjang dan belum tercatat pada pesanan final.
+              </p>
 
               {/* Items List */}
               <div className="divide-y divide-slate-100">
                 {cartItems.map((item) => (
-                  <div key={item.cartItemId} className="py-4 first:pt-0 last:pb-0 space-y-2">
+                  <div key={item.cartItemId} className="py-4 first:pt-0 last:pb-0 space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-bold text-sm text-slate-900">{item.name}</h3>
-                        {item.notes && (
-                          <p className="text-xs text-slate-500 mt-0.5">Catatan: {item.notes}</p>
-                        )}
                       </div>
                       <button
                         onClick={() => removeFromCart(item.cartItemId)}
@@ -140,8 +123,26 @@ export const Cart = () => {
                       </button>
                     </div>
 
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor={`cart-item-note-${item.cartItemId}`}
+                        className="block text-xs font-semibold text-slate-600"
+                      >
+                        Catatan untuk Penjual (Opsional)
+                      </label>
+                      <input
+                        id={`cart-item-note-${item.cartItemId}`}
+                        type="text"
+                        value={item.notes || ''}
+                        onChange={(event) => updateNotes(item.cartItemId, event.target.value)}
+                        placeholder="Tambahkan catatan untuk menu ini (Opsional)"
+                        aria-label={`Catatan untuk ${item.name}`}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#2152B7]"
+                      />
+                    </div>
+
                     <div className="flex justify-between items-center pt-1">
-                      <span className="font-bold text-sm text-[#DC2626]">
+                      <span className="gocan-price text-sm font-bold">
                         Rp {(Number(item.price) * item.quantity).toLocaleString('id-ID')}
                       </span>
 
@@ -173,7 +174,7 @@ export const Cart = () => {
               {/* Divider & Total */}
               <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
                 <span className="text-sm font-medium text-slate-600">Total Pesanan</span>
-                <span className="text-xl font-bold text-[#DC2626]">
+                <span className="gocan-price text-xl font-bold">
                   Rp {totalFoodPrice.toLocaleString('id-ID')}
                 </span>
               </div>

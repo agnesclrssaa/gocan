@@ -636,13 +636,13 @@ navigate(`/order-success/${confirmedOrderId}`, {
               <div className="space-y-3 text-sm text-slate-600">
                 <div className="flex justify-between items-center">
                   <span>Subtotal Makanan</span>
-                  <span className="font-semibold text-slate-800">
+                  <span className="gocan-price font-semibold">
                     Rp {totalFoodPrice.toLocaleString('id-ID')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Biaya Pengantaran</span>
-                  <span className="font-semibold text-slate-800">
+                  <span className="gocan-price font-semibold">
                     {deliveryFee === 0 ? 'Rp 0' : `Rp ${deliveryFee.toLocaleString('id-ID')}`}
                   </span>
                 </div>
@@ -650,21 +650,21 @@ navigate(`/order-success/${confirmedOrderId}`, {
   <div className="flex items-center justify-between gap-3 text-emerald-700">
     <span>Potongan Ongkir</span>
 
-    <span className="font-semibold">
+    <span className="gocan-price font-semibold">
       − Rp {deliveryDiscount.toLocaleString('id-ID')}
     </span>
   </div>
 )}
                 <div className="flex justify-between items-center">
                   <span>Biaya Layanan Aplikasi</span>
-                  <span className="font-semibold text-slate-800">
+                  <span className="gocan-price font-semibold">
                     Rp {serviceFee.toLocaleString('id-ID')}
                   </span>
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
                   <span className="text-sm font-bold text-slate-800">Total Pembayaran</span>
-                  <span className="text-xl font-bold text-[#DC2626]">
+                  <span className="gocan-price text-xl font-bold">
                     Rp {totalAmount.toLocaleString('id-ID')}
                   </span>
                 </div>

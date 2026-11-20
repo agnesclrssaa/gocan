@@ -13,6 +13,7 @@ export default function CanteenMenuSales() {
   const { canteen, refreshCanteen, isOpen, updateStoreStatus, updatingStoreStatus } = useOutletContext();
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAllMenus, setShowAllMenus] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -221,6 +222,7 @@ export default function CanteenMenuSales() {
     (selectedCategory === 'Semua' || item.category === selectedCategory) &&
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   ));
+  const displayedItems = showAllMenus ? filteredItems : filteredItems.slice(0, 6);
 
   const weeklySales = (() => {
     const days = Array.from({ length: 7 }, (_, index) => {
@@ -330,7 +332,7 @@ export default function CanteenMenuSales() {
                       <h3 className="truncate text-xs font-bold text-slate-900">{unavailableMenu.name}</h3>
                       <span className="rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">HABIS</span>
                     </div>
-                    <span className="text-xs font-bold text-slate-700">{formatPrice(unavailableMenu.price)}</span>
+                    <span className="gocan-price text-xs font-bold">{formatPrice(unavailableMenu.price)}</span>
                   </div>
                 </div>
               ) : (
@@ -379,7 +381,7 @@ export default function CanteenMenuSales() {
           <p className="merchant-card-glow rounded-xl border p-8 text-center text-sm text-slate-500">Tidak ada menu yang cocok dengan pencarian.</p>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredItems.map((item) => (
+            {displayedItems.map((item) => (
               <article key={item.id} className="merchant-card-glow overflow-hidden rounded-xl border border-slate-200">
                 <div className="h-48 w-full bg-slate-100">
                   <img src={item.imageUrl || defaultImage} alt={item.name} className="h-full w-full object-cover" />
@@ -391,7 +393,7 @@ export default function CanteenMenuSales() {
                       {item.isAvailable ? 'TERSEDIA' : 'HABIS'}
                     </span>
                   </div>
-                  <p className="text-sm font-bold text-slate-800">{formatPrice(item.price)}</p>
+                  <p className="gocan-price text-sm font-bold">{formatPrice(item.price)}</p>
                   <p className="text-xs text-slate-500">{item.category || 'Tanpa kategori'}</p>
                   <div className="flex w-full items-center justify-between pt-2">
                     <button
@@ -425,6 +427,16 @@ export default function CanteenMenuSales() {
               </article>
             ))}
           </div>
+        )}
+        {filteredItems.length > 6 && (
+          <button
+            type="button"
+            onClick={() => setShowAllMenus((current) => !current)}
+            className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+            aria-expanded={showAllMenus}
+          >
+            {showAllMenus ? 'Lihat Lebih Sedikit' : 'Lihat Semua'}
+          </button>
         )}
       </section>
 

@@ -261,7 +261,9 @@ export default function CanteenDashboard() {
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-blue-50 text-xs font-bold text-blue-800">#{item.rank}</span>
                       <div className="min-w-0">
                         <span className="block truncate text-xs font-bold text-slate-900">{item.name}</span>
-                        <span className="text-[10px] text-slate-500">{item.category} · {formatPrice(item.price)}</span>
+                        <span className="text-[10px] text-slate-500">
+                          {item.category} · <span className="gocan-price">{formatPrice(item.price)}</span>
+                        </span>
                       </div>
                     </div>
                     <span className="shrink-0 text-xs font-bold text-blue-700">{item.sales} terjual</span>
