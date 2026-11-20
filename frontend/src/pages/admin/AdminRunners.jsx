@@ -13,7 +13,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { api, asArray } from '../../lib/api';
+import { ADMIN_OVERVIEW_REFRESH_EVENT, api, asArray } from '../../lib/api';
 
 const filters = [
   { value: 'all', label: 'Semua' },
@@ -47,7 +47,9 @@ function RunnerKtmImage({ runnerId }) {
         if (active) setImageUrl(objectUrl);
       })
       .catch((loadError) => {
-        if (active) setError(loadError.message || 'Foto KTM tidak dapat dimuat.');
+        if (active) {
+          setError(loadError.status === 404 ? 'Foto KTM belum tersedia' : 'Foto KTM tidak dapat dimuat.');
+        }
       });
 
     return () => {
@@ -56,7 +58,14 @@ function RunnerKtmImage({ runnerId }) {
     };
   }, [runnerId]);
 
-  if (error) return <p role="alert" className="text-sm text-rose-700">{error}</p>;
+  if (error) {
+    const unavailable = error === 'Foto KTM belum tersedia';
+    return (
+      <p role={unavailable ? 'status' : 'alert'} className={`text-sm ${unavailable ? 'text-slate-500' : 'text-rose-700'}`}>
+        {error}
+      </p>
+    );
+  }
   if (!imageUrl) return <p role="status" className="text-sm text-slate-500">Memuat foto KTM...</p>;
 
   return (
@@ -108,6 +117,7 @@ export default function AdminRunners() {
         status,
         ...(status === 'REJECTED' ? { reason } : {}),
       });
+      window.dispatchEvent(new Event(ADMIN_OVERVIEW_REFRESH_EVENT));
       setNotice(result?.notification?.sent === false
         ? `${runner.name || 'Runner'}: ${result.notification.message || 'Notifikasi tidak dikirim.'}`
         : `${runner.name || 'Runner'} ${status === 'APPROVED' ? 'disetujui' : 'ditolak'}; notifikasi email ${result?.notification?.sent ? 'terkirim' : 'diproses'}.`);
@@ -197,7 +207,7 @@ export default function AdminRunners() {
                     {runner?.ktmUrl ? (
                       <RunnerKtmImage runnerId={runner?.id} />
                     ) : (
-                      <p className="flex items-center gap-2 text-sm text-rose-700"><AlertCircle className="h-4 w-4" />Foto KTM belum diunggah</p>
+                      <p role="status" className="text-sm text-slate-500">Foto KTM belum tersedia</p>
                     )}
                     {runner?.rejectionReason && status === 'rejected' && (
                       <p className="rounded-lg bg-rose-50 p-3 text-xs text-rose-800"><strong>Alasan penolakan:</strong> {runner.rejectionReason}</p>

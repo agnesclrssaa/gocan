@@ -21,9 +21,9 @@ const getOverview = async (_req, res, next) => {
         prisma.user.count(),
         prisma.user.count({ where: { role: 'customer' } }),
         prisma.canteen.count(),
-        prisma.user.count({ where: { role: 'runner', approvalStatus: { in: ['approved', 'APPROVED'] } } }),
-        prisma.user.count({ where: { role: 'courier', approvalStatus: { in: ['approved', 'APPROVED'] } } }),
-        prisma.user.count({ where: { role: 'runner', approvalStatus: { in: ['pending', 'PENDING'] } } }),
+        prisma.user.count({ where: { role: 'runner', approvalStatus: { equals: 'approved', mode: 'insensitive' } } }),
+        prisma.user.count({ where: { role: 'courier', approvalStatus: { equals: 'approved', mode: 'insensitive' } } }),
+        prisma.user.count({ where: { role: 'runner', approvalStatus: { equals: 'pending', mode: 'insensitive' } } }),
         prisma.order.count({
           where: {
             status: {
@@ -62,7 +62,10 @@ const getOverview = async (_req, res, next) => {
           },
         }),
         prisma.user.findMany({
-          where: { role: { in: ['runner', 'courier'] }, approvalStatus: { in: ['approved', 'APPROVED'] } },
+          where: {
+            role: { in: ['runner', 'courier'] },
+            approvalStatus: { equals: 'approved', mode: 'insensitive' },
+          },
           select: { id: true, name: true },
           orderBy: { name: 'asc' },
         }),
@@ -98,7 +101,7 @@ const listUsers = async (req, res, next) => {
       where.role = role;
     }
     if (['pending', 'approved', 'rejected'].includes(approvalStatus)) {
-      where.approvalStatus = { in: [approvalStatus, approvalStatus.toUpperCase()] };
+      where.approvalStatus = { equals: approvalStatus, mode: 'insensitive' };
     }
     if (typeof search === 'string' && search.trim()) {
       where.OR = [
@@ -150,7 +153,7 @@ const listRunners = async (req, res, next) => {
       where: {
         role: 'runner',
         ...(status
-          ? { approvalStatus: { in: [status, status.toLowerCase()] } }
+          ? { approvalStatus: { equals: status, mode: 'insensitive' } }
           : {}),
       },
       select: {
@@ -232,23 +235,27 @@ const updateRunnerApproval = async (req, res, next) => {
       },
     });
 
-    let notification;
+    let notification = {
+      sent: false,
+      message: 'Status berhasil diperbarui, tetapi email notifikasi gagal dikirim.',
+    };
     try {
-      notification = await sendRunnerApprovalEmail({
+      const emailResult = await sendRunnerApprovalEmail({
         name: updatedUser.name,
         email: updatedUser.email,
         status: status.toLowerCase(),
         reason,
       });
-      if (!notification.sent) {
-        console.warn(`Runner approval email for user ${userId} was not sent: ${notification.message}`);
+      if (emailResult && typeof emailResult.sent === 'boolean') {
+        notification = emailResult;
+      } else {
+        console.error(`Runner approval email for user ${userId} returned an invalid result.`);
       }
     } catch (error) {
       console.error(`Runner approval email for user ${userId} failed:`, error);
-      notification = {
-        sent: false,
-        message: 'Status berhasil diperbarui, tetapi email notifikasi gagal dikirim.',
-      };
+    }
+    if (!notification.sent) {
+      console.warn(`Runner approval email for user ${userId} was not sent: ${notification.message}`);
     }
     return res.json({ user: updatedUser, notification });
   } catch (error) {
@@ -268,7 +275,7 @@ const assignOrder = async (req, res, next) => {
       where: {
         id: runnerId,
         role: { in: ['runner', 'courier'] },
-        approvalStatus: { in: ['approved', 'APPROVED'] },
+        approvalStatus: { equals: 'approved', mode: 'insensitive' },
       },
       select: { id: true },
     });

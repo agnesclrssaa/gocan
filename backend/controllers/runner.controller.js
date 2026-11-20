@@ -95,7 +95,11 @@ const getKtmPhoto = async (req, res, next) => {
     }
 
     return res.sendFile(path.join(privateUploadDirectory, runner.ktmUrl), (error) => {
-      if (error && !res.headersSent) next(error);
+      if (!error) return;
+      if (!res.headersSent && (error.code === 'ENOENT' || error.status === 404)) {
+        return res.status(404).json({ error: 'Foto KTM Runner tidak ditemukan.' });
+      }
+      return next(error);
     });
   } catch (error) {
     return next(error);

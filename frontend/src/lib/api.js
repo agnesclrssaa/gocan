@@ -5,6 +5,7 @@ const API_BASE_URL = API_URL ? `${API_URL.replace(/\/$/, '')}/api` : '/api';
 const TOKEN_KEY = 'token';
 const LEGACY_TOKEN_KEY = 'gocan_token';
 export const API_AUTH_ERROR_EVENT = 'gocan:api-auth-error';
+export const ADMIN_OVERVIEW_REFRESH_EVENT = 'gocan:admin-overview-refresh';
 
 const migrateLegacyToken = () => {
   try {

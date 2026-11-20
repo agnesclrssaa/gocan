@@ -14,7 +14,7 @@ import {
   X,
   LogOut
 } from 'lucide-react';
-import { api } from '../lib/api';
+import { ADMIN_OVERVIEW_REFRESH_EVENT, api } from '../lib/api';
 
 export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -25,15 +25,26 @@ export default function AdminLayout() {
 
   useEffect(() => {
     let active = true;
-    api.get('/admin/overview')
-      .then((data) => {
-        if (active) setOverview(data);
-      })
-      .catch((error) => {
+    const loadOverview = async () => {
+      try {
+        const data = await api.get('/admin/overview');
+        if (active) {
+          setOverview(data);
+          setOverviewError('');
+        }
+      } catch (error) {
         if (active) setOverviewError(error.message || 'Gagal memuat status admin.');
-      });
+      }
+    };
+    const handleOverviewRefresh = () => {
+      void loadOverview();
+    };
+
+    handleOverviewRefresh();
+    window.addEventListener(ADMIN_OVERVIEW_REFRESH_EVENT, handleOverviewRefresh);
     return () => {
       active = false;
+      window.removeEventListener(ADMIN_OVERVIEW_REFRESH_EVENT, handleOverviewRefresh);
     };
   }, []);
 
