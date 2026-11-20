@@ -58,6 +58,6 @@ router.post(
 );
 router.get('/:id', getOrder);
 router.post('/:id/cancel', cancelOrder);
-router.patch('/:id/status', requireRole('canteen', 'runner', 'courier'), requireApprovedRunner, updateOrderStatus);
+router.patch('/:id/status', requireRole('admin', 'canteen', 'runner', 'courier'), requireApprovedRunner, updateOrderStatus);
 
 module.exports = router;

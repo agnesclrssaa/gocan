@@ -9,7 +9,7 @@ import { AlertCircle, X } from 'lucide-react';
 import IntroLoadingScreen from './components/common/IntroLoadingScreen';
 import SplashScreen from './components/common/SplashScreen';
 import WelcomeScreen from './components/common/WelcomeScreen';
-import { useCallback, useState } from 'react';
+import { Component, useCallback, useState } from 'react';
 
 // Layouts
 import CanteenLayout from './layouts/CanteenLayout';
@@ -53,6 +53,44 @@ import AdminFinance from './pages/admin/AdminFinance';
 import AdminManagement from './pages/admin/AdminManagement';
 import AdminRunners from './pages/admin/AdminRunners';
 import ProtectedRoute from './routes/ProtectedRoute';
+
+class ErrorBoundary extends Component {
+  state = { error: null };
+
+  static getDerivedStateFromError(error) {
+    return {
+      error: error instanceof Error
+        ? error
+        : new Error(String(error ?? 'Terjadi kesalahan saat menampilkan halaman.')),
+    };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('Application render error:', error, info);
+  }
+
+  render() {
+    if (!this.state.error) return this.props.children;
+
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+        <section role="alert" className="w-full max-w-lg space-y-4 rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <h1 className="text-xl font-black text-slate-900">Halaman mengalami gangguan</h1>
+          <p className="break-words text-sm text-slate-600">
+            {this.state.error.message || 'Terjadi kesalahan saat menampilkan halaman.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="rounded-xl bg-[#0A2E6E] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#082457]"
+          >
+            Muat ulang
+          </button>
+        </section>
+      </main>
+    );
+  }
+}
 
 const roleHome = {
   customer: '/',
@@ -250,7 +288,8 @@ export function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <Routes>
+          <ErrorBoundary>
+            <Routes>
             <Route path="/" element={<RoleLanding />} />
             <Route path="/landing" element={<IntroLoadingScreen />} />
             <Route path="/intro" element={<IntroLoadingScreen />} />
@@ -334,7 +373,8 @@ export function App() {
 
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+            </Routes>
+          </ErrorBoundary>
           <FloatingCart />
           <ApiNotice />
         </CartProvider>

@@ -11,7 +11,7 @@ import {
   Store,
   Users,
 } from 'lucide-react';
-import { api } from '../../lib/api';
+import { api, asArray } from '../../lib/api';
 
 const currency = new Intl.NumberFormat('id-ID', {
   style: 'currency',
@@ -29,6 +29,25 @@ const metricsConfig = [
   { key: 'couriers', label: 'Kurir aktif', icon: Bike },
 ];
 
+const normalizeOverview = (response) => {
+  const data = response?.data ?? response;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return { metrics: {}, unassignedOrders: [], availableRunners: [] };
+  }
+
+  return {
+    ...data,
+    metrics: data.metrics && typeof data.metrics === 'object' ? data.metrics : {},
+    unassignedOrders: asArray(data.unassignedOrders),
+    availableRunners: asArray(data.availableRunners),
+  };
+};
+
+const safeNumber = (value) => {
+  const number = Number(value ?? 0);
+  return Number.isFinite(number) ? number : 0;
+};
+
 export default function AdminDashboard() {
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +61,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       setError('');
-      setOverview(await api.get('/admin/overview'));
+      setOverview(normalizeOverview(await api.get('/admin/overview')));
     } catch (loadError) {
       setError(loadError.message || 'Gagal memuat ringkasan admin.');
     } finally {
@@ -54,7 +73,7 @@ export default function AdminDashboard() {
     let active = true;
     api.get('/admin/overview')
       .then((data) => {
-        if (active) setOverview(data);
+        if (active) setOverview(normalizeOverview(data));
       })
       .catch((loadError) => {
         if (active) setError(loadError.message || 'Gagal memuat ringkasan admin.');
@@ -69,11 +88,11 @@ export default function AdminDashboard() {
 
   const assignOrder = async (event) => {
     event.preventDefault();
-    if (!selectedOrder || !runnerId) return;
+    if (!selectedOrder?.id || !runnerId) return;
 
     try {
       setSaving(true);
-      await api.patch(`/admin/orders/${selectedOrder.id}/assign`, { runnerId: Number(runnerId) });
+      await api.patch(`/admin/orders/${selectedOrder.id}/assign`, { runnerId: safeNumber(runnerId) });
       setSelectedOrder(null);
       setRunnerId('');
       setNotice(`Pesanan #${selectedOrder.id} berhasil ditugaskan.`);
@@ -84,6 +103,9 @@ export default function AdminDashboard() {
       setSaving(false);
     }
   };
+
+  const unassignedOrders = asArray(overview?.unassignedOrders);
+  const availableRunners = asArray(overview?.availableRunners);
 
   return (
     <div className="space-y-6">
@@ -126,7 +148,7 @@ export default function AdminDashboard() {
               </span>
             </div>
             <p className="mt-3 text-2xl font-black text-slate-900">
-              {loading ? <LoaderCircle className="h-6 w-6 animate-spin text-slate-400" /> : format ? format(overview?.metrics?.[key] || 0) : (overview?.metrics?.[key] ?? 0).toLocaleString('id-ID')}
+              {loading ? <LoaderCircle className="h-6 w-6 animate-spin text-slate-400" /> : format ? format(safeNumber(overview?.metrics?.[key])) : safeNumber(overview?.metrics?.[key]).toLocaleString('id-ID')}
             </p>
           </div>
         ))}
@@ -140,21 +162,21 @@ export default function AdminDashboard() {
               <p className="mt-1 text-xs text-slate-500">Pesanan delivery yang belum ditugaskan ke runner.</p>
             </div>
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">
-              {overview?.unassignedOrders?.length || 0} menunggu
+              {unassignedOrders.length} menunggu
             </span>
           </div>
           {loading && !overview ? (
             <p className="py-8 text-center text-sm text-slate-500">Memuat pesanan...</p>
-          ) : overview?.unassignedOrders?.length ? (
+          ) : unassignedOrders.length ? (
             <div className="space-y-3">
-              {overview.unassignedOrders.map((order) => (
-                <div key={order.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+              {unassignedOrders.map((order) => (
+                <div key={order?.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="font-bold text-slate-900">Pesanan #{order.id} · {order.canteen?.name || 'Kantin'}</p>
+                    <p className="font-bold text-slate-900">Pesanan #{order?.id ?? '—'} · {order?.canteen?.name || 'Kantin'}</p>
                     <p className="mt-1 text-xs text-slate-500">
-                      {order.user?.name || 'Pemesan'} · {order.items.length} item · {currency.format(order.totalPrice)}
+                      {order?.user?.name || 'Pemesan'} · {Array.isArray(order?.items) ? order.items.length : 0} item · {currency.format(safeNumber(order?.totalPrice))}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">{order.buildingName || order.meetingPoint || 'Lokasi belum dicantumkan'}</p>
+                    <p className="mt-1 text-xs text-slate-500">{order?.buildingName || order?.meetingPoint || 'Lokasi belum dicantumkan'}</p>
                   </div>
                   <button
                     type="button"
@@ -208,19 +230,19 @@ export default function AdminDashboard() {
                 className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm"
               >
                 <option value="">Pilih runner</option>
-                {(overview?.availableRunners || []).map((runner) => (
-                  <option key={runner.id} value={runner.id}>{runner.name}</option>
+                {availableRunners.map((runner) => (
+                  <option key={runner?.id} value={runner?.id}>{runner?.name || 'Runner'}</option>
                 ))}
               </select>
             </label>
-            {!overview?.availableRunners?.length && (
+            {!availableRunners.length && (
               <p className="text-sm text-amber-700">Belum ada runner yang disetujui. Setujui pendaftaran terlebih dahulu.</p>
             )}
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setSelectedOrder(null)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700">
                 Batal
               </button>
-              <button type="submit" disabled={saving || !overview?.availableRunners?.length} className="rounded-lg bg-[#0A2E6E] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
+              <button type="submit" disabled={saving || !availableRunners.length} className="rounded-lg bg-[#0A2E6E] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
                 {saving ? 'Menyimpan...' : 'Tugaskan'}
               </button>
             </div>

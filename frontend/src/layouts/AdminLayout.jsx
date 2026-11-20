@@ -130,7 +130,7 @@ export default function AdminLayout() {
                 <p className="font-bold">Pesanan siap antar</p>
                 <p className="text-[10px] text-amber-200/80">
                   {overview
-                    ? `${overview.metrics.unassignedOrderCount} belum ditugaskan`
+                    ? `${overview?.metrics?.unassignedOrderCount ?? 0} belum ditugaskan`
                     : overviewError || 'Memuat status pesanan...'}
                 </p>
               </div>

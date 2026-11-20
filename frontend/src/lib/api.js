@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const API_BASE_URL = `${API_URL.replace(/\/$/, '')}/api`;
+const API_URL = import.meta.env.VITE_API_URL?.trim();
+const API_BASE_URL = API_URL ? `${API_URL.replace(/\/$/, '')}/api` : '/api';
 const TOKEN_KEY = 'token';
 const LEGACY_TOKEN_KEY = 'gocan_token';
 export const API_AUTH_ERROR_EVENT = 'gocan:api-auth-error';
@@ -110,6 +110,13 @@ export const api = {
   delete: async (path, config) => (await client.delete(path, config)).data,
   assetUrl: (path) =>
     new URL(path, new URL(API_BASE_URL, window.location.origin)).toString(),
+};
+
+export const asArray = (response) => {
+  const data = Array.isArray(response) ? response : response?.data;
+  return Array.isArray(data)
+    ? data.filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+    : [];
 };
 
 export const AUTH_TOKEN_KEY = TOKEN_KEY;

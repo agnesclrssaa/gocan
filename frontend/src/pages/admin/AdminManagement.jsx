@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Bike, Download, RefreshCw, Search, Store, Users } from 'lucide-react';
-import { api } from '../../lib/api';
+import { AlertCircle, Bike, Check, Download, RefreshCw, Search, Store, Users } from 'lucide-react';
+import { api, asArray } from '../../lib/api';
 
 const roleLabels = {
   customer: 'Customer',
@@ -28,7 +28,7 @@ export default function AdminManagement() {
     try {
       setLoading(true);
       setError('');
-      setUsers(await api.get('/admin/users'));
+      setUsers(asArray(await api.get('/admin/users')));
     } catch (loadError) {
       setError(loadError.message || 'Gagal memuat daftar akun.');
     } finally {
@@ -40,7 +40,7 @@ export default function AdminManagement() {
     let active = true;
     api.get('/admin/users')
       .then((data) => {
-        if (active) setUsers(data);
+        if (active) setUsers(asArray(data));
       })
       .catch((loadError) => {
         if (active) setError(loadError.message || 'Gagal memuat daftar akun.');
@@ -55,9 +55,9 @@ export default function AdminManagement() {
 
   const visibleUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return users.filter((user) => {
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-      const matchesSearch = !query || `${user.name} ${user.email} ${user.canteen?.name || ''}`.toLowerCase().includes(query);
+    return asArray(users).filter((user) => {
+      const matchesRole = roleFilter === 'all' || user?.role === roleFilter;
+      const matchesSearch = !query || `${user?.name || ''} ${user?.email || ''} ${user?.canteen?.name || ''}`.toLowerCase().includes(query);
       return matchesRole && matchesSearch;
     });
   }, [users, roleFilter, search]);
@@ -112,10 +112,10 @@ export default function AdminManagement() {
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
         {[
           { label: 'Total akun', value: users.length, icon: Users },
-          { label: 'Mitra kantin', value: users.filter((user) => user.role === 'canteen').length, icon: Store },
-          { label: 'Runner', value: users.filter((user) => user.role === 'runner').length, icon: Bike },
-          { label: 'Kurir', value: users.filter((user) => user.role === 'courier').length, icon: Bike },
-          { label: 'Menunggu verifikasi', value: users.filter((user) => user.role === 'runner' && user.approvalStatus === 'pending').length, icon: Check },
+          { label: 'Mitra kantin', value: users.filter((user) => user?.role === 'canteen').length, icon: Store },
+          { label: 'Runner', value: users.filter((user) => user?.role === 'runner').length, icon: Bike },
+          { label: 'Kurir', value: users.filter((user) => user?.role === 'courier').length, icon: Bike },
+          { label: 'Menunggu verifikasi', value: users.filter((user) => user?.role === 'runner' && user?.approvalStatus?.toLowerCase() === 'pending').length, icon: Check },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between text-xs font-bold uppercase text-slate-500">
@@ -167,18 +167,18 @@ export default function AdminManagement() {
               {visibleUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50/70">
                   <td className="px-5 py-3.5">
-                    <p className="font-bold text-slate-900">{user.name}</p>
-                    <p className="text-xs text-slate-500">{user.email}</p>
+                    <p className="font-bold text-slate-900">{user?.name || '—'}</p>
+                    <p className="text-xs text-slate-500">{user?.email || '—'}</p>
                   </td>
-                  <td className="px-5 py-3.5 text-slate-700">{roleLabels[user.role] || user.role}</td>
-                  <td className="px-5 py-3.5 text-slate-700">{user.canteen?.name || '—'}</td>
+                  <td className="px-5 py-3.5 text-slate-700">{roleLabels[user?.role] || user?.role || '—'}</td>
+                  <td className="px-5 py-3.5 text-slate-700">{user?.canteen?.name || '—'}</td>
                   <td className="px-5 py-3.5">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${user.approvalStatus === 'approved' ? 'bg-emerald-50 text-emerald-700' : user.approvalStatus === 'rejected' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'}`}>
-                      {statusLabels[user.approvalStatus] || user.approvalStatus}
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${user?.approvalStatus?.toLowerCase() === 'approved' ? 'bg-emerald-50 text-emerald-700' : user?.approvalStatus?.toLowerCase() === 'rejected' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'}`}>
+                      {statusLabels[user?.approvalStatus?.toLowerCase()] || user?.approvalStatus || '—'}
                     </span>
                   </td>
                   <td className="px-5 py-3.5 text-right">
-                    {user.role === 'runner' ? (
+                    {user?.role === 'runner' ? (
                       <Link to="/admin-portal/runners" className="text-xs font-bold text-blue-700 hover:underline">
                         Tinjau profil
                       </Link>

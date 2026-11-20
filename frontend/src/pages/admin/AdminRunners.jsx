@@ -13,7 +13,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { api } from '../../lib/api';
+import { api, asArray } from '../../lib/api';
 
 const filters = [
   { value: 'all', label: 'Semua' },
@@ -82,7 +82,7 @@ export default function AdminRunners() {
     setError('');
     try {
       const query = filter === 'all' ? '' : `?status=${filter}`;
-      setRunners(await api.get(`/admin/runners${query}`));
+      setRunners(asArray(await api.get(`/admin/runners${query}`)));
     } catch (loadError) {
       setError(loadError.message || 'Gagal memuat pendaftar Runner.');
     } finally {
@@ -95,6 +95,11 @@ export default function AdminRunners() {
   }, [loadRunners]);
 
   const reviewRunner = async (runner, status, reason = '') => {
+    if (!runner?.id) {
+      setError('ID Runner tidak valid.');
+      return;
+    }
+
     setSavingId(runner.id);
     setError('');
     setNotice('');
@@ -103,9 +108,9 @@ export default function AdminRunners() {
         status,
         ...(status === 'REJECTED' ? { reason } : {}),
       });
-      setNotice(result.notification?.sent === false
-        ? `${runner.name}: ${result.notification.message}`
-        : `${runner.name} ${status === 'APPROVED' ? 'disetujui' : 'ditolak'}; notifikasi email ${result.notification?.sent ? 'terkirim' : 'diproses'}.`);
+      setNotice(result?.notification?.sent === false
+        ? `${runner.name || 'Runner'}: ${result.notification.message || 'Notifikasi tidak dikirim.'}`
+        : `${runner.name || 'Runner'} ${status === 'APPROVED' ? 'disetujui' : 'ditolak'}; notifikasi email ${result?.notification?.sent ? 'terkirim' : 'diproses'}.`);
       setRejectingRunner(null);
       setRejectionReason('');
       await loadRunners();
@@ -166,16 +171,16 @@ export default function AdminRunners() {
       ) : (
         <section className="space-y-4">
           {runners.map((runner) => {
-            const status = (runner.approvalStatus || 'pending').toLowerCase();
-            const holderMismatch = runner.accountHolderName !== runner.name;
+            const status = (runner?.approvalStatus || 'pending').toLowerCase();
+            const holderMismatch = runner?.accountHolderName !== runner?.name;
             return (
-              <article key={runner.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <article key={runner?.id ?? `${runner?.email || 'runner'}-${runner?.createdAt || 'unknown'}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4 sm:px-6">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700"><UserRound className="h-5 w-5" /></div>
                     <div className="min-w-0">
-                      <h2 className="truncate text-base font-black text-slate-900">{runner.name}</h2>
-                      <p className="text-xs text-slate-500">NRP {runner.nrp || 'Belum diisi'}</p>
+                      <h2 className="truncate text-base font-black text-slate-900">{runner?.name || 'Runner'}</h2>
+                      <p className="text-xs text-slate-500">NRP {runner?.nrp || 'Belum diisi'}</p>
                     </div>
                   </div>
                   <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${statusStyles[status] || statusStyles.pending}`}>
@@ -187,14 +192,14 @@ export default function AdminRunners() {
                 <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[1fr_1fr]">
                   <section className="space-y-3">
                     <h3 className="text-xs font-black uppercase tracking-wide text-slate-500">Identitas Pendaftar</h3>
-                    <p className="flex items-center gap-2 break-all text-sm text-slate-700"><Mail className="h-4 w-4 shrink-0 text-slate-400" />{runner.email}</p>
-                    <p className="flex items-center gap-2 text-sm text-slate-700"><Phone className="h-4 w-4 shrink-0 text-slate-400" />{runner.phoneNumber || 'Nomor telepon belum diisi'}</p>
-                    {runner.ktmUrl ? (
-                      <RunnerKtmImage runnerId={runner.id} />
+                    <p className="flex items-center gap-2 break-all text-sm text-slate-700"><Mail className="h-4 w-4 shrink-0 text-slate-400" />{runner?.email || 'Email belum diisi'}</p>
+                    <p className="flex items-center gap-2 text-sm text-slate-700"><Phone className="h-4 w-4 shrink-0 text-slate-400" />{runner?.phoneNumber || 'Nomor telepon belum diisi'}</p>
+                    {runner?.ktmUrl ? (
+                      <RunnerKtmImage runnerId={runner?.id} />
                     ) : (
                       <p className="flex items-center gap-2 text-sm text-rose-700"><AlertCircle className="h-4 w-4" />Foto KTM belum diunggah</p>
                     )}
-                    {runner.rejectionReason && status === 'rejected' && (
+                    {runner?.rejectionReason && status === 'rejected' && (
                       <p className="rounded-lg bg-rose-50 p-3 text-xs text-rose-800"><strong>Alasan penolakan:</strong> {runner.rejectionReason}</p>
                     )}
                   </section>
@@ -204,9 +209,9 @@ export default function AdminRunners() {
                       <CreditCard className="h-4 w-4" />Data Pencairan Dana
                     </h3>
                     <dl className="mt-3 space-y-2 text-sm">
-                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Bank / E-Wallet</dt><dd className="text-right font-bold text-slate-900">{runner.bankName || '—'}</dd></div>
-                      <div className="flex justify-between gap-3"><dt className="text-slate-500">No. Rekening</dt><dd className="break-all text-right font-bold text-slate-900">{runner.accountNumber || '—'}</dd></div>
-                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Nama Pemilik</dt><dd className="text-right font-bold text-slate-900">{runner.accountHolderName || '—'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Bank / E-Wallet</dt><dd className="text-right font-bold text-slate-900">{runner?.bankName || '—'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-slate-500">No. Rekening</dt><dd className="break-all text-right font-bold text-slate-900">{runner?.accountNumber || '—'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Nama Pemilik</dt><dd className="text-right font-bold text-slate-900">{runner?.accountHolderName || '—'}</dd></div>
                     </dl>
                     {holderMismatch && (
                       <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs font-semibold text-amber-900">
@@ -219,10 +224,10 @@ export default function AdminRunners() {
 
                 {status !== 'approved' && (
                   <footer className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-4 py-3 sm:px-6">
-                    <button type="button" disabled={savingId === runner.id || !runner.nrp || !runner.phoneNumber || !runner.ktmUrl || !runner.bankName || !runner.accountNumber || !runner.accountHolderName} onClick={() => reviewRunner(runner, 'APPROVED')} className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50">
+                    <button type="button" disabled={savingId === runner?.id || !runner?.nrp || !runner?.phoneNumber || !runner?.ktmUrl || !runner?.bankName || !runner?.accountNumber || !runner?.accountHolderName} onClick={() => reviewRunner(runner, 'APPROVED')} className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50">
                       <CheckCircle className="h-5 w-5 text-emerald-600" />Setujui
                     </button>
-                    <button type="button" disabled={savingId === runner.id} onClick={() => { setRejectingRunner(runner); setRejectionReason(''); setError(''); }} className="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-50">
+                    <button type="button" disabled={savingId === runner?.id} onClick={() => { setRejectingRunner(runner); setRejectionReason(''); setError(''); }} className="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-50">
                       <XCircle className="h-5 w-5 text-rose-600" />Tolak
                     </button>
                   </footer>
@@ -239,7 +244,7 @@ export default function AdminRunners() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 id="runner-rejection-title" className="text-lg font-black text-slate-900">Tolak Pendaftaran Runner</h2>
-                <p className="mt-1 text-sm text-slate-500">{rejectingRunner.name} akan menerima alasan ini melalui email.</p>
+                <p className="mt-1 text-sm text-slate-500">{rejectingRunner?.name || 'Runner'} akan menerima alasan ini melalui email.</p>
               </div>
               <button type="button" onClick={() => setRejectingRunner(null)} aria-label="Tutup dialog" className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button>
             </div>
@@ -250,7 +255,7 @@ export default function AdminRunners() {
               </label>
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setRejectingRunner(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600">Batal</button>
-                <button type="submit" disabled={!rejectionReason.trim() || savingId === rejectingRunner.id} className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700 disabled:opacity-50">Kirim Penolakan</button>
+                <button type="submit" disabled={!rejectionReason.trim() || savingId === rejectingRunner?.id} className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700 disabled:opacity-50">Kirim Penolakan</button>
               </div>
             </form>
           </section>

@@ -1,9 +1,9 @@
 import { useAuth } from '../../context/AuthContext';
 import DemoPaymentPanel from '../../components/common/DemoPaymentPanel';
-import { formatOrderDate } from '../../lib/orderStatus';
+import { formatOrderDate, normalizeOrderStatus } from '../../lib/orderStatus';
 import PickupScanner from '../../components/common/PickupScanner';
 import { useCallback, useEffect, useState } from 'react';
-import { api } from '../../lib/api';
+import { api, asArray } from '../../lib/api';
 import { CheckCircle2, Clock3, FileText, RefreshCw, Utensils, X } from 'lucide-react';
 
 const statusTabs = [
@@ -14,14 +14,20 @@ const statusTabs = [
   { id: 'dibatalkan', label: 'Dibatalkan', statuses: ['cancelled'] },
 ];
 
-const getDisplayStatus = (status) => {
-  if (status === 'pending') return 'baru';
-  if (status === 'cooking') return 'dimasak';
-  if (status === 'ready' || status === 'delivering') return 'siap';
-  if (status === 'completed') return 'selesai';
-  if (status === 'cancelled') return 'dibatalkan';
-  return 'lainnya';
-};
+const getDisplayStatus = (status) => ({
+  pending: 'baru',
+  cooking: 'dimasak',
+  ready: 'siap',
+  delivering: 'siap',
+  completed: 'selesai',
+  cancelled: 'dibatalkan',
+}[normalizeOrderStatus(status)] || 'lainnya');
+
+const normalizeOrders = (response) =>
+  asArray(response).map((order) => ({
+    ...order,
+    status: normalizeOrderStatus(order.status),
+  }));
 
 const isDigitalPaymentPending = (order) =>
   ['QRIS', 'DEBIT'].includes(String(order.paymentMethod || '').toUpperCase()) &&
@@ -30,11 +36,16 @@ const isDigitalPaymentPending = (order) =>
 const getItemSummary = (items) =>
   (Array.isArray(items) ? items : [])
     .map((item) => {
-      const name = item.name || item.menu_name || 'Menu';
-      const note = item.notes || item.note;
-      return `${item.quantity || 1}× ${name}${note ? ` (${note})` : ''}`;
+      const name = item?.name || item?.menu_name || 'Menu';
+      const note = item?.notes || item?.note;
+      return `${Number(item?.quantity ?? 1) || 1}× ${name}${note ? ` (${note})` : ''}`;
     })
     .join(', ');
+
+const formatPrice = (value) => {
+  const amount = Number(value ?? 0);
+  return (Number.isFinite(amount) ? amount : 0).toLocaleString('id-ID');
+};
 
 export default function CanteenOrders() {
   const { profile } = useAuth();
@@ -50,7 +61,7 @@ export default function CanteenOrders() {
     setOrdersError(null);
     try {
       const data = await api.get('/orders/canteen');
-      setOrders(data);
+      setOrders(normalizeOrders(data));
     } catch (error) {
       setOrdersError(`Gagal memuat pesanan: ${error.message}`);
     } finally {
@@ -66,9 +77,13 @@ export default function CanteenOrders() {
     setUpdatingOrderId(orderId);
     setOrdersError(null);
     try {
-      const { order } = await api.patch(`/orders/${orderId}/status`, { status });
+      const response = await api.patch(`/orders/${orderId}/status`, { status });
+      if (!response?.order) {
+        throw new Error('Respons pesanan dari server tidak valid.');
+      }
+      const order = normalizeOrders([response.order])[0];
       setOrders((currentOrders) =>
-        currentOrders.map((currentOrder) => currentOrder.id === orderId ? order : currentOrder)
+        normalizeOrders(currentOrders).map((currentOrder) => currentOrder?.id === orderId ? order : currentOrder)
       );
       setNotificationMsg(`Pesanan #${orderId} sekarang berstatus ${status}.`);
       setTimeout(() => setNotificationMsg(null), 3000);
@@ -79,8 +94,9 @@ export default function CanteenOrders() {
     }
   };
 
-  const filteredOrders = orders.filter(
-    (order) => getDisplayStatus(order.status) === activeTab
+  const safeOrders = normalizeOrders(orders);
+  const filteredOrders = safeOrders.filter(
+    (order) => getDisplayStatus(order?.status) === activeTab
   );
 
   return (
@@ -123,7 +139,7 @@ export default function CanteenOrders() {
 <PickupScanner onVerified={fetchOrders} />
       <nav aria-label="Filter status pesanan" className="merchant-card-glow bg-white border border-slate-200 flex gap-1.5 overflow-x-auto rounded-xl p-2">
         {statusTabs.map((tab) => {
-          const count = orders.filter((order) => tab.statuses.includes(order.status)).length;
+          const count = safeOrders.filter((order) => getDisplayStatus(order?.status) === tab.id).length;
           return (
             <button
               key={tab.id}
@@ -168,30 +184,28 @@ export default function CanteenOrders() {
 
         {!loadingOrders && filteredOrders.map((order) => (
           <article
-            key={order.id}
+            key={order?.id}
             data-testid="canteen-order-card"
             className="merchant-card-glow space-y-4 rounded-xl border border-slate-200 bg-white p-5"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 className="font-black text-slate-900">Pesanan #{order.id}</h3>
+                <h3 className="font-black text-slate-900">Pesanan #{order?.id ?? '—'}</h3>
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
                   <Clock3 className="h-3.5 w-3.5" />
-                  {order.createdAt
-                    ? new Date(order.createdAt).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })
-                    : 'Waktu tidak tersedia'}
+                  {formatOrderDate(order?.createdAt)}
                 </p>
               </div>
               <div className="text-right">
                 <p className="font-black text-blue-700">
-                  Rp {Number(order.totalPrice || 0).toLocaleString('id-ID')}
+                  Rp {formatPrice(order?.totalPrice)}
                 </p>
-                {order.status === 'cancelled' ? (
+                {order?.status === 'cancelled' ? (
                   <span className="mt-1 inline-flex rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">
                     Dibatalkan Pembeli
                   </span>
                 ) : (
-                  <p className="mt-1 text-xs font-semibold capitalize text-slate-500">{order.status}</p>
+                  <p className="mt-1 text-xs font-semibold capitalize text-slate-500">{order?.status || 'Status tidak tersedia'}</p>
                 )}
               </div>
             </div>
@@ -200,7 +214,7 @@ export default function CanteenOrders() {
               {getItemSummary(order.items) || 'Detail item belum tersedia'}
             </div>
 
-{String(order.orderType).toUpperCase() === 'SCHEDULED' && (
+{String(order?.orderType || '').toUpperCase() === 'SCHEDULED' && (
   <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
     <p className="flex items-center gap-2 text-sm font-bold text-[#2152B7]">
       <Clock3 className="h-4 w-4 shrink-0" />
@@ -296,12 +310,12 @@ export default function CanteenOrders() {
 {order.status === 'ready' && (
   <div className="text-right">
     <p className="text-xs font-semibold text-amber-700">
-      {String(order.fulfillmentType).toLowerCase() === 'pickup'
+      {String(order?.fulfillmentType || '').toLowerCase() === 'pickup'
         ? 'Menunggu pelanggan mengambil pesanan'
         : 'Menunggu Campus Runner mengambil pesanan'}
     </p>
 
-    {String(order.fulfillmentType).toLowerCase() === 'pickup' && (
+    {String(order?.fulfillmentType || '').toLowerCase() === 'pickup' && (
       <p className="mt-1 text-xs text-slate-500">
         Gunakan scanner di atas untuk memverifikasi QR E-ticket pelanggan.
       </p>

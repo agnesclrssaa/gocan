@@ -331,8 +331,10 @@ const updateOrderStatus = async (req, res, next) => {
   try {
     const targetStatus = req.body?.status;
     const userRole = req.auth.role;
-    const allowedStatuses =
-      userRole === 'canteen' ? ['cooking', 'ready'] : ['delivering', 'completed'];
+    const isAdminOrCanteen = ['admin', 'canteen'].includes(userRole);
+    const allowedStatuses = isAdminOrCanteen
+      ? ['cooking', 'ready']
+      : ['delivering', 'completed'];
     if (!allowedStatuses.includes(targetStatus)) {
       return res.status(400).json({ error: 'Status tujuan tidak valid untuk peran akun ini.' });
     }
@@ -353,20 +355,26 @@ const updateOrderStatus = async (req, res, next) => {
     }
 
     let updatedOrder;
-    if (userRole === 'canteen') {
-      const user = await prisma.user.findUnique({
-        where: { id: req.auth.userId },
-        select: { canteenId: true },
-      });
-      if (!user?.canteenId) {
-        return res.status(403).json({ error: 'Akun ini belum terhubung ke kantin.' });
+    if (isAdminOrCanteen) {
+      let currentOrder;
+      if (userRole === 'admin') {
+        currentOrder = await prisma.order.findUnique({ where: { id: orderId } });
+      } else {
+        const user = await prisma.user.findUnique({
+          where: { id: req.auth.userId },
+          select: { canteenId: true },
+        });
+        if (!user?.canteenId) {
+          return res.status(403).json({ error: 'Akun ini belum terhubung ke kantin.' });
+        }
+
+        currentOrder = await prisma.order.findFirst({
+          where: { id: orderId, canteenId: user.canteenId },
+        });
       }
 
-      const currentOrder = await prisma.order.findFirst({
-        where: { id: orderId, canteenId: user.canteenId },
-      });
       if (!currentOrder) {
-        return res.status(404).json({ error: 'Pesanan tidak ditemukan untuk kantin ini.' });
+        return res.status(404).json({ error: 'Pesanan tidak ditemukan.' });
       }
       if (
   targetStatus === 'cooking' &&
