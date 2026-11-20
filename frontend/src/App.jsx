@@ -247,7 +247,7 @@ function ApiNotice() {
 
 export function App() {
   return (
-    <BrowserRouter basename="/gocan">
+    <BrowserRouter>
       <AuthProvider>
         <CartProvider>
           <Routes>

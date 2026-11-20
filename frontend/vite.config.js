@@ -5,7 +5,7 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   envDir: '..',
-  base: '/gocan/',
+  base: '/',
   plugins: [react(), tailwindcss()],
   server: {
     host: true, // Listen on all local IPs (0.0.0.0)
