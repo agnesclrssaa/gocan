@@ -2,7 +2,6 @@ require('dotenv').config();
 
 let server;
 let isShuttingDown = false;
-let databaseReady = false;
 let listenerReady = false;
 let startupLogged = false;
 
@@ -53,13 +52,6 @@ app.use(
 );
 app.get('/', (_req, res) => res.json({ status: 'GoCan API is running' }));
 
-app.use((_req, res, next) => {
-  if (!databaseReady) {
-    return res.status(503).json({ error: 'Database belum siap.' });
-  }
-  return next();
-});
-
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/search', searchRoutes);
@@ -97,27 +89,14 @@ async function shutdown(signal) {
 }
 
 function logStartupReady() {
-  if (databaseReady && listenerReady && !startupLogged) {
+  if (listenerReady && !startupLogged) {
     startupLogged = true;
     console.log(`GoCan API listening on port ${PORT}`);
   }
 }
 
-prisma
-  .$connect()
-  .then(() => {
-    databaseReady = true;
-    logStartupReady();
-  })
-  .catch(async (error) => {
-    console.error('Could not connect to the database:', error);
-    process.exitCode = 1;
-    await shutdown('database connection failure');
-  });
-
-if (require.main === module) {
-  process.once('SIGINT', () => shutdown('SIGINT'));
-  process.once('SIGTERM', () => shutdown('SIGTERM'));
+async function startServer() {
+  await prisma.$connect();
 
   server = app.listen(Number(PORT));
   server.on('listening', () => {
@@ -131,6 +110,17 @@ if (require.main === module) {
   });
   server.on('close', () => {
     console.error('GoCan API listener closed.');
+  });
+}
+
+if (require.main === module) {
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+
+  startServer().catch(async (error) => {
+    console.error('Could not connect to the database:', error);
+    process.exitCode = 1;
+    await shutdown('database connection failure');
   });
 }
 
