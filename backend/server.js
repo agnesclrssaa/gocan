@@ -31,6 +31,7 @@ const paymentRoutes = require('./routes/payment.routes');
 const runnerRoutes = require('./routes/runner.routes');
 const searchRoutes = require('./routes/search.routes');
 const uploadRoutes = require('./routes/upload.routes');
+const chatsRoutes = require('./routes/chats.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -66,6 +67,7 @@ app.use('/api/canteens', menuRoutes);
 app.use('/api/canteen', canteenOrderRoutes);
 app.use('/api/canteens', ratingRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/chats', chatsRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Endpoint tidak ditemukan.' });

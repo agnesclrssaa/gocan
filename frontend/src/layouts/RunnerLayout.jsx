@@ -6,6 +6,7 @@ import {
   Wallet,
   Compass,
   Bike,
+  MessageCircle,
   ExternalLink,
   User,
   LogOut
@@ -105,6 +106,18 @@ export default function RunnerLayout() {
               <Bike className="w-3.5 h-3.5" />
               <span>Proses Antar Aktif</span>
             </NavLink>
+            <NavLink
+              to="/chat"
+              className={({ isActive }) =>
+                `flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${isActive
+                  ? 'bg-white text-[#2152B7] shadow-sm'
+                  : 'text-white hover:bg-white/15'
+                }`
+              }
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>Live Chat</span>
+            </NavLink>
           </nav>
 
           {/* Back to Customer Web & Logout */}
@@ -174,6 +187,17 @@ export default function RunnerLayout() {
           >
             <Bike className="w-5 h-5" />
             <span className="text-[9px] sm:text-[10px]">Antar</span>
+          </NavLink>
+
+          <NavLink
+            to="/chat"
+            className={({ isActive }) =>
+              `flex min-w-0 flex-col items-center gap-1 px-1 py-1 transition ${isActive ? 'font-black text-[#2152B7]' : 'text-slate-500 hover:text-[#2152B7]'
+              }`
+            }
+          >
+            <MessageCircle className="h-5 w-5" />
+            <span className="text-[9px] sm:text-[10px]">Chat</span>
           </NavLink>
 
           <Link

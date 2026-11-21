@@ -317,8 +317,6 @@ export function App() {
                 <Route path="/orders/:orderId" element={<OrderTracking />} />
                 <Route path="/order/:orderId" element={<OrderTracking />} />
                 <Route path="/history" element={<History />} />
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/chat/:conversationId" element={<Chat />} />
                 <Route path="/customer-preview">
                   <Route index element={<Home />} />
                   <Route path="canteen/:canteenId" element={<CanteenDetail />} />
@@ -330,6 +328,11 @@ export function App() {
                   <Route path="history" element={<History />} />
                 </Route>
               </Route>
+            </Route>
+
+            <Route element={<ProtectedRoute allowedRoles={['customer', 'canteen', 'canteen_staff', 'runner', 'courier']} requireApproval={false} />}>
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/chat/:conversationId" element={<Chat />} />
             </Route>
 
             {/* Canteen Portal Routes (Terproteksi Role & Approval) */}

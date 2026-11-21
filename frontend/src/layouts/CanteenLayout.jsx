@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   Utensils,
+  MessageCircle,
   Bell,
   ChevronRight,
   ExternalLink,
@@ -87,6 +88,13 @@ export default function CanteenLayout() {
       label: 'Kelola Menu',
       icon: Utensils,
       desc: 'Katalog stok & harga'
+    },
+    {
+      to: '/chat',
+      end: false,
+      label: 'Live Chat',
+      icon: MessageCircle,
+      desc: 'Pesan dari Customer'
     }
   ];
 

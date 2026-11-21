@@ -50,7 +50,17 @@ const listOrders = async (req, res, next) => {
         runnerId: true,
         createdAt: true,
         updatedAt: true,
-        canteen: { select: { name: true, location: true } },
+        canteen: {
+          select: {
+            name: true,
+            location: true,
+            users: {
+              where: { role: { in: ['canteen', 'canteen_staff'] } },
+              select: { id: true },
+              take: 1,
+            },
+          },
+        },
         courier: { select: { id: true, name: true } },
         runner: { select: { id: true, name: true } },
       },
@@ -86,8 +96,19 @@ const getOrder = async (req, res, next) => {
     const order = await prisma.order.findFirst({
       where: { id: orderId, userId: req.auth.userId },
       include: {
-        canteen: { select: { name: true, location: true } },
+        canteen: {
+          select: {
+            name: true,
+            location: true,
+            users: {
+              where: { role: { in: ['canteen', 'canteen_staff'] } },
+              select: { id: true },
+              take: 1,
+            },
+          },
+        },
         courier: { select: { id: true, name: true } },
+        runner: { select: { id: true, name: true } },
       },
     });
     if (!order) {

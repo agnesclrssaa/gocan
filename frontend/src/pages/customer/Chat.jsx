@@ -1,91 +1,44 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
-  ImagePlus,
-  Paperclip,
   Search,
   Send,
   Smile,
   Store,
   UserRound,
-  X,
 } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
+import { useAuth } from '../../context/AuthContext';
+import { api } from '../../lib/api';
 import './Chat.css';
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-
-const demoConversations = [
-  {
-    id: 'courier-001',
-    role: 'Kurir',
-    name: 'Andi',
-    orderId: '001',
-    canteenName: 'Molen Mini',
-    status: 'Dalam perjalanan',
-    online: true,
-    unread: 2,
-    lastTime: '10:42',
-    lastMessage: 'Pesanan sudah saya ambil dari kantin.',
-  },
-  {
-    id: 'canteen-001',
-    role: 'Kantin',
-    name: 'Molen Mini',
-    orderId: '001',
-    canteenName: 'Molen Mini',
-    status: 'Pesanan diproses',
-    online: true,
-    unread: 0,
-    lastTime: '09:58',
-    lastMessage: 'Pesanan Anda sedang kami siapkan.',
-  },
-  {
-    id: 'courier-002',
-    role: 'Kurir',
-    name: 'Rama',
-    orderId: '002',
-    canteenName: 'Pangsit Bu Sari',
-    status: 'Pesanan selesai',
-    online: false,
-    unread: 0,
-    lastTime: 'Kemarin',
-    lastMessage: 'Terima kasih, pesanan sudah diterima.',
-  },
-];
-
-const initialMessages = {
-  'courier-001': [
-    { id: 1, sender: 'courier', text: 'Halo! Saya Andi, kurir untuk pesanan #001.', time: '10:30' },
-    { id: 2, sender: 'customer', text: 'Baik kak, tolong antar ke Gedung A ya.', time: '10:31' },
-    { id: 3, sender: 'courier', text: 'Pesanan sudah saya ambil dari kantin.', time: '10:42' },
-  ],
-  'canteen-001': [
-    { id: 1, sender: 'canteen', text: 'Halo! Pesanan #001 sudah kami terima.', time: '09:55' },
-    { id: 2, sender: 'customer', text: 'Terima kasih, mohon disiapkan dengan baik ya.', time: '09:56' },
-    { id: 3, sender: 'canteen', text: 'Pesanan Anda sedang kami siapkan.', time: '09:58' },
-  ],
-  'courier-002': [
-    { id: 1, sender: 'customer', text: 'Pesanan sudah sampai kak?', time: 'Kemarin, 14:20' },
-    { id: 2, sender: 'courier', text: 'Sudah sampai di lokasi. Terima kasih!', time: 'Kemarin, 14:25' },
-  ],
+const formatTime = (date) => {
+  if (!date) return '';
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(date));
 };
 
 function Avatar({ conversation, size = 'normal' }) {
-  const isCanteen = conversation.role === 'Kantin';
+  const isCanteen = conversation.partner?.role === 'Kantin';
   return (
-    <div className={`chat-avatar chat-avatar-${size} ${isCanteen ? 'chat-avatar-canteen' : 'chat-avatar-courier'}`} aria-hidden="true">
+    <div
+      className={`chat-avatar chat-avatar-${size} ${isCanteen ? 'chat-avatar-canteen' : 'chat-avatar-courier'}`}
+      aria-hidden="true"
+    >
       {isCanteen ? <Store /> : <UserRound />}
     </div>
   );
 }
 
-function ChatList({ conversations, activeId, onSelect, loading }) {
+function ChatList({ conversations, activeId, onSelect, loading, error }) {
   const [query, setQuery] = useState('');
   const filtered = conversations.filter((conversation) =>
-    `${conversation.name} ${conversation.role} ${conversation.orderId}`
+    `${conversation.partner.name} ${conversation.partner.role} ${conversation.orderId || ''}`
       .toLowerCase()
       .includes(query.toLowerCase())
   );
@@ -108,6 +61,8 @@ function ChatList({ conversations, activeId, onSelect, loading }) {
         />
       </label>
 
+      {error && <div role="alert" className="chat-error">{error}</div>}
+
       {loading ? (
         <div className="chat-list-loading" aria-label="Memuat percakapan">
           {[1, 2, 3].map((item) => (
@@ -129,24 +84,23 @@ function ChatList({ conversations, activeId, onSelect, loading }) {
             <button
               type="button"
               key={conversation.id}
-              className={`chat-list-item ${activeId === conversation.id ? 'is-active' : ''}`}
+              className={`chat-list-item ${String(activeId) === String(conversation.id) ? 'is-active' : ''}`}
               onClick={() => onSelect(conversation)}
             >
               <div className="chat-avatar-wrap">
                 <Avatar conversation={conversation} />
-                {conversation.online && <span className="chat-online-dot" />}
               </div>
               <div className="chat-list-copy">
                 <div className="chat-list-name-row">
                   <div>
-                    <strong>{conversation.name}</strong>
-                    <span>{conversation.role}</span>
+                    <strong>{conversation.partner.name}</strong>
+                    <span>{conversation.partner.role}</span>
                   </div>
-                  <time>{conversation.lastTime}</time>
+                  <time>{formatTime(conversation.lastMessageAt)}</time>
                 </div>
                 <div className="chat-list-preview-row">
-                  <p>{conversation.lastMessage}</p>
-                  {conversation.unread > 0 && <b>{conversation.unread}</b>}
+                  <p>{conversation.lastMessage || 'Belum ada pesan'}</p>
+                  {conversation.unreadCount > 0 && <b>{conversation.unreadCount}</b>}
                 </div>
               </div>
             </button>
@@ -163,11 +117,8 @@ function ChatBubble({ message, conversation }) {
     <div className={`chat-bubble-row ${isCustomer ? 'is-customer' : 'is-partner'}`}>
       {!isCustomer && <Avatar conversation={conversation} size="small" />}
       <div>
-        {message.imageUrl && (
-          <img className="chat-message-image" src={message.imageUrl} alt="Lampiran foto" />
-        )}
-        {message.text && <div className="chat-bubble">{message.text}</div>}
-        <time>{message.time}</time>
+        <div className="chat-bubble">{message.text}</div>
+        <time>{formatTime(message.createdAt)}</time>
       </div>
     </div>
   );
@@ -176,138 +127,154 @@ function ChatBubble({ message, conversation }) {
 export default function Chat() {
   const navigate = useNavigate();
   const { conversationId } = useParams();
-  const [searchParams] = useSearchParams();
+  const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [conversations, setConversations] = useState(demoConversations);
-  const [messages, setMessages] = useState(initialMessages);
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState('');
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageError, setImageError] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
-  const fileInputRef = useRef(null);
+  const [sending, setSending] = useState(false);
+  const [chatError, setChatError] = useState('');
+  const [messageError, setMessageError] = useState('');
   const messageEndRef = useRef(null);
-  const localObjectUrlsRef = useRef(new Set());
+  const lastMessageIdRef = useRef(null);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setLoading(false), 450);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  const requestedOrderId = searchParams.get('orderId');
-  const requestedRole = searchParams.get('role');
-
-  const activeConversation = useMemo(() => {
-    if (conversationId) {
-      const exact = conversations.find((item) => item.id === conversationId);
-      if (exact) return exact;
-
-      const requestedRole = conversationId.startsWith('canteen') ? 'Kantin' : 'Kurir';
-      const contextOrderId = searchParams.get('orderId');
-      return conversations.find((item) =>
-        item.role === requestedRole &&
-        (!contextOrderId || String(item.orderId) === String(contextOrderId))
-      ) || conversations.find((item) => item.role === requestedRole) || conversations[0];
+  const fetchConversations = useCallback(async (signal) => {
+    try {
+      const result = await api.get('/chats', { signal });
+      setConversations(Array.isArray(result) ? result : []);
+      setChatError('');
+    } catch (error) {
+      if (!signal?.aborted) {
+        console.error('Gagal memuat percakapan:', error);
+        setChatError(error.message || 'Gagal memuat percakapan.');
+      }
+    } finally {
+      if (!signal?.aborted) setLoading(false);
     }
-    if (requestedOrderId && requestedRole) {
-      const roleMatch = requestedRole === 'canteen' ? 'Kantin' : 'Kurir';
-      return conversations.find((item) =>
-        String(item.orderId) === String(requestedOrderId) && item.role === roleMatch
-      ) || conversations[0];
-    }
-    return null;
-  }, [conversationId, conversations, requestedOrderId, requestedRole]);
-
-  useEffect(() => () => {
-    localObjectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    localObjectUrlsRef.current.clear();
   }, []);
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeConversation?.id, messages]);
+    const controller = new AbortController();
+    fetchConversations(controller.signal);
+    const intervalId = window.setInterval(
+      () => fetchConversations(controller.signal),
+      3000
+    );
+    return () => {
+      controller.abort();
+      window.clearInterval(intervalId);
+    };
+  }, [fetchConversations]);
+
+  const activeConversation = useMemo(
+    () => conversations.find((item) => String(item.id) === String(conversationId)),
+    [conversationId, conversations]
+  );
+
+  const fetchMessages = useCallback(async (id, signal) => {
+    try {
+      const result = await api.get(`/chats/${encodeURIComponent(id)}/messages`, { signal });
+      if (signal?.aborted) return;
+      const currentUserId = String(profile?.id);
+      setMessages(
+        (Array.isArray(result) ? result : []).map((message) => ({
+          ...message,
+          sender: String(message.senderId) === currentUserId ? 'customer' : 'partner',
+          text: message.content,
+        }))
+      );
+      setMessageError('');
+    } catch (error) {
+      if (!signal?.aborted) {
+        console.error('Gagal memuat pesan chat:', error);
+        setMessageError(error.message || 'Gagal memuat pesan.');
+      }
+    }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    setMessages([]);
+    lastMessageIdRef.current = null;
+    if (!conversationId || !activeConversation) return undefined;
+
+    const controller = new AbortController();
+    fetchMessages(activeConversation.id, controller.signal);
+    const intervalId = window.setInterval(
+      () => fetchMessages(activeConversation.id, controller.signal),
+      3000
+    );
+    return () => {
+      controller.abort();
+      window.clearInterval(intervalId);
+    };
+  }, [conversationId, activeConversation?.id, fetchMessages]);
+
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.id !== lastMessageIdRef.current) {
+      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      lastMessageIdRef.current = lastMessage.id;
+    }
+  }, [messages]);
 
   const selectConversation = (conversation) => {
-    navigate(`/chat/${conversation.id}`, { replace: false });
+    navigate(`/chat/${conversation.id}`);
   };
 
-  const handleFile = (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    if (!allowedTypes.includes(file.type)) {
-      setImageError('Format foto harus JPG, JPEG, PNG, atau WEBP.');
-      return;
-    }
-    if (file.size > MAX_IMAGE_SIZE) {
-      setImageError('Ukuran foto maksimal 5 MB.');
-      return;
-    }
-    setImageError('');
-    setImagePreview((current) => {
-      if (current?.url) {
-        URL.revokeObjectURL(current.url);
-        localObjectUrlsRef.current.delete(current.url);
-      }
-      const url = URL.createObjectURL(file);
-      localObjectUrlsRef.current.add(url);
-      return { file, url, name: file.name };
-    });
-  };
+  const sendMessage = async () => {
+    const content = draft.trim();
+    if (!activeConversation || !content || sending) return;
 
-  const cancelImage = () => {
-    if (imagePreview?.url) {
-      URL.revokeObjectURL(imagePreview.url);
-      localObjectUrlsRef.current.delete(imagePreview.url);
+    setSending(true);
+    setMessageError('');
+    try {
+      await api.post(`/chats/${encodeURIComponent(activeConversation.id)}/messages`, { content });
+      setDraft('');
+      setShowEmoji(false);
+      await fetchMessages(activeConversation.id);
+      await fetchConversations();
+    } catch (error) {
+      console.error('Gagal mengirim pesan chat:', error);
+      setMessageError(error.message || 'Pesan gagal dikirim. Silakan coba lagi.');
+    } finally {
+      setSending(false);
     }
-    setImagePreview(null);
-    setImageError('');
-  };
-
-  const appendDemoMessage = () => {
-    if (!activeConversation) return;
-    const text = draft.trim();
-    if (!text && !imagePreview) return;
-    const now = new Date();
-    const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    const newMessage = {
-      id: Date.now(),
-      sender: 'customer',
-      text,
-      imageUrl: imagePreview?.url,
-      time,
-      localDemo: true,
-    };
-    setMessages((current) => ({
-      ...current,
-      [activeConversation.id]: [...(current[activeConversation.id] || []), newMessage],
-    }));
-    setDraft('');
-    setImagePreview(null);
-    setShowEmoji(false);
   };
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      appendDemoMessage();
+      sendMessage();
     }
   };
 
-  const mobileConversationOpen = Boolean(activeConversation);
+  const isCustomer = profile?.role === 'customer';
+  const portalPath = profile?.role === 'canteen' || profile?.role === 'canteen_staff'
+    ? '/canteen-portal'
+    : '/runner-portal';
 
   return (
-    <div className="chat-page">
-      <Navbar />
-      <main className={`chat-shell ${mobileConversationOpen ? 'has-conversation' : ''}`}>
+    <div className={`chat-page ${isCustomer ? 'is-customer' : 'is-partner'}`}>
+      {isCustomer ? (
+        <Navbar />
+      ) : (
+        <header className="chat-partner-bar">
+          <Link to={portalPath}>← Kembali ke portal</Link>
+          <strong>Live Chat</strong>
+        </header>
+      )}
+      <main className={`chat-shell ${activeConversation ? 'has-conversation' : ''}`}>
         <ChatList
           conversations={conversations}
           activeId={activeConversation?.id}
           onSelect={selectConversation}
           loading={loading}
+          error={chatError}
         />
 
         {activeConversation ? (
-          <section className="chat-conversation" aria-label={`Percakapan dengan ${activeConversation.name}`}>
+          <section className="chat-conversation" aria-label={`Percakapan dengan ${activeConversation.partner.name}`}>
             <header className="chat-header">
               <button type="button" className="chat-back" onClick={() => navigate('/chat')} aria-label="Kembali ke daftar chat">
                 <ArrowLeft />
@@ -315,44 +282,36 @@ export default function Chat() {
               <Avatar conversation={activeConversation} />
               <div className="chat-header-copy">
                 <div>
-                  <h2>{activeConversation.name}</h2>
-                  <span>{activeConversation.role}</span>
+                  <h2>{activeConversation.partner.name}</h2>
+                  <span>{activeConversation.partner.role}</span>
                 </div>
-                <p>
-                  <i className={activeConversation.online ? 'online' : ''} />
-                  {activeConversation.online ? 'Online' : 'Offline'}
-                  <b>·</b> Pesanan #{activeConversation.orderId}
-                </p>
+                {activeConversation.orderId && (
+                  <p>Pesanan #{activeConversation.orderId}</p>
+                )}
               </div>
             </header>
 
-            <div className="chat-order-context">
-              <span>Pesanan #{activeConversation.orderId}</span>
-              <b>{activeConversation.canteenName}</b>
-              <i>·</i>
-              <em>{activeConversation.status}</em>
-            </div>
-
-            <div className="chat-messages">
-              <div className="chat-date-divider"><span>Hari ini</span></div>
-              {(messages[activeConversation.id] || []).map((message) => (
-                <ChatBubble key={message.id} message={message} conversation={activeConversation} />
-              ))}
-              <div ref={messageEndRef} />
-            </div>
-
-            {imageError && <div className="chat-image-error" role="alert">{imageError}</div>}
-
-            {imagePreview && (
-              <div className="chat-image-preview">
-                <img src={imagePreview.url} alt={`Preview ${imagePreview.name}`} />
-                <div>
-                  <p>{imagePreview.name}</p>
-                  <span>Preview lokal · belum dikirim</span>
-                </div>
-                <button type="button" onClick={cancelImage} aria-label="Batalkan foto"><X /></button>
+            {activeConversation.orderId && (
+              <div className="chat-order-context">
+                <span>Pesanan #{activeConversation.orderId}</span>
+                {activeConversation.canteenName && <b>{activeConversation.canteenName}</b>}
+                {activeConversation.status && (
+                  <>
+                    {activeConversation.canteenName && <i>·</i>}
+                    <em>{activeConversation.status}</em>
+                  </>
+                )}
               </div>
             )}
+
+            <div className="chat-messages">
+              {messages.length > 0 && <div className="chat-date-divider"><span>Riwayat pesan</span></div>}
+              {messages.map((message) => (
+                <ChatBubble key={message.id} message={message} conversation={activeConversation} />
+              ))}
+              {messageError && <p className="chat-message-error" role="alert">{messageError}</p>}
+              <div ref={messageEndRef} />
+            </div>
 
             <div className="chat-input-area">
               {showEmoji && (
@@ -366,24 +325,15 @@ export default function Chat() {
                 <button type="button" className="chat-tool" onClick={() => setShowEmoji((value) => !value)} aria-label="Buka emoji">
                   <Smile />
                 </button>
-                <button type="button" className="chat-tool" onClick={() => fileInputRef.current?.click()} aria-label="Lampirkan foto">
-                  <Paperclip />
-                </button>
-                <input
-                  ref={fileInputRef}
-                  className="chat-file-input"
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                  onChange={handleFile}
-                />
                 <textarea
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
                   onKeyDown={handleKeyDown}
                   rows={1}
+                  maxLength={4000}
                   placeholder="Tulis pesan..."
                 />
-                <button type="button" className="chat-send" onClick={appendDemoMessage} aria-label="Kirim pesan" disabled={!draft.trim() && !imagePreview}>
+                <button type="button" className="chat-send" onClick={sendMessage} aria-label="Kirim pesan" disabled={!draft.trim() || sending}>
                   <Send />
                 </button>
               </div>
@@ -391,9 +341,9 @@ export default function Chat() {
           </section>
         ) : (
           <section className="chat-placeholder">
-            <div className="chat-placeholder-icon"><ImagePlus /></div>
+            <div className="chat-placeholder-icon"><UserRound /></div>
             <h2>Pilih percakapan</h2>
-            <p>Pilih kurir atau kantin untuk melihat pesan terkait pesanan Anda.</p>
+            <p>Pilih Customer, Kantin, atau Runner untuk melihat dan membalas pesan.</p>
           </section>
         )}
       </main>

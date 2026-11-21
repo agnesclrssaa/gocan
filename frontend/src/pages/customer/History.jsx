@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Clock3,
   MapPin,
   RefreshCw,
   ShoppingBag,
+  MessageCircle,
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
@@ -21,7 +22,10 @@ import {
   ORDER_TONES,
 } from '../../lib/orderStatus';
 
-const OrderCard = ({ order, preview }) => {
+const OrderCard = ({ order, preview, active = false }) => {
+  const navigate = useNavigate();
+  const [openingChat, setOpeningChat] = useState('');
+  const [chatError, setChatError] = useState('');
   const items = Array.isArray(order.items) ? order.items : [];
 
   const itemCount = items.reduce(
@@ -30,6 +34,24 @@ const OrderCard = ({ order, preview }) => {
   );
 
   const presentation = getOrderPresentation(order);
+
+  const openChat = async (targetUserId, partner) => {
+    if (!targetUserId || openingChat) return;
+    setOpeningChat(partner);
+    setChatError('');
+    try {
+      const { conversation } = await api.post('/chats', {
+        targetUserId,
+        orderId: order.id,
+      });
+      navigate(`/chat/${conversation.id}`);
+    } catch (error) {
+      console.error(`Gagal membuka chat dengan ${partner}:`, error);
+      setChatError(error.message || `Chat dengan ${partner} gagal dibuka.`);
+    } finally {
+      setOpeningChat('');
+    }
+  };
 
   return (
     <article className="customer-card rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm">
@@ -114,6 +136,36 @@ const OrderCard = ({ order, preview }) => {
             )
             .join(', ')}
         </p>
+      )}
+
+      {active && (
+        <div className="mt-4 border-t border-slate-100 pt-3">
+          <div className="flex flex-wrap gap-2">
+            {order.canteen?.users?.[0]?.id && (
+              <button
+                type="button"
+                disabled={Boolean(openingChat)}
+                onClick={() => openChat(order.canteen.users[0].id, 'Kantin')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-[#dc0413] transition hover:bg-red-100 disabled:cursor-wait disabled:opacity-60"
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                {openingChat === 'Kantin' ? 'Membuka...' : 'Chat Kantin'}
+              </button>
+            )}
+            {(order.courier || order.runner) && (
+              <button
+                type="button"
+                disabled={Boolean(openingChat)}
+                onClick={() => openChat(order.courier?.id || order.runner?.id, 'Runner')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-[#116aa5] transition hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60"
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                {openingChat === 'Runner' ? 'Membuka...' : 'Chat Runner'}
+              </button>
+            )}
+          </div>
+          {chatError && <p role="alert" className="mt-2 text-xs text-rose-700">{chatError}</p>}
+        </div>
       )}
     </article>
   );
@@ -318,6 +370,7 @@ activeOrders.map((order) => (
     key={order.id}
     order={order}
     preview={preview}
+    active
   />
 ))
 ) : error && !currentOrders.length ? (

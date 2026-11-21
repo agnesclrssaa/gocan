@@ -1,13 +1,14 @@
 import RunnerRatingForm from '../../components/customer/RunnerRatingForm';
 import CanteenRatingForm from '../../components/customer/CanteenRatingForm';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   AlertTriangle,
   Check,
   Clock3,
   MapPin,
   RefreshCw,
+  MessageCircle,
   X,
 } from 'lucide-react';
 
@@ -31,6 +32,7 @@ const CANCEL_REASONS = [
 
 export const OrderTracking = () => {
   const { orderId } = useParams();
+  const navigate = useNavigate();
 
   const [order, setOrder] = useState(null);
   const [loadedOrderId, setLoadedOrderId] = useState(null);
@@ -38,6 +40,8 @@ export const OrderTracking = () => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [openingChat, setOpeningChat] = useState('');
+  const [chatError, setChatError] = useState('');
 
   const [cancelling, setCancelling] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -49,6 +53,24 @@ export const OrderTracking = () => {
   const activeOrderId = useRef(orderId);
   const cancelDialogRef = useRef(null);
   const cancelTriggerRef = useRef(null);
+
+  const openOrderChat = async (targetUserId, partner) => {
+    if (!targetUserId || openingChat) return;
+    setOpeningChat(partner);
+    setChatError('');
+    try {
+      const { conversation } = await api.post('/chats', {
+        targetUserId,
+        orderId: order.id,
+      });
+      navigate(`/chat/${conversation.id}`);
+    } catch (requestError) {
+      console.error(`Gagal membuka chat dengan ${partner}:`, requestError);
+      setChatError(requestError.message || `Chat dengan ${partner} gagal dibuka.`);
+    } finally {
+      setOpeningChat('');
+    }
+  };
 
   const fetchOrder = useCallback(
     async (signal) => {
@@ -729,22 +751,37 @@ export const OrderTracking = () => {
                 )}
               </dl>
 
-<div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
-  <Link
-    to={`/chat/canteen-${encodeURIComponent(order.id)}?orderId=${encodeURIComponent(order.id)}&role=canteen`}
-    className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-[#dc0413] transition hover:bg-red-100"
-  >
-    Chat dengan Kantin
-  </Link>
-
-  {!isPickup && (order.courier || order.runner) && (
-    <Link
-      to={`/chat/courier-${encodeURIComponent(order.id)}?orderId=${encodeURIComponent(order.id)}&role=courier`}
-      className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-[#116aa5] transition hover:bg-blue-100"
-    >
-      Chat dengan Kurir
-    </Link>
+<div className="mt-6 space-y-2">
+  {chatError && (
+    <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
+      {chatError}
+    </p>
   )}
+  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
+    {order.canteen?.users?.[0]?.id && (
+      <button
+        type="button"
+        disabled={Boolean(openingChat)}
+        onClick={() => openOrderChat(order.canteen.users[0].id, 'Kantin')}
+        className="inline-flex items-center justify-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-[#dc0413] transition hover:bg-red-100 disabled:cursor-wait disabled:opacity-60"
+      >
+        <MessageCircle className="h-4 w-4" />
+        {openingChat === 'Kantin' ? 'Membuka chat...' : 'Chat dengan Kantin'}
+      </button>
+    )}
+
+    {!isPickup && (order.courier || order.runner) && (
+      <button
+        type="button"
+        disabled={Boolean(openingChat)}
+        onClick={() => openOrderChat(order.courier?.id || order.runner?.id, 'Runner')}
+        className="inline-flex items-center justify-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-[#116aa5] transition hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60"
+      >
+        <MessageCircle className="h-4 w-4" />
+        {openingChat === 'Runner' ? 'Membuka chat...' : 'Chat dengan Runner'}
+      </button>
+    )}
+  </div>
 </div>
 
 <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50 p-4">
