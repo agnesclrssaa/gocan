@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   Building2,
@@ -16,41 +16,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-
-const STORAGE_KEY = 'gocan_campuses';
-
-const INITIAL_CAMPUSES = [
-  {
-    campusId: 'CAMPUS001',
-    name: 'Universitas Katolik Widya Mandala Surabaya',
-    city: 'Surabaya',
-    address: 'Jl. Dinoyo No. 42-44, Surabaya',
-    image: '',
-    latitude: '-7.2722',
-    longitude: '112.7368',
-    status: 'active',
-  },
-  {
-    campusId: 'CAMPUS002',
-    name: 'Universitas Ciputra',
-    city: 'Surabaya',
-    address: 'CitraLand CBD Boulevard, Made, Surabaya',
-    image: '',
-    latitude: '-7.2856',
-    longitude: '112.6327',
-    status: 'active',
-  },
-  {
-    campusId: 'CAMPUS003',
-    name: 'Universitas Surabaya',
-    city: 'Surabaya',
-    address: 'Jl. Ngagel Jaya Selatan No. 169, Surabaya',
-    image: '',
-    latitude: '-7.2987',
-    longitude: '112.7489',
-    status: 'inactive',
-  },
-];
+import { api } from '../../lib/api';
 
 const EMPTY_FORM = {
   campusId: '',
@@ -62,54 +28,6 @@ const EMPTY_FORM = {
   longitude: '',
   status: 'active',
 };
-
-const isCampusRecord = (campus) =>
-  campus &&
-  typeof campus.campusId === 'string' &&
-  typeof campus.name === 'string' &&
-  typeof campus.city === 'string' &&
-  typeof campus.address === 'string' &&
-  typeof campus.image === 'string' &&
-  typeof campus.latitude === 'string' &&
-  typeof campus.longitude === 'string' &&
-  ['active', 'inactive'].includes(campus.status);
-
-function readCampusData() {
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === null) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_CAMPUSES));
-      return { campuses: INITIAL_CAMPUSES, error: '' };
-    }
-
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed) || !parsed.every(isCampusRecord)) {
-      throw new Error('Format data kampus tidak sesuai.');
-    }
-
-    return { campuses: parsed, error: '' };
-  } catch (error) {
-    return {
-      campuses: [],
-      error: `Data kampus gagal dimuat dari penyimpanan lokal. ${error.message}`,
-    };
-  }
-}
-
-function createCampusId(campuses) {
-  const highestId = campuses.reduce((highest, campus) => {
-    const match = campus.campusId.match(/^CAMPUS(\d+)$/i);
-    return match ? Math.max(highest, Number(match[1])) : highest;
-  }, 0);
-
-  let nextId = highestId + 1;
-  let campusId = `CAMPUS${String(nextId).padStart(3, '0')}`;
-  while (campuses.some((campus) => campus.campusId === campusId)) {
-    nextId += 1;
-    campusId = `CAMPUS${String(nextId).padStart(3, '0')}`;
-  }
-  return campusId;
-}
 
 function CampusPhoto({ campus, className = '' }) {
   const [imageFailed, setImageFailed] = useState(false);
@@ -166,7 +84,8 @@ function Modal({ title, onClose, children, maxWidth = 'max-w-lg' }) {
 const inputClassName = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#116aa5] focus:ring-2 focus:ring-[#116aa5]/15';
 
 export default function AdminCampusManagement() {
-  const [campusData, setCampusData] = useState(readCampusData);
+  const [campusData, setCampusData] = useState({ campuses: [], error: '' });
+  const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState('');
   const [searchCity, setSearchCity] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -174,8 +93,36 @@ export default function AdminCampusManagement() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState('');
   const [notice, setNotice] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const campuses = campusData.campuses;
+
+  const refreshCampuses = useCallback(async () => {
+    setLoading(true);
+    setCampusData((current) => ({ ...current, error: '' }));
+    try {
+      const response = await api.get('/campuses');
+      if (!Array.isArray(response)) {
+        throw new Error('Format daftar kampus dari server tidak valid.');
+      }
+      setCampusData({ campuses: response, error: '' });
+      return response;
+    } catch (requestError) {
+      setCampusData((current) => ({
+        ...current,
+        error: requestError.message || 'Gagal memuat data kampus.',
+      }));
+      throw requestError;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshCampuses().catch((requestError) => {
+      console.error('Gagal memuat manajemen kampus:', requestError);
+    });
+  }, [refreshCampuses]);
 
   useEffect(() => {
     if (!notice) return undefined;
@@ -210,21 +157,6 @@ export default function AdminCampusManagement() {
     });
   }, [campuses, searchName, searchCity, statusFilter]);
 
-  const persistCampuses = (nextCampuses, successMessage) => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCampuses));
-      setCampusData({ campuses: nextCampuses, error: '' });
-      setNotice(successMessage);
-      return true;
-    } catch (error) {
-      setCampusData((current) => ({
-        ...current,
-        error: `Perubahan tidak dapat disimpan ke penyimpanan lokal. ${error.message}`,
-      }));
-      return false;
-    }
-  };
-
   const openAddForm = () => {
     setForm({ ...EMPTY_FORM });
     setFormError('');
@@ -232,13 +164,20 @@ export default function AdminCampusManagement() {
   };
 
   const openEditForm = (campus) => {
-    setForm({ ...campus });
+    setForm({
+      ...EMPTY_FORM,
+      ...campus,
+      image: campus.image || '',
+      latitude: campus.latitude || '',
+      longitude: campus.longitude || '',
+    });
     setFormError('');
     setModal({ type: 'form', editing: true });
   };
 
-  const saveCampus = (event) => {
+  const saveCampus = async (event) => {
     event.preventDefault();
+    if (saving) return;
     const nextForm = {
       ...form,
       name: form.name.trim(),
@@ -264,37 +203,68 @@ export default function AdminCampusManagement() {
       return;
     }
 
-    const updatedCampus = {
-      ...nextForm,
-      campusId: modal.editing ? form.campusId : createCampusId(campuses),
+    const payload = {
+      name: nextForm.name,
+      city: nextForm.city,
+      address: nextForm.address,
+      image: nextForm.image,
+      latitude: nextForm.latitude,
+      longitude: nextForm.longitude,
+      status: nextForm.status,
     };
-    const nextCampuses = modal.editing
-      ? campuses.map((campus) => (campus.campusId === form.campusId ? updatedCampus : campus))
-      : [updatedCampus, ...campuses];
 
-    const saved = persistCampuses(
-      nextCampuses,
-      modal.editing ? 'Informasi kampus berhasil diperbarui.' : 'Kampus baru berhasil ditambahkan.'
-    );
-    if (saved) setModal(null);
+    setSaving(true);
+    setFormError('');
+    try {
+      if (modal.editing) {
+        await api.put(`/campuses/${encodeURIComponent(form.campusId)}`, payload);
+      } else {
+        await api.post('/campuses', payload);
+      }
+      window.dispatchEvent(new Event('gocan_campuses_updated'));
+      setNotice(modal.editing ? 'Informasi kampus berhasil diperbarui.' : 'Kampus baru berhasil ditambahkan.');
+      setModal(null);
+      try {
+        await refreshCampuses();
+      } catch (requestError) {
+        console.error('Perubahan tersimpan, tetapi daftar kampus gagal diperbarui:', requestError);
+      }
+    } catch (requestError) {
+      setFormError(requestError.message || 'Kampus gagal disimpan.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const confirmCampusAction = () => {
+  const confirmCampusAction = async () => {
     if (!modal?.campus) return;
     const { campus, action } = modal;
-
-    if (action === 'delete') {
-      const nextCampuses = campuses.filter((item) => item.campusId !== campus.campusId);
-      if (persistCampuses(nextCampuses, 'Kampus berhasil dihapus.')) setModal(null);
-      return;
+    setSaving(true);
+    setCampusData((current) => ({ ...current, error: '' }));
+    try {
+      if (action === 'delete') {
+        await api.delete(`/campuses/${encodeURIComponent(campus.campusId)}`);
+        setNotice('Kampus berhasil dihapus.');
+      } else {
+        const status = action === 'activate' ? 'active' : 'inactive';
+        await api.put(`/campuses/${encodeURIComponent(campus.campusId)}`, { status });
+        setNotice(status === 'active' ? 'Kampus berhasil diaktifkan kembali.' : 'Kampus berhasil dinonaktifkan.');
+      }
+      window.dispatchEvent(new Event('gocan_campuses_updated'));
+      setModal(null);
+      try {
+        await refreshCampuses();
+      } catch (requestError) {
+        console.error('Tindakan kampus berhasil, tetapi daftar gagal diperbarui:', requestError);
+      }
+    } catch (requestError) {
+      setCampusData((current) => ({
+        ...current,
+        error: requestError.message || 'Tindakan kampus gagal diproses.',
+      }));
+    } finally {
+      setSaving(false);
     }
-
-    const nextStatus = action === 'activate' ? 'active' : 'inactive';
-    const nextCampuses = campuses.map((item) =>
-      item.campusId === campus.campusId ? { ...item, status: nextStatus } : item
-    );
-    const message = nextStatus === 'active' ? 'Kampus berhasil diaktifkan kembali.' : 'Kampus berhasil dinonaktifkan.';
-    if (persistCampuses(nextCampuses, message)) setModal(null);
   };
 
   const statsCards = [
@@ -396,7 +366,11 @@ export default function AdminCampusManagement() {
           </div>
         </div>
 
-        {filteredCampuses.length ? (
+        {loading && campuses.length === 0 ? (
+          <div className="px-5 py-14 text-center text-sm font-semibold text-slate-500">
+            Memuat daftar kampus...
+          </div>
+        ) : filteredCampuses.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="bg-white text-[11px] font-bold uppercase tracking-wide text-slate-500">
@@ -534,9 +508,9 @@ export default function AdminCampusManagement() {
               <button type="button" onClick={() => setModal(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50">
                 Batal
               </button>
-              <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#dc0413] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#b80310]">
+              <button type="submit" disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#dc0413] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#b80310] disabled:cursor-not-allowed disabled:opacity-60">
                 <Save className="h-4 w-4" />
-                Simpan
+                {saving ? 'Menyimpan...' : 'Simpan'}
               </button>
             </div>
           </form>
@@ -602,9 +576,10 @@ export default function AdminCampusManagement() {
               <button
                 type="button"
                 onClick={confirmCampusAction}
-                className={`rounded-xl px-4 py-2.5 text-sm font-bold text-white transition ${modal.action === 'delete' ? 'bg-[#dc0413] hover:bg-[#b80310]' : modal.action === 'activate' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-amber-700 hover:bg-amber-800'}`}
+                disabled={saving}
+                className={`rounded-xl px-4 py-2.5 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${modal.action === 'delete' ? 'bg-[#dc0413] hover:bg-[#b80310]' : modal.action === 'activate' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-amber-700 hover:bg-amber-800'}`}
               >
-                {modal.action === 'delete' ? 'Hapus permanen' : modal.action === 'activate' ? 'Aktifkan' : 'Nonaktifkan'}
+                {saving ? 'Memproses...' : modal.action === 'delete' ? 'Hapus permanen' : modal.action === 'activate' ? 'Aktifkan' : 'Nonaktifkan'}
               </button>
             </div>
           </div>

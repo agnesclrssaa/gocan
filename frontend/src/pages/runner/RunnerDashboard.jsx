@@ -17,7 +17,6 @@ import { api, asArray } from '../../lib/api';
 import {
   getRunnerCampusInfo,
   getRunnerCampusOrders,
-  getRunnerOrderHistory,
   isRunnerOrderAssignedTo,
 } from '../../lib/runnerCampus';
 
@@ -63,7 +62,10 @@ export default function RunnerDashboard() {
     return isRunnerOrderAssignedTo(order, currentUser) &&
       !['completed', 'cancelled'].includes(status);
   });
-  const history = getRunnerOrderHistory(currentUser, campusInfo.campusId);
+  const history = runnerOrders.filter((order) =>
+    isRunnerOrderAssignedTo(order, currentUser) &&
+    ['completed', 'complete'].includes(String(order.status || '').toLowerCase())
+  );
   const recentAvailableOrders = availableOrders.slice(0, 3).map((order) => ({
     ...order,
     displayId: `#GoCan-${order.id}`,

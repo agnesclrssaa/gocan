@@ -37,9 +37,10 @@ export const CanteenDetail = ({ preview = false }) => {
             `/canteens/${encodeURIComponent(selectedCanteen.id)}/menus`
           );
         } else {
+          const campusRequest = { params: { campusId: selectedCampusId } };
           const [canteens, customerMenuData] = await Promise.all([
-            api.get('/canteens'),
-            api.get(`/canteens/${encodeURIComponent(canteenId)}/menus`),
+            api.get('/canteens', campusRequest),
+            api.get(`/canteens/${encodeURIComponent(canteenId)}/menus`, campusRequest),
           ]);
           selectedCanteen = canteens
             .map((item) => ({ ...item, campusId: getCampusId(item) }))

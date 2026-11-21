@@ -25,6 +25,8 @@ model User {
   bankName          String?  @map("bank_name")
   accountNumber     String?  @map("account_number")
   accountHolderName String?  @map("account_holder_name")
+  campusId          String?  @default("CAMPUS001")
+  campus            Campus?  @relation(fields: [campusId], references: [campusId], onDelete: Restrict)
   resetOtp          String?
   resetOtpExpiresAt DateTime?
   canteenId         String?
@@ -43,6 +45,7 @@ model User {
   updatedAt         DateTime @updatedAt
 
   @@index([role, approvalStatus, createdAt])
+  @@index([campusId])
 }
 
 model Order {
@@ -50,6 +53,7 @@ model Order {
   userId              Int
   customerId          Int?      @map("customer_id")
   canteenId           String    @default("canteen-pak-brazil")
+  campusId            String?   @default("CAMPUS001")
   runnerId            Int?      @map("runner_id")
   items               String
   totalPrice          Float
@@ -85,6 +89,7 @@ model Order {
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   customer            User?     @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: Cascade)
   canteen             Canteen   @relation(fields: [canteenId], references: [id], onDelete: Restrict)
+  campus              Campus?   @relation(fields: [campusId], references: [campusId], onDelete: Restrict)
   rating              Rating?
   runnerRating        RunnerRating?
   courierId           Int?
@@ -97,6 +102,7 @@ model Order {
 
   @@index([userId, createdAt])
   @@index([canteenId, status])
+  @@index([campusId, status])
 }
 
 model OrderItem {
@@ -148,6 +154,7 @@ model Message {
 
 model Canteen {
   id           String   @id
+  campusId     String?  @default("CAMPUS001")
   name         String
   description  String
   location     String?
@@ -161,6 +168,28 @@ model Canteen {
   orders       Order[]
   menus        Menu[]
   ratings      Rating[]
+  campus       Campus?  @relation(fields: [campusId], references: [campusId], onDelete: Restrict)
+
+  @@index([campusId])
+}
+
+model Campus {
+  id        Int      @id @default(autoincrement())
+  campusId  String   @unique
+  name      String
+  city      String
+  address   String
+  image     String?
+  latitude  String?
+  longitude String?
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+  canteens  Canteen[]
+  orders    Order[]
+
+  @@index([status, name])
 }
 
 model Rating {

@@ -8,11 +8,8 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import {
-  getRunnerCampusInfo,
-  getRunnerCampusOrders,
-  saveRunnerCompletedOrder,
-} from '../../lib/runnerCampus';
+import { api } from '../../lib/api';
+import { getRunnerCampusInfo, getRunnerCampusOrders } from '../../lib/runnerCampus';
 
 export default function RunnerDetail() {
   const { state } = useLocation();
@@ -35,25 +32,51 @@ export default function RunnerDetail() {
     order?.meetingPoint || order?.destinationNote || order?.destination_note,
   ].filter(Boolean).join(' · ') || 'Lokasi tujuan belum tersedia';
   // Step: 1 = Kurir Menerima, 2 = Sampai di Kantin, 3 = Serah Terima (Input PIN), 4 = Selesai
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const status = String(order?.status || '').toLowerCase();
+    return status === 'completed' ? 4 : status === 'delivering' ? 3 : 1;
+  });
   const [pinDigits, setPinDigits] = useState(['', '', '', '']);
+  const [pickupQrCode, setPickupQrCode] = useState('');
+  const [orderStatus, setOrderStatus] = useState(order?.status || '');
   const [pinError, setPinError] = useState(false);
-  const [orderCompleted, setOrderCompleted] = useState(false);
+  const [orderCompleted, setOrderCompleted] = useState(
+    () => String(order?.status || '').toLowerCase() === 'completed'
+  );
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [completionError, setCompletionError] = useState('');
   const [showCallModal, setShowCallModal] = useState(false);
 
   const correctPin = '4821';
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (!canProcessOrder) return;
     if (currentStep === 1) {
       setCurrentStep(2);
     } else if (currentStep === 2) {
-      setCurrentStep(3);
+      if (!pickupQrCode.trim()) {
+        setCompletionError('Masukkan kode QR pengambilan dari Customer terlebih dahulu.');
+        return;
+      }
+
+      setUpdatingStatus(true);
+      setCompletionError('');
+      try {
+        await api.post('/orders/verify-pickup', {
+          pickupQrCode: pickupQrCode.trim(),
+        });
+        setOrderStatus('DELIVERING');
+        setCurrentStep(3);
+      } catch (requestError) {
+        console.error(`Gagal memverifikasi pengambilan pesanan ${order?.id}:`, requestError);
+        setCompletionError(requestError.message || 'Kode QR pengambilan gagal diverifikasi.');
+      } finally {
+        setUpdatingStatus(false);
+      }
     }
   };
 
-  const handlePinChange = (index, value) => {
+  const handlePinChange = async (index, value) => {
     if (canProcessOrder && /^\d?$/.test(value)) {
       const nextPin = [...pinDigits];
       nextPin[index] = value;
@@ -69,20 +92,24 @@ export default function RunnerDetail() {
       if (nextPin.every((d) => d !== '')) {
         const enteredPin = nextPin.join('');
         if (enteredPin === correctPin) {
-          setOrderCompleted(true);
-          setCurrentStep(4);
-          if (order) {
-            try {
-              saveRunnerCompletedOrder(
-                { ...order, status: 'COMPLETED' },
-                user || profile,
-                campusInfo.campusId
-              );
-              setCompletionError('');
-            } catch (error) {
-              console.error('Gagal menyimpan riwayat pengantaran lokal:', error);
-              setCompletionError(error.message || 'Riwayat pengantaran tidak dapat disimpan.');
+          setUpdatingStatus(true);
+          setCompletionError('');
+          try {
+            const result = await api.patch(`/orders/${order.id}/status`, {
+              status: 'completed',
+            });
+            if (String(result?.order?.status || '').toLowerCase() !== 'completed') {
+              throw new Error('Server belum mengonfirmasi pesanan selesai.');
             }
+            setOrderStatus(result.order.status);
+            setOrderCompleted(true);
+            setCurrentStep(4);
+          } catch (requestError) {
+            console.error(`Gagal menyelesaikan pesanan ${order?.id}:`, requestError);
+            setCompletionError(requestError.message || 'Pesanan gagal ditandai selesai.');
+            setPinDigits(['', '', '', '']);
+          } finally {
+            setUpdatingStatus(false);
           }
         } else {
           setPinError(true);
@@ -124,7 +151,7 @@ export default function RunnerDetail() {
           </span>
           <div className="text-right">
             <span className="text-[10px] text-slate-400 block font-medium">Estimasi tiba</span>
-            <strong className="text-base font-extrabold text-slate-900">{order?.status || '—'}</strong>
+            <strong className="text-base font-extrabold text-slate-900">{orderStatus || '—'}</strong>
           </div>
         </div>
       </div>
@@ -385,11 +412,29 @@ export default function RunnerDetail() {
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  disabled={!canProcessOrder}
-                  className="w-full py-3.5 px-6 rounded-full bg-[#DC2626] hover:bg-[#B91C1C] text-white font-extrabold text-xs sm:text-sm tracking-wider uppercase transition shadow-md cursor-pointer text-center block"
+                  disabled={!canProcessOrder || updatingStatus}
+                  className="w-full py-3.5 px-6 rounded-full bg-[#DC2626] hover:bg-[#B91C1C] text-white font-extrabold text-xs sm:text-sm tracking-wider uppercase transition shadow-md cursor-pointer text-center block disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {currentStep === 1 ? 'SAYA SUDAH DI KANTIN' : 'AMBIL MAKANAN DARI STAN'}
+                  {updatingStatus
+                    ? 'Memverifikasi...'
+                    : currentStep === 1
+                      ? 'SAYA SUDAH DI KANTIN'
+                      : 'VERIFIKASI & AMBIL MAKANAN'}
                 </button>
+              )}
+
+              {currentStep === 2 && (
+                <label className="block text-xs font-semibold text-slate-700">
+                  Kode QR pengambilan dari Customer
+                  <input
+                    type="text"
+                    value={pickupQrCode}
+                    onChange={(event) => setPickupQrCode(event.target.value)}
+                    disabled={!canProcessOrder || updatingStatus}
+                    autoComplete="off"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-mono text-xs outline-none focus:border-[#116aa5] focus:ring-2 focus:ring-[#116aa5]/20 disabled:bg-slate-100"
+                  />
+                </label>
               )}
 
               {/* Step 3: PIN Input */}
@@ -410,7 +455,7 @@ export default function RunnerDetail() {
                         maxLength="1"
                         value={digit}
                         onChange={(e) => handlePinChange(idx, e.target.value)}
-                        disabled={!canProcessOrder}
+                        disabled={!canProcessOrder || updatingStatus}
                         className="w-11 h-12 text-center text-lg font-black bg-white border border-slate-300 rounded-xl focus:border-[#0A2E6E] focus:ring-1 focus:ring-[#0A2E6E] focus:outline-hidden"
                       />
                     ))}

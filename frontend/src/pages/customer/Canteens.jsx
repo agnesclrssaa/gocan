@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, MapPin, Search, Star, Store } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
@@ -42,12 +42,13 @@ export const Canteens = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-const fetchCanteens = async () => {
+const fetchCanteens = useCallback(async () => {
   setLoading(true);
   setError(null);
 
   try {
-    const response = await api.get('/canteens');
+    const campusRequest = { params: { campusId: selectedCampusId } };
+    const response = await api.get('/canteens', campusRequest);
 
     if (!Array.isArray(response)) {
       throw new Error('Format daftar kantin belum sesuai.');
@@ -69,7 +70,8 @@ const fetchCanteens = async () => {
       validCanteens.map(async (canteen) => {
         try {
           const menus = await api.get(
-            `/canteens/${encodeURIComponent(canteen.id)}/menus`
+            `/canteens/${encodeURIComponent(canteen.id)}/menus`,
+            campusRequest
           );
 
           if (!Array.isArray(menus)) {
@@ -84,7 +86,8 @@ const fetchCanteens = async () => {
             })),
             menuSearchFailed: false,
           };
-        } catch {
+        } catch (requestError) {
+          console.error(`Gagal memuat menu kantin ${canteen.name}:`, requestError);
           return {
             ...canteen,
             searchMenus: [],
@@ -103,11 +106,11 @@ const fetchCanteens = async () => {
   } finally {
     setLoading(false);
   }
-};
+}, [selectedCampusId]);
 
   useEffect(() => {
     fetchCanteens();
-  }, []);
+  }, [fetchCanteens]);
 
   const refreshCanteens = () => {
     setLoading(true);

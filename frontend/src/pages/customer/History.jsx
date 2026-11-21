@@ -292,7 +292,9 @@ export const History = () => {
     });
     orders.forEach((order) => {
       const campusId = getCampusId(order);
-      if (!options.has(campusId)) options.set(campusId, `Kampus ${campusId}`);
+      if (!options.has(campusId)) {
+        options.set(campusId, order.campus?.name || `Kampus ${campusId}`);
+      }
     });
     return [...options.entries()];
   }, [campuses, orders]);
@@ -300,6 +302,7 @@ export const History = () => {
   const getOrderCampusName = (order) => {
     const campusId = getCampusId(order);
     return campuses.find((campus) => getCampusId(campus) === campusId)?.name
+      || order.campus?.name
       || `Kampus ${campusId}`;
   };
 

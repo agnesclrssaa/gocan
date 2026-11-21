@@ -13,13 +13,36 @@ const profileSelect = {
   bankName: true,
   accountNumber: true,
   accountHolderName: true,
+  campusId: true,
+  campus: {
+    select: {
+      campusId: true,
+      name: true,
+      city: true,
+      address: true,
+      image: true,
+      latitude: true,
+      longitude: true,
+      status: true,
+    },
+  },
   canteen: {
     select: {
       id: true,
       name: true,
+      campusId: true,
       building: true,
       location: true,
       imageUrl: true,
+      campus: {
+        select: {
+          campusId: true,
+          name: true,
+          city: true,
+          address: true,
+          status: true,
+        },
+      },
     },
   },
 };
@@ -206,6 +229,16 @@ const updateProfile = async (req, res, next) => {
             building: true,
             location: true,
             imageUrl: true,
+            campusId: true,
+            campus: {
+              select: {
+                campusId: true,
+                name: true,
+                city: true,
+                address: true,
+                status: true,
+              },
+            },
           },
         });
         return { ...updatedUser, canteen };

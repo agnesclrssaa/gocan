@@ -4,11 +4,7 @@ import BrandLogo from '../components/common/BrandLogo';
 import './MerchantSidebarDecor.css';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
-import {
-  getCampusById,
-  saveCanteenProfile,
-  withCanteenOwnership,
-} from '../lib/canteenCampus';
+import { withCanteenOwnership } from '../lib/canteenCampus';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -34,14 +30,18 @@ export default function CanteenLayout() {
 
   const attachCampusDetails = useCallback((profile) => {
     if (!profile) return profile;
-    const campus = getCampusById(profile.campusId);
+    const campus = profile.campus || {};
     return {
       ...profile,
-      campusName: campus?.name || profile.campusName || '',
-      campusCity: campus?.city || profile.campusCity || '',
-      campusStatus: campus?.status || profile.campusStatus || '',
+      campusId: profile.campusId || campus.campusId || '',
+      campusName: campus.name || '',
+      campusCity: campus.city || '',
+      campusStatus: campus.status || '',
       menus: Array.isArray(profile.menus)
-        ? profile.menus.map((menu) => withCanteenOwnership(menu, profile))
+        ? profile.menus.map((menu) => withCanteenOwnership(menu, {
+            ...profile,
+            campusId: profile.campusId || campus.campusId,
+          }))
         : [],
     };
   }, []);
@@ -51,8 +51,7 @@ export default function CanteenLayout() {
     setCanteenError(null);
     try {
       const currentCanteen = await api.get('/canteens/mine');
-      const localProfile = saveCanteenProfile(currentCanteen, user);
-      const enrichedCanteen = attachCampusDetails(localProfile);
+      const enrichedCanteen = attachCampusDetails(currentCanteen);
       setCanteen(enrichedCanteen);
       setIsOpen(currentCanteen.isOpen);
       return enrichedCanteen;
@@ -62,24 +61,20 @@ export default function CanteenLayout() {
     } finally {
       setCanteenLoading(false);
     }
-  }, [attachCampusDetails, user]);
+  }, [attachCampusDetails]);
 
   useEffect(() => {
     refreshCanteen();
   }, [refreshCanteen]);
 
   useEffect(() => {
-    const refreshCampusDetails = (event) => {
-      if (event?.type === 'storage' && event.key && event.key !== 'gocan_campuses') return;
-      setCanteen((current) => attachCampusDetails(current));
-    };
-    window.addEventListener('storage', refreshCampusDetails);
-    window.addEventListener('focus', refreshCampusDetails);
+    window.addEventListener('focus', refreshCanteen);
+    window.addEventListener('gocan_campuses_updated', refreshCanteen);
     return () => {
-      window.removeEventListener('storage', refreshCampusDetails);
-      window.removeEventListener('focus', refreshCampusDetails);
+      window.removeEventListener('focus', refreshCanteen);
+      window.removeEventListener('gocan_campuses_updated', refreshCanteen);
     };
-  }, [attachCampusDetails]);
+  }, [refreshCanteen]);
 
   const handleStoreStatusChange = async () => {
     if (updatingStoreStatus) return;
@@ -88,11 +83,11 @@ export default function CanteenLayout() {
     try {
       const updatedCanteen = await api.patch('/canteens/mine', { isOpen: !isOpen });
       setCanteen((current) => attachCampusDetails(
-        saveCanteenProfile({
+        {
           ...current,
           ...updatedCanteen,
           campusId: current?.campusId,
-        }, user)
+        }
       ));
       setIsOpen(updatedCanteen.isOpen);
     } catch (error) {

@@ -7,9 +7,7 @@ import { api, asArray } from '../lib/api';
 import {
   getRunnerCampusInfo,
   getRunnerCampusOrders,
-  getRunnerOrderHistory,
   isRunnerOrderAssignedTo,
-  saveRunnerCompletedOrder,
 } from '../lib/runnerCampus';
 
 const formatRupiah = (amount) =>
@@ -130,12 +128,8 @@ export default function CourierDashboard() {
     setError(null);
     try {
       const result = await api.patch(`/orders/${orderId}/status`, { status });
-      if (status === 'completed') {
-        saveRunnerCompletedOrder(
-          result?.order || { ...order, status: 'COMPLETED' },
-          user || profile,
-          currentCampus.campusId
-        );
+      if (!result?.order) {
+        throw new Error('Server tidak mengembalikan pesanan yang diperbarui.');
       }
       await fetchOrders();
     } catch (requestError) {
@@ -153,7 +147,10 @@ export default function CourierDashboard() {
   const deliveringOrders = campusOrders.filter((order) =>
     String(order.status || '').toLowerCase() === 'delivering'
   );
-  const completedOrders = getRunnerOrderHistory(user || profile, campusInfo.campusId);
+  const completedOrders = campusOrders.filter((order) =>
+    ['completed', 'complete'].includes(String(order.status || '').toLowerCase()) &&
+    isRunnerOrderAssignedTo(order, user || profile)
+  );
 
   return (
     <div className="min-h-screen bg-[#F0F4F9] pb-12 text-slate-800">

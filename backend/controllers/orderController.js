@@ -2,6 +2,7 @@ const { randomUUID } = require('node:crypto');
 const prisma = require('../src/lib/prisma');
 const { createPickupQrCode } = require('../utils/qrGenerator');
 const { mergeOrderItemNotes, orderItemNotesInclude } = require('../utils/orderItems');
+const { ensureDefaultCampuses } = require('../services/campus.service');
 
 const SERVICE_FEE = 1000;
 const DELIVERY_PROMO_MINIMUM = 25000;
@@ -52,9 +53,11 @@ const isValidScheduledTime = (scheduledTime, createdAt) => {
 
 const createOrder = async (req, res, next) => {
   try {
+    await ensureDefaultCampuses();
     let {
       items,
       canteenId,
+      campusId: requestedCampusId,
       orderType: requestedOrderType,
       fulfillmentType: requestedFulfillmentType,
       paymentMethod: requestedPaymentMethod = 'QRIS',
@@ -139,13 +142,37 @@ const createOrder = async (req, res, next) => {
 
     const canteen = await prisma.canteen.findUnique({
       where: { id: canteenId },
-      select: { id: true, isOpen: true },
+      select: { id: true, isOpen: true, campusId: true },
     });
     if (!canteen) {
       return res.status(400).json({ error: 'Kantin pada pesanan tidak ditemukan.' });
     }
     if (!canteen.isOpen) {
       return res.status(409).json({ error: 'Kantin sedang tutup dan tidak menerima pesanan.' });
+    }
+    const campusId = typeof requestedCampusId === 'string' && requestedCampusId.trim()
+      ? requestedCampusId.trim()
+      : canteen.campusId;
+    if (
+      typeof campusId !== 'string' ||
+      !campusId ||
+      campusId !== canteen.campusId ||
+      items.some((item) => item.campusId && item.campusId !== campusId)
+    ) {
+      return res.status(409).json({ error: 'Kampus keranjang tidak sesuai dengan kampus kantin.' });
+    }
+    const campus = await prisma.campus.findFirst({
+      where: { campusId, status: 'active' },
+      select: {
+        campusId: true,
+        name: true,
+        city: true,
+        address: true,
+        status: true,
+      },
+    });
+    if (!campus) {
+      return res.status(409).json({ error: 'Kampus pesanan tidak tersedia atau sudah nonaktif.' });
     }
 
     const invalidItem = items.find((item) =>
@@ -219,6 +246,7 @@ const createOrder = async (req, res, next) => {
         userId: req.auth.userId,
         customerId: req.auth.userId,
         canteenId,
+        campusId,
         items: JSON.stringify(orderItems),
         orderItems: {
           create: orderItems.map((item, position) => ({
@@ -259,12 +287,44 @@ const createOrder = async (req, res, next) => {
         classInfo: fulfillmentType === 'delivery' ? destinationRoom?.trim() || null : null,
         deliveryNote: notes?.trim() || null,
       },
+      include: {
+        campus: {
+          select: { campusId: true, name: true, city: true, address: true, status: true },
+        },
+        canteen: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            campusId: true,
+            campus: {
+              select: { campusId: true, name: true, city: true, status: true },
+            },
+          },
+        },
+      },
     });
     if (isCash) {
       order = await prisma.order.update({
         where: { id: order.id },
         data: {
           pickupQrCode: createPickupQrCode({ orderId: order.id, userId: req.auth.userId }),
+        },
+        include: {
+          campus: {
+            select: { campusId: true, name: true, city: true, address: true, status: true },
+          },
+          canteen: {
+            select: {
+              id: true,
+              name: true,
+              location: true,
+              campusId: true,
+              campus: {
+                select: { campusId: true, name: true, city: true, status: true },
+              },
+            },
+          },
         },
       });
     }
@@ -294,11 +354,18 @@ const listCanteenOrders = async (req, res, next) => {
   if (req.auth.role === 'admin') {
   const orders = await prisma.order.findMany({
     include: {
+      campus: {
+        select: { campusId: true, name: true, city: true, status: true },
+      },
       canteen: {
         select: {
           id: true,
           name: true,
           location: true,
+          campusId: true,
+          campus: {
+            select: { campusId: true, name: true, city: true, status: true },
+          },
         },
       },
       user: {
@@ -336,7 +403,23 @@ const listCanteenOrders = async (req, res, next) => {
 
     const orders = await prisma.order.findMany({
       where: { canteenId: user.canteenId },
-      include: { orderItems: orderItemNotesInclude },
+      include: {
+        campus: {
+          select: { campusId: true, name: true, city: true, status: true },
+        },
+        canteen: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            campusId: true,
+            campus: {
+              select: { campusId: true, name: true, city: true, status: true },
+            },
+          },
+        },
+        orderItems: orderItemNotesInclude,
+      },
       orderBy: { createdAt: 'desc' },
     });
     return res.json(orders.map(parseOrderItems));
@@ -357,14 +440,19 @@ const updateOrderStatus = async (req, res, next) => {
       return res.status(400).json({ error: 'Status tujuan tidak valid untuk peran akun ini.' });
     }
 
+    let courierCampusId = null;
     if (userRole === 'runner' || userRole === 'courier') {
       const courier = await prisma.user.findUnique({
         where: { id: req.auth.userId },
-        select: { approvalStatus: true },
+        select: { approvalStatus: true, campusId: true },
       });
       if (!courier || courier.approvalStatus?.toUpperCase() !== 'APPROVED') {
         return res.status(403).json({ error: 'Akun runner belum disetujui admin.' });
       }
+      if (!courier.campusId) {
+        return res.status(403).json({ error: 'Akun Runner belum terhubung ke kampus. Hubungi Admin.' });
+      }
+      courierCampusId = courier.campusId;
     }
 
     const orderId = Number(req.params.id);
@@ -454,6 +542,7 @@ const updateOrderStatus = async (req, res, next) => {
       const claimed = await prisma.order.updateMany({
         where: {
           id: orderId,
+          campusId: courierCampusId,
           status: { in: ['ready', 'READY_FOR_PICKUP'] },
           isPickupVerified: true,
           OR: [
@@ -471,6 +560,7 @@ const updateOrderStatus = async (req, res, next) => {
       const completed = await prisma.order.updateMany({
         where: {
           id: orderId,
+          campusId: courierCampusId,
           status: { in: ['delivering', 'DELIVERING'] },
           OR: [{ courierId: req.auth.userId }, { runnerId: req.auth.userId }],
         },
@@ -492,23 +582,44 @@ const listCourierOrders = async (req, res, next) => {
   try {
     const courier = await prisma.user.findUnique({
       where: { id: req.auth.userId },
-      select: { approvalStatus: true },
+      select: { approvalStatus: true, campusId: true },
     });
     if (!courier || courier.approvalStatus?.toUpperCase() !== 'APPROVED') {
       return res.status(403).json({ error: 'Akun runner belum disetujui admin.' });
     }
+    if (!courier.campusId) {
+      return res.status(403).json({ error: 'Akun Runner belum terhubung ke kampus. Hubungi Admin.' });
+    }
 
     const orders = await prisma.order.findMany({
       where: {
+        campusId: courier.campusId,
         OR: [
-          { status: 'PAID', fulfillmentType: 'delivery', courierId: null, runnerId: null },
-          { status: 'ready', courierId: null },
+          { status: { in: ['PAID', 'ready'] }, fulfillmentType: 'delivery', courierId: null, runnerId: null },
           { status: 'ready', courierId: req.auth.userId },
           { status: { in: ['delivering', 'DELIVERING'] }, courierId: req.auth.userId },
           { status: { in: ['PREPARING', 'READY_FOR_PICKUP'] }, runnerId: req.auth.userId },
+          { status: { in: ['COMPLETED', 'completed'] }, OR: [{ courierId: req.auth.userId }, { runnerId: req.auth.userId }] },
         ],
       },
-      include: { orderItems: orderItemNotesInclude },
+      include: {
+        campus: {
+          select: { campusId: true, name: true, city: true, address: true, status: true },
+        },
+        canteen: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            campusId: true,
+            campus: {
+              select: { campusId: true, name: true, city: true, status: true },
+            },
+          },
+        },
+        user: { select: { id: true, name: true, phoneNumber: true } },
+        orderItems: orderItemNotesInclude,
+      },
       orderBy: { updatedAt: 'asc' },
     });
     return res.json(orders.map(parseOrderItems));

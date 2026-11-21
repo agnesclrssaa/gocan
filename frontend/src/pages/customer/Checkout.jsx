@@ -214,6 +214,7 @@ if (scheduleType === 'scheduled') {
       setError(null);
 
       const { order } = await api.post('/orders', {
+        campusId: selectedCampus.campusId,
         items: cartItems.map(({ campusId: _campusId, ...item }) => item),
         totalPrice: totalAmount,
         canteenId: currentCanteen?.id || cartItems[0]?.canteen_id,

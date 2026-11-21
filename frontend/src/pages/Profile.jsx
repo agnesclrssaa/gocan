@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, CheckCircle, ImageUp, UserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
-import { findCanteenProfile, getCampusById, saveCanteenProfile } from '../lib/canteenCampus';
 import { getRunnerCampusInfo } from '../lib/runnerCampus';
 
 const emptyForm = {
@@ -49,12 +48,8 @@ const roleHome = {
 export default function Profile() {
   const { user, profile, updateProfile } = useAuth();
   const isCanteen = user?.role === 'canteen';
-  const canteenRecord = isCanteen
-    ? findCanteenProfile(profile?.canteen, user) || profile?.canteen
-    : null;
-  const campusInfo = canteenRecord?.campusId
-    ? getCampusById(canteenRecord.campusId)
-    : null;
+  const canteenRecord = isCanteen ? profile?.canteen : null;
+  const campusInfo = canteenRecord?.campus || profile?.campus || null;
   const isRunner = [user?.role, profile?.role].some((role) => ['runner', 'courier'].includes(role));
   const runnerCampus = isRunner ? getRunnerCampusInfo(profile, user) : null;
   const [form, setForm] = useState(() => createForm(profile));
@@ -134,17 +129,7 @@ export default function Profile() {
       if (avatarFile) formData.append('avatar', avatarFile);
       if (isCanteen && canteenImageFile) formData.append('canteenImage', canteenImageFile);
 
-      const updatedProfile = await updateProfile(formData);
-      if (isCanteen) {
-        saveCanteenProfile({
-          ...canteenRecord,
-          name: form.name.trim(),
-          phoneNumber: form.phoneNumber.trim(),
-          email: form.email.trim(),
-          imageUrl: updatedProfile?.canteen?.imageUrl || canteenRecord?.imageUrl || '',
-          campusId: canteenRecord?.campusId || '',
-        }, user);
-      }
+      await updateProfile(formData);
       if (avatarPreviewRef.current) {
         URL.revokeObjectURL(avatarPreviewRef.current);
         avatarPreviewRef.current = '';

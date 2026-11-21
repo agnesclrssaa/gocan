@@ -35,7 +35,14 @@ function CampusImage({ campus }) {
 }
 
 export default function CampusSelection() {
-  const { activeCampuses, selectCampus, selectedCampus } = useCampus();
+  const {
+    activeCampuses,
+    error: campusError,
+    loading: campusesLoading,
+    refreshCampusData,
+    selectCampus,
+    selectedCampus,
+  } = useCampus();
   const { cartItems, cartCampusId, clearCart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -50,10 +57,10 @@ export default function CampusSelection() {
     );
   }, [activeCampuses, query]);
 
-  const applySelection = (campus, shouldClearCart = false) => {
+  const applySelection = async (campus, shouldClearCart = false) => {
     try {
+      await selectCampus(campus);
       if (shouldClearCart) clearCart();
-      selectCampus(campus);
       navigate(getReturnPath(location), { replace: true });
     } catch (selectionError) {
       setError(selectionError.message || 'Kampus gagal dipilih. Silakan coba lagi.');
@@ -98,6 +105,18 @@ export default function CampusSelection() {
             {error}
           </p>
         )}
+        {campusError && (
+          <div role="alert" className="mx-auto mt-6 max-w-2xl rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p>{campusError}</p>
+            <button
+              type="button"
+              onClick={() => refreshCampusData().catch((requestError) => console.error('Gagal mencoba ulang daftar kampus:', requestError))}
+              className="mt-2 font-bold underline"
+            >
+              Coba lagi
+            </button>
+          </div>
+        )}
 
         <div className="mx-auto mt-7 max-w-xl">
           <label className="relative block">
@@ -113,7 +132,11 @@ export default function CampusSelection() {
           </label>
         </div>
 
-        {activeCampuses.length === 0 ? (
+        {campusesLoading ? (
+          <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center text-sm font-semibold text-slate-500 shadow-sm">
+            Memuat kampus aktif...
+          </div>
+        ) : campusError ? null : activeCampuses.length === 0 ? (
           <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
             <Building2 className="mx-auto h-10 w-10 text-slate-300" aria-hidden="true" />
             <h2 className="mt-3 font-bold text-slate-800">Belum ada kampus yang tersedia.</h2>
@@ -148,7 +171,8 @@ export default function CampusSelection() {
                     <button
                       type="button"
                       onClick={() => handleSelectCampus(campus)}
-                      className="w-full rounded-xl bg-[#dc0413] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#b80310]"
+                      disabled={campusesLoading}
+                      className="w-full rounded-xl bg-[#dc0413] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#b80310] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Pilih Kampus
                     </button>

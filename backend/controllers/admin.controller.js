@@ -47,8 +47,17 @@ const getOverview = async (_req, res, next) => {
             runnerId: null,
           },
           include: {
+            campus: {
+              select: { campusId: true, name: true, city: true, status: true },
+            },
             user: { select: { name: true } },
-            canteen: { select: { name: true } },
+            canteen: {
+              select: {
+                name: true,
+                campusId: true,
+                campus: { select: { campusId: true, name: true, city: true, status: true } },
+              },
+            },
           },
           orderBy: { updatedAt: 'asc' },
           take: 10,
@@ -66,7 +75,12 @@ const getOverview = async (_req, res, next) => {
             role: { in: ['runner', 'courier'] },
             approvalStatus: { equals: 'approved', mode: 'insensitive' },
           },
-          select: { id: true, name: true },
+          select: {
+            id: true,
+            name: true,
+            campusId: true,
+            campus: { select: { campusId: true, name: true, city: true, status: true } },
+          },
           orderBy: { name: 'asc' },
         }),
       ]);
@@ -117,9 +131,23 @@ const listUsers = async (req, res, next) => {
         name: true,
         email: true,
         role: true,
+        campusId: true,
+        campus: {
+          select: { campusId: true, name: true, city: true, status: true },
+        },
         approvalStatus: true,
         createdAt: true,
-        canteen: { select: { id: true, name: true, isOpen: true } },
+        canteen: {
+          select: {
+            id: true,
+            name: true,
+            isOpen: true,
+            campusId: true,
+            campus: {
+              select: { campusId: true, name: true, city: true, status: true },
+            },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: 200,
@@ -169,6 +197,10 @@ const listRunners = async (req, res, next) => {
         bankName: true,
         accountNumber: true,
         accountHolderName: true,
+        campusId: true,
+        campus: {
+          select: { campusId: true, name: true, city: true, status: true },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -277,15 +309,34 @@ const assignOrder = async (req, res, next) => {
         role: { in: ['runner', 'courier'] },
         approvalStatus: { equals: 'approved', mode: 'insensitive' },
       },
-      select: { id: true },
+      select: { id: true, campusId: true },
     });
     if (!runner) {
       return res.status(404).json({ error: 'Runner aktif tidak ditemukan.' });
+    }
+    if (!runner.campusId) {
+      return res.status(409).json({ error: 'Runner belum terhubung ke kampus.' });
+    }
+    const activeCampus = await prisma.campus.findFirst({
+      where: { campusId: runner.campusId, status: 'active' },
+      select: { campusId: true },
+    });
+    if (!activeCampus) {
+      return res.status(409).json({ error: 'Kampus Runner sedang nonaktif dan tidak dapat menerima penugasan baru.' });
+    }
+
+    const orderCampus = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { campusId: true },
+    });
+    if (!orderCampus || orderCampus.campusId !== runner.campusId) {
+      return res.status(409).json({ error: 'Runner hanya dapat ditugaskan pada pesanan dari kampus yang sama.' });
     }
 
     const assigned = await prisma.order.updateMany({
       where: {
         id: orderId,
+        campusId: runner.campusId,
         status: { in: ['PAID', 'ready'] },
         fulfillmentType: 'delivery',
         courierId: null,
@@ -304,8 +355,17 @@ const assignOrder = async (req, res, next) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
+        campus: {
+          select: { campusId: true, name: true, city: true, status: true },
+        },
         user: { select: { name: true } },
-        canteen: { select: { name: true } },
+        canteen: {
+          select: {
+            name: true,
+            campusId: true,
+            campus: { select: { campusId: true, name: true, city: true, status: true } },
+          },
+        },
         courier: { select: { id: true, name: true } },
       },
     });

@@ -148,7 +148,12 @@ function PublicEntryFlow() {
 
 function RoleLanding() {
   const { user, profile, loading, authError, refreshProfile, signOut } = useAuth();
-  const { selectedCampus } = useCampus();
+  const {
+    selectedCampus,
+    loading: campusesLoading,
+    error: campusError,
+    refreshCampusData,
+  } = useCampus();
 
   if (loading && localStorage.getItem(AUTH_TOKEN_KEY)) {
     return (
@@ -205,6 +210,29 @@ function RoleLanding() {
 
   // Keep the storefront available at the root URL for customers and canteen partners.
   if (profile.role === 'customer') {
+    if (campusesLoading) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-[#fbf7f1] text-sm font-semibold text-slate-600">
+          Memuat kampus aktif...
+        </div>
+      );
+    }
+    if (campusError) {
+      return (
+        <main role="alert" className="flex min-h-screen items-center justify-center bg-[#fbf7f1] p-4">
+          <div className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-6 text-center shadow-sm">
+            <p className="text-sm text-red-700">{campusError}</p>
+            <button
+              type="button"
+              onClick={() => refreshCampusData().catch((requestError) => console.error('Gagal mencoba ulang daftar kampus:', requestError))}
+              className="mt-4 rounded-xl bg-[#dc0413] px-4 py-2.5 text-sm font-bold text-white"
+            >
+              Coba lagi
+            </button>
+          </div>
+        </main>
+      );
+    }
     if (!selectedCampus) {
       return <Navigate to="/select-campus" replace state={{ from: { pathname: '/' } }} />;
     }

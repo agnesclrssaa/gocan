@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -88,12 +88,15 @@ export const Home = () => {
   // 1. AMBIL DATA KANTIN DAN MENU DARI API
   // ==========================================
 
-  const fetchCanteens = async () => {
+  const fetchCanteens = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const data = await api.get('/canteens');
+      const requestConfig = selectedCampusId
+        ? { params: { campusId: selectedCampusId } }
+        : undefined;
+      const data = await api.get('/canteens', requestConfig);
       const safeCanteens = Array.isArray(data)
         ? data.map((canteen) => ({ ...canteen, campusId: getCampusId(canteen) }))
         : [];
@@ -104,7 +107,8 @@ export const Home = () => {
         safeCanteens.map(async (canteen) => {
           try {
             const response = await api.get(
-              `/canteens/${canteen.id}/menus`
+              `/canteens/${encodeURIComponent(canteen.id)}/menus`,
+              requestConfig
             );
 
             const menus = Array.isArray(response)
@@ -136,16 +140,19 @@ export const Home = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCampusId]);
 
   useEffect(() => {
     fetchCanteens();
-  }, []);
+  }, [fetchCanteens]);
 
   useEffect(() => {
     const fetchBestSellers = async () => {
       try {
-        const data = await api.get('/menu/bestsellers');
+        const requestConfig = selectedCampusId
+          ? { params: { campusId: selectedCampusId } }
+          : undefined;
+        const data = await api.get('/menu/bestsellers', requestConfig);
         setBestSellerItems(
           Array.isArray(data)
             ? data.map((item) => ({ ...item, campusId: getCampusId(item) }))
@@ -158,7 +165,7 @@ export const Home = () => {
     };
 
     fetchBestSellers();
-  }, []);
+  }, [selectedCampusId]);
 
   // ==========================================
   // 3. RESET FILTER

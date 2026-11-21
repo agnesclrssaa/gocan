@@ -16,19 +16,45 @@ const parseOrderItems = (order) => {
   }
 };
 
-const listAvailableOrders = async (_req, res, next) => {
+const listAvailableOrders = async (req, res, next) => {
   try {
+    const runner = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      select: { campusId: true },
+    });
+    if (!runner?.campusId) {
+      return res.status(403).json({ error: 'Akun Runner belum terhubung ke kampus. Hubungi Admin.' });
+    }
+
+    const campus = await prisma.campus.findFirst({
+      where: { campusId: runner.campusId, status: 'active' },
+      select: { campusId: true },
+    });
+    if (!campus) return res.json([]);
+
     const orders = await prisma.order.findMany({
       where: {
+        campusId: runner.campusId,
         status: { in: ['PAID', 'ready'] },
         fulfillmentType: 'delivery',
         courierId: null,
         runnerId: null,
       },
       include: {
+        campus: {
+          select: { campusId: true, name: true, city: true, address: true, status: true },
+        },
         orderItems: orderItemNotesInclude,
         user: { select: { name: true, phoneNumber: true } },
-        canteen: { select: { name: true, location: true } },
+        canteen: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            campusId: true,
+            campus: { select: { campusId: true, name: true, city: true, status: true } },
+          },
+        },
       },
       orderBy: { updatedAt: 'asc' },
     });
@@ -45,9 +71,25 @@ const acceptOrder = async (req, res, next) => {
       return res.status(400).json({ error: 'ID pesanan tidak valid.' });
     }
 
+    const runner = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      select: { campusId: true },
+    });
+    if (!runner?.campusId) {
+      return res.status(403).json({ error: 'Akun Runner belum terhubung ke kampus. Hubungi Admin.' });
+    }
+    const activeCampus = await prisma.campus.findFirst({
+      where: { campusId: runner.campusId, status: 'active' },
+      select: { campusId: true },
+    });
+    if (!activeCampus) {
+      return res.status(409).json({ error: 'Kampus Runner sedang nonaktif. Hubungi Admin.' });
+    }
+
     const claimed = await prisma.order.updateMany({
       where: {
         id: orderId,
+        campusId: runner.campusId,
         status: { in: ['PAID', 'ready'] },
         fulfillmentType: 'delivery',
         courierId: null,
@@ -68,9 +110,20 @@ const acceptOrder = async (req, res, next) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
+        campus: {
+          select: { campusId: true, name: true, city: true, address: true, status: true },
+        },
         orderItems: orderItemNotesInclude,
         user: { select: { name: true, phoneNumber: true } },
-        canteen: { select: { name: true, location: true } },
+        canteen: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+            campusId: true,
+            campus: { select: { campusId: true, name: true, city: true, status: true } },
+          },
+        },
       },
     });
     return res.json({ order: parseOrderItems(order) });

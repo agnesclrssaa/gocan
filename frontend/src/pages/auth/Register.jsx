@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useCampus } from '../../context/CampusContext';
 import { api } from '../../lib/api';
 import { CreditCard, ImageUp } from 'lucide-react';
-import { getActiveCampuses, saveCanteenProfile } from '../../lib/canteenCampus';
-import { saveRunnerCampusProfile } from '../../lib/runnerCampus';
 import './Auth.css';
 
 export default function Register() {
   const { register, refreshProfile } = useAuth();
+  const {
+    activeCampuses,
+    loading: campusesLoading,
+    error: campusError,
+  } = useCampus();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -19,7 +23,6 @@ export default function Register() {
     campusId: '',
   });
 
-  const [activeCampuses, setActiveCampuses] = useState(getActiveCampuses);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,16 +32,6 @@ export default function Register() {
   useEffect(() => () => {
     if (ktmPreview) URL.revokeObjectURL(ktmPreview);
   }, [ktmPreview]);
-
-  useEffect(() => {
-    const refreshCampuses = () => setActiveCampuses(getActiveCampuses());
-    window.addEventListener('storage', refreshCampuses);
-    window.addEventListener('focus', refreshCampuses);
-    return () => {
-      window.removeEventListener('storage', refreshCampuses);
-      window.removeEventListener('focus', refreshCampuses);
-    };
-  }, []);
 
   const update = (field, value) => {
     setFormData((current) => ({
@@ -53,15 +46,6 @@ export default function Register() {
 
     if (!['customer', 'runner', 'canteen'].includes(formData.role)) {
       setError('Role pendaftaran tidak valid.');
-      return;
-    }
-
-    const selectedCampus = ['canteen', 'runner'].includes(formData.role)
-      ? getActiveCampuses().find((campus) => String(campus.campusId || campus.campus_id || '') === formData.campusId)
-      : null;
-    if (['canteen', 'runner'].includes(formData.role) && !selectedCampus) {
-      setActiveCampuses(getActiveCampuses());
-      setError(`Pilih kampus aktif untuk mendaftarkan ${formData.role === 'runner' ? 'Runner' : 'Mitra Kantin'}.`);
       return;
     }
 
@@ -95,11 +79,20 @@ export default function Register() {
 
     let registrationCompleted = false;
     try {
+      const selectedCampus = ['canteen', 'runner'].includes(formData.role)
+        ? activeCampuses.find((campus) => campus.campusId === formData.campusId)
+        : null;
+      if (['canteen', 'runner'].includes(formData.role) && !selectedCampus) {
+        setError(`Pilih kampus aktif untuk mendaftarkan ${formData.role === 'runner' ? 'Runner' : 'Mitra Kantin'}.`);
+        return;
+      }
+
       const session = await register({
         name: formData.name.trim(),
         email: formData.email.trim(),
         password: formData.password,
         role: formData.role,
+        ...(selectedCampus ? { campusId: selectedCampus.campusId } : {}),
         ...(formData.role === 'runner'
           ? {
               nrp: formData.nrp.trim(),
@@ -112,23 +105,8 @@ export default function Register() {
       });
 
       registrationCompleted = true;
-      if (formData.role === 'canteen') {
-        const registeredUser = session.user;
-        const campusId = String(selectedCampus.campusId || selectedCampus.campus_id);
-        saveCanteenProfile({
-          id: registeredUser.canteen?.id || registeredUser.canteenId || registeredUser.id,
-          canteenId: registeredUser.canteen?.id || registeredUser.canteenId || registeredUser.id,
-          ownerId: registeredUser.id,
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          campusId,
-          campusName: selectedCampus.name || '',
-          campusCity: selectedCampus.city || '',
-        }, registeredUser);
-      }
 
       if (formData.role === 'runner') {
-        saveRunnerCampusProfile(session.user, String(selectedCampus.campusId || selectedCampus.campus_id));
         const uploadData = new FormData();
         uploadData.append('image', ktmPhoto);
         const uploadedPhoto = await api.post('/upload/ktm', uploadData);
@@ -229,6 +207,11 @@ export default function Register() {
           {error && (
             <div className="auth-error" role="alert">
               {error}
+            </div>
+          )}
+          {campusError && formData.role !== 'customer' && (
+            <div className="auth-error" role="alert">
+              Gagal memuat kampus aktif: {campusError}
             </div>
           )}
 
@@ -332,13 +315,14 @@ export default function Register() {
                 <select
                   id="canteen-campus"
                   required
+                  disabled={campusesLoading || activeCampuses.length === 0}
                   value={formData.campusId}
                   onChange={(event) => update('campusId', event.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm text-slate-800 outline-none focus:border-[#116aa5] focus:ring-2 focus:ring-[#116aa5]/20"
                 >
-                  <option value="">Pilih kampus aktif</option>
+                  <option value="">{campusesLoading ? 'Memuat kampus...' : 'Pilih kampus aktif'}</option>
                   {activeCampuses.map((campus) => {
-                    const campusId = String(campus.campusId || campus.campus_id || '');
+                    const campusId = campus.campusId;
                     return (
                       <option key={campusId} value={campusId}>
                         {campus.name} · {campus.city}
@@ -361,13 +345,14 @@ export default function Register() {
                   <select
                     id="runner-campus"
                     required
+                    disabled={campusesLoading || activeCampuses.length === 0}
                     value={formData.campusId}
                     onChange={(event) => update('campusId', event.target.value)}
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm"
                   >
-                    <option value="">Pilih kampus aktif</option>
+                    <option value="">{campusesLoading ? 'Memuat kampus...' : 'Pilih kampus aktif'}</option>
                     {activeCampuses.map((campus) => {
-                      const campusId = String(campus.campusId || campus.campus_id || '');
+                      const campusId = campus.campusId;
                       return (
                         <option key={campusId} value={campusId}>
                           {campus.name} · {campus.city}

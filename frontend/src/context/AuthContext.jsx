@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = useCallback(
-    async ({ name, email, password, role, ...runnerProfile }) => {
+    async ({ name, email, password, role, campusId, ...runnerProfile }) => {
       setLoading(true);
       setAuthError(null);
       try {
@@ -72,6 +72,7 @@ export const AuthProvider = ({ children }) => {
           email,
           password,
           role,
+          ...(typeof campusId === 'string' && campusId ? { campusId } : {}),
           ...(role === 'runner' ? runnerProfile : {}),
         });
         applySession(session);

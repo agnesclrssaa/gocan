@@ -13,12 +13,19 @@ const normalizeOrderStatus = (status) => ({
 
 const listOrders = async (req, res, next) => {
   try {
+    const requestedCampusId = typeof req.query.campusId === 'string'
+      ? req.query.campusId.trim()
+      : '';
     const orders = await prisma.order.findMany({
-      where: { userId: req.auth.userId },
+      where: {
+        userId: req.auth.userId,
+        ...(requestedCampusId ? { campusId: requestedCampusId } : {}),
+      },
       select: {
         id: true,
         userId: true,
         canteenId: true,
+        campusId: true,
         items: true,
         totalPrice: true,
         orderType: true,
@@ -52,10 +59,29 @@ const listOrders = async (req, res, next) => {
         createdAt: true,
         updatedAt: true,
         orderItems: orderItemNotesInclude,
+        campus: {
+          select: {
+            campusId: true,
+            name: true,
+            city: true,
+            address: true,
+            status: true,
+          },
+        },
         canteen: {
           select: {
+            id: true,
             name: true,
             location: true,
+            campusId: true,
+            campus: {
+              select: {
+                campusId: true,
+                name: true,
+                city: true,
+                status: true,
+              },
+            },
             users: {
               where: { role: { in: ['canteen', 'canteen_staff'] } },
               select: { id: true },
@@ -98,10 +124,29 @@ const getOrder = async (req, res, next) => {
       where: { id: orderId, userId: req.auth.userId },
       include: {
         orderItems: orderItemNotesInclude,
+        campus: {
+          select: {
+            campusId: true,
+            name: true,
+            city: true,
+            address: true,
+            status: true,
+          },
+        },
         canteen: {
           select: {
+            id: true,
             name: true,
             location: true,
+            campusId: true,
+            campus: {
+              select: {
+                campusId: true,
+                name: true,
+                city: true,
+                status: true,
+              },
+            },
             users: {
               where: { role: { in: ['canteen', 'canteen_staff'] } },
               select: { id: true },
@@ -259,6 +304,17 @@ const verifyPickup = async (req, res, next) => {
     return res.status(403).json({
       success: false,
       message: 'Pesanan antar belum ditugaskan kepada Runner ini.',
+    });
+  }
+
+  const runner = await prisma.user.findUnique({
+    where: { id: req.auth.userId },
+    select: { campusId: true },
+  });
+  if (!runner?.campusId || runner.campusId !== order.campusId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Runner hanya dapat memverifikasi pesanan dari kampus yang sama.',
     });
   }
 }

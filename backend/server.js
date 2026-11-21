@@ -20,6 +20,7 @@ const express = require('express');
 const path = require('path');
 const prisma = require('./src/lib/prisma');
 const authRoutes = require('./routes/auth.routes');
+const campusRoutes = require('./routes/campus.routes');
 const adminRoutes = require('./routes/admin.routes');
 const healthRoutes = require('./routes/health.routes');
 const menuRoutes = require('./routes/menuRoutes');
@@ -55,6 +56,7 @@ app.get('/', (_req, res) => res.json({ status: 'GoCan API is running' }));
 
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/campuses', campusRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/user', userRoutes);

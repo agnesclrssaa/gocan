@@ -3,6 +3,7 @@ const { randomInt, randomUUID } = require('crypto');
 const jwt = require('jsonwebtoken');
 const prisma = require('../src/lib/prisma');
 const { sendPasswordResetEmail } = require('../utils/email');
+const { ensureDefaultCampuses } = require('../services/campus.service');
 
 const createToken = (user) =>
   jwt.sign(
@@ -27,6 +28,9 @@ const toPublicUser = ({
   avatarUrl,
   defaultBuilding,
   defaultRoom,
+  campusId,
+  campus,
+  canteen,
 }) => ({
   id,
   name,
@@ -44,6 +48,9 @@ const toPublicUser = ({
   avatarUrl,
   defaultBuilding,
   defaultRoom,
+  campusId,
+  campus,
+  canteen,
 });
 
 const runnerProfileSelect = {
@@ -62,6 +69,35 @@ const runnerProfileSelect = {
   avatarUrl: true,
   defaultBuilding: true,
   defaultRoom: true,
+  campusId: true,
+  campus: {
+    select: {
+      campusId: true,
+      name: true,
+      city: true,
+      address: true,
+      image: true,
+      latitude: true,
+      longitude: true,
+      status: true,
+    },
+  },
+  canteen: {
+    select: {
+      id: true,
+      name: true,
+      campusId: true,
+      campus: {
+        select: {
+          campusId: true,
+          name: true,
+          city: true,
+          address: true,
+          status: true,
+        },
+      },
+    },
+  },
 };
 
 const getMe = async (req, res, next) => {
@@ -93,6 +129,7 @@ const register = async (req, res, next) => {
       bankName,
       accountNumber,
       accountHolderName,
+      campusId: requestedCampusId,
     } = req.body;
     if (
       typeof name !== 'string' ||
@@ -106,6 +143,29 @@ const register = async (req, res, next) => {
       return res.status(400).json({
         error: 'Nama, email valid, password minimal 8 karakter, dan role pendaftaran yang valid wajib diisi.',
       });
+    }
+    const campusId = typeof requestedCampusId === 'string'
+      ? requestedCampusId.trim()
+      : '';
+    if (
+      ['canteen', 'runner'].includes(role) &&
+      !campusId
+    ) {
+      return res.status(400).json({ error: 'Kampus aktif wajib dipilih untuk mendaftar sebagai Mitra Kantin atau Runner.' });
+    }
+    if (requestedCampusId !== undefined && typeof requestedCampusId !== 'string') {
+      return res.status(400).json({ error: 'Campus ID tidak valid.' });
+    }
+
+    await ensureDefaultCampuses();
+    const selectedCampus = campusId
+      ? await prisma.campus.findFirst({
+          where: { campusId, status: 'active' },
+          select: { campusId: true },
+        })
+      : null;
+    if (campusId && !selectedCampus) {
+      return res.status(400).json({ error: 'Kampus tidak ditemukan atau sudah nonaktif.' });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
@@ -138,6 +198,7 @@ const register = async (req, res, next) => {
         ? await transaction.canteen.create({
             data: {
               id: randomUUID(),
+              campusId: selectedCampus.campusId,
               name: name.trim(),
               description: 'Mitra kantin GoCan',
             },
@@ -150,6 +211,7 @@ const register = async (req, res, next) => {
           email: normalizedEmail,
           password: hashedPassword,
           role,
+          campusId: selectedCampus?.campusId || null,
           approvalStatus: role === 'runner' ? 'PENDING' : 'APPROVED',
           ...(role === 'runner'
             ? {
@@ -161,6 +223,23 @@ const register = async (req, res, next) => {
               }
             : {}),
           ...(canteen ? { canteenId: canteen.id } : {}),
+        },
+        include: {
+          campus: {
+            select: {
+              campusId: true,
+              name: true,
+              city: true,
+              address: true,
+              image: true,
+              latitude: true,
+              longitude: true,
+              status: true,
+            },
+          },
+          canteen: {
+            include: { campus: true },
+          },
         },
       });
     });
@@ -241,6 +320,10 @@ const login = async (req, res, next) => {
 
     const user = await prisma.user.findUnique({
       where: { email: email.trim().toLowerCase() },
+      include: {
+        campus: true,
+        canteen: { include: { campus: true } },
+      },
     });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Email atau password salah.' });
