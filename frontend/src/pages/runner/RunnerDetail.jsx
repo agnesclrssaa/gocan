@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Phone,
   CheckCircle,
@@ -13,6 +13,8 @@ import {
 
 export default function RunnerDetail() {
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const activeOrderItems = Array.isArray(state?.order?.items) ? state.order.items : [];
   // Step: 1 = Kurir Menerima, 2 = Sampai di Kantin, 3 = Serah Terima (Input PIN), 4 = Selesai
   const [currentStep, setCurrentStep] = useState(1);
   const [pinDigits, setPinDigits] = useState(['', '', '', '']);
@@ -137,6 +139,22 @@ export default function RunnerDetail() {
               <strong className="text-slate-900 font-bold">Ayam Geprek</strong>
             </div>
           </div>
+
+          {activeOrderItems.length > 0 && (
+            <div className="space-y-2 border-t border-slate-100 pt-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Rincian menu
+              </h3>
+              {activeOrderItems.map((item, index) => (
+                <div key={`${item.id || item.name || 'menu'}-${index}`} className="text-xs text-slate-700">
+                  <p>{item.quantity || 1}x {item.name || item.menu_name || 'Menu'}</p>
+                  {item.notes && (
+                    <p className="mt-0.5 break-words text-slate-500">Catatan: {item.notes}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Stepper Proses Pengantaran */}
           <div className="pt-2">

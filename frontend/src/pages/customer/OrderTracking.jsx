@@ -567,9 +567,14 @@ export const OrderTracking = () => {
                     key={item.cartItemId || item.id || index}
                     className="flex justify-between gap-4 text-sm text-slate-700"
                   >
-                    <span>
+                    <span className="min-w-0 flex-1">
                       {item.quantity || 1}x{' '}
                       {item.name || item.menu_name || 'Menu'}
+                      {item.notes && (
+                        <span className="mt-1 block break-words text-xs font-normal text-slate-500">
+                          Catatan: {item.notes}
+                        </span>
+                      )}
                     </span>
 
                     <span className="gocan-price shrink-0 font-semibold">

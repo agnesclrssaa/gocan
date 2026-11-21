@@ -134,6 +134,7 @@ export const Cart = () => {
                         id={`cart-item-note-${item.cartItemId}`}
                         type="text"
                         value={item.notes || ''}
+                        maxLength={1000}
                         onChange={(event) => updateNotes(item.cartItemId, event.target.value)}
                         placeholder="Tambahkan catatan untuk menu ini (Opsional)"
                         aria-label={`Catatan untuk ${item.name}`}

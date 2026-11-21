@@ -180,6 +180,7 @@ const MenuCard = ({ menu, canteen }) => {
               <textarea
                 rows="3"
                 value={notes}
+                maxLength={1000}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Contoh: Sambal dipisah, tidak pedas..."
                 className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-[#2152B7]"

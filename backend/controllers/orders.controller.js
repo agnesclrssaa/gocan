@@ -1,4 +1,5 @@
 const prisma = require('../src/lib/prisma');
+const { mergeOrderItemNotes, orderItemNotesInclude } = require('../utils/orderItems');
 
 const normalizeOrderStatus = (status) => ({
   PENDING_PAYMENT: 'pending',
@@ -50,6 +51,7 @@ const listOrders = async (req, res, next) => {
         runnerId: true,
         createdAt: true,
         updatedAt: true,
+        orderItems: orderItemNotesInclude,
         canteen: {
           select: {
             name: true,
@@ -69,8 +71,7 @@ const listOrders = async (req, res, next) => {
     return res.status(200).json(orders.map((order) => {
       let items = [];
       try {
-        const parsedItems = JSON.parse(order.items);
-        items = Array.isArray(parsedItems) ? parsedItems : [];
+        items = mergeOrderItemNotes(order);
       } catch (parseError) {
         console.error(`Gagal membaca rincian item pesanan #${order.id}:`, parseError);
       }
@@ -96,6 +97,7 @@ const getOrder = async (req, res, next) => {
     const order = await prisma.order.findFirst({
       where: { id: orderId, userId: req.auth.userId },
       include: {
+        orderItems: orderItemNotesInclude,
         canteen: {
           select: {
             name: true,
@@ -119,7 +121,7 @@ const getOrder = async (req, res, next) => {
       order: {
         ...order,
         status: normalizeOrderStatus(order.status),
-        items: JSON.parse(order.items),
+        items: mergeOrderItemNotes(order),
         isScheduled: order.orderType === 'SCHEDULED',
       },
     });

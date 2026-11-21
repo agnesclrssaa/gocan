@@ -1,12 +1,13 @@
 const prisma = require('../src/lib/prisma');
 const path = require('path');
 const { privateUploadDirectory } = require('../middlewares/upload.middleware');
+const { mergeOrderItemNotes, orderItemNotesInclude } = require('../utils/orderItems');
 
 const parseOrderItems = (order) => {
   try {
     return {
       ...order,
-      items: JSON.parse(order.items),
+      items: mergeOrderItemNotes(order),
       isScheduled: order.orderType === 'SCHEDULED',
     };
   } catch (error) {
@@ -25,6 +26,7 @@ const listAvailableOrders = async (_req, res, next) => {
         runnerId: null,
       },
       include: {
+        orderItems: orderItemNotesInclude,
         user: { select: { name: true, phoneNumber: true } },
         canteen: { select: { name: true, location: true } },
       },
@@ -66,6 +68,7 @@ const acceptOrder = async (req, res, next) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
+        orderItems: orderItemNotesInclude,
         user: { select: { name: true, phoneNumber: true } },
         canteen: { select: { name: true, location: true } },
       },

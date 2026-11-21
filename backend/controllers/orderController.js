@@ -1,6 +1,7 @@
 const { randomUUID } = require('node:crypto');
 const prisma = require('../src/lib/prisma');
 const { createPickupQrCode } = require('../utils/qrGenerator');
+const { mergeOrderItemNotes, orderItemNotesInclude } = require('../utils/orderItems');
 
 const SERVICE_FEE = 1000;
 const DELIVERY_PROMO_MINIMUM = 25000;
@@ -151,10 +152,14 @@ const createOrder = async (req, res, next) => {
       typeof item.id !== 'string' ||
       !Number.isSafeInteger(Number(item.quantity ?? 1)) ||
       Number(item.quantity ?? 1) < 1 ||
-      Number(item.quantity ?? 1) > 99
+      Number(item.quantity ?? 1) > 99 ||
+      (item.notes != null &&
+        (typeof item.notes !== 'string' || item.notes.length > 1000))
     );
     if (invalidItem) {
-      return res.status(400).json({ error: 'Setiap item harus memiliki ID menu dan jumlah antara 1 hingga 99.' });
+      return res.status(400).json({
+        error: 'Setiap item harus memiliki ID menu, jumlah antara 1 hingga 99, dan catatan maksimal 1000 karakter.',
+      });
     }
     const menuIds = [...new Set(items.map((item) => item.id))];
     const availableMenus = await prisma.menu.findMany({
@@ -191,6 +196,7 @@ const createOrder = async (req, res, next) => {
         onlinePrice,
         imageUrl: menu.imageUrl,
         canteenId: menu.canteenId,
+        notes: typeof item.notes === 'string' ? item.notes.trim() || null : null,
       };
     });
     const subtotal = orderItems.reduce((total, item) => total + item.onlinePrice * item.quantity, 0);
@@ -214,6 +220,16 @@ const createOrder = async (req, res, next) => {
         customerId: req.auth.userId,
         canteenId,
         items: JSON.stringify(orderItems),
+        orderItems: {
+          create: orderItems.map((item, position) => ({
+            menuId: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            notes: item.notes,
+            position,
+          })),
+        },
         totalPrice: totalAmount,
         subtotal,
         deliveryFee,
@@ -269,7 +285,7 @@ const createOrder = async (req, res, next) => {
 const parseOrderItems = (order) => ({
   ...order,
   status: normalizeOrderStatus(order.status),
-  items: JSON.parse(order.items),
+  items: mergeOrderItemNotes(order),
   isScheduled: order.orderType === 'SCHEDULED',
 });
 
@@ -303,6 +319,7 @@ const listCanteenOrders = async (req, res, next) => {
           name: true,
         },
       },
+      orderItems: orderItemNotesInclude,
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -319,6 +336,7 @@ const listCanteenOrders = async (req, res, next) => {
 
     const orders = await prisma.order.findMany({
       where: { canteenId: user.canteenId },
+      include: { orderItems: orderItemNotesInclude },
       orderBy: { createdAt: 'desc' },
     });
     return res.json(orders.map(parseOrderItems));
@@ -490,6 +508,7 @@ const listCourierOrders = async (req, res, next) => {
           { status: { in: ['PREPARING', 'READY_FOR_PICKUP'] }, runnerId: req.auth.userId },
         ],
       },
+      include: { orderItems: orderItemNotesInclude },
       orderBy: { updatedAt: 'asc' },
     });
     return res.json(orders.map(parseOrderItems));

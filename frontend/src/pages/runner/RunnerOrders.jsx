@@ -78,7 +78,9 @@ export default function RunnerOrders() {
       distance: '—',
       category: order.buildingName || 'Kampus',
       schedule: 'Langsung Antar',
-      displayItems: order.items.map((item) => `${item.quantity || 1}x ${item.name || 'Menu'}`).join(', '),
+      displayItems: order.items.map((item) =>
+        `${item.quantity || 1}x ${item.name || 'Menu'}${item.notes ? ` (Catatan: ${item.notes})` : ''}`
+      ).join(', '),
       isHot: true,
     }));
 

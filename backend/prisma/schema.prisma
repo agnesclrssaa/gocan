@@ -91,11 +91,27 @@ model Order {
   courier             User?     @relation("CourierOrders", fields: [courierId], references: [id], onDelete: SetNull)
   runner              User?     @relation("OrderRunner", fields: [runnerId], references: [id], onDelete: SetNull)
   conversations       Conversation[]
+  orderItems          OrderItem[]
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
   @@index([userId, createdAt])
   @@index([canteenId, status])
+}
+
+model OrderItem {
+  id       Int     @id @default(autoincrement())
+  orderId  Int
+  menuId   String
+  name     String
+  quantity Int
+  price    Float
+  notes    String?
+  position Int
+  order    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, position])
+  @@index([orderId])
 }
 
 model Conversation {

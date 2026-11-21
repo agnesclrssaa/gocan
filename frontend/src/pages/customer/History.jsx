@@ -126,16 +126,16 @@ const OrderCard = ({ order, preview, active = false }) => {
       )}
 
       {items.length > 0 && (
-        <p className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-600">
-          {items
-            .map(
-              (item) =>
-                `${item.quantity || 1}x ${
-                  item.name || item.menu_name || 'Menu'
-                }`
-            )
-            .join(', ')}
-        </p>
+        <div className="mt-3 space-y-1 border-t border-slate-100 pt-3 text-xs text-slate-600">
+          {items.map((item, index) => (
+            <p key={`${item.id || item.name || 'menu'}-${index}`}>
+              {item.quantity || 1}x {item.name || item.menu_name || 'Menu'}
+              {item.notes && (
+                <span className="ml-1 text-slate-500">· Catatan: {item.notes}</span>
+              )}
+            </p>
+          ))}
+        </div>
       )}
 
       {active && (
