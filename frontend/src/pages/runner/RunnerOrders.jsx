@@ -2,26 +2,26 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
   Compass,
-  MapPin,
-  Clock,
-  ArrowRight,
-  ShieldCheck,
   AlertCircle,
-  Building,
   Check,
   CheckCircle,
   X,
-  Filter,
   Zap,
-  Sparkles,
   ChevronRight,
   Navigation
 } from 'lucide-react';
-import { api } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
+import { api, asArray } from '../../lib/api';
+import {
+  getRunnerCampusInfo,
+  getRunnerCampusOrders,
+} from '../../lib/runnerCampus';
 
 export default function RunnerOrders() {
   const { isOnline } = useOutletContext();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const campusInfo = getRunnerCampusInfo(profile, user);
   const [activeFilter, setActiveFilter] = useState('Semua');
   const [takenJobId, setTakenJobId] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
@@ -33,26 +33,39 @@ export default function RunnerOrders() {
     setLoadingOrders(true);
     setOrdersError('');
     try {
-      setOrders(await api.get('/runner/available-orders'));
+      const data = await api.get('/runner/available-orders');
+      setOrders(getRunnerCampusOrders(asArray(data), campusInfo.campusId));
     } catch (error) {
       setOrdersError(error.message || 'Gagal memuat pesanan yang tersedia.');
     } finally {
       setLoadingOrders(false);
     }
-  }, []);
+  }, [campusInfo.campusId]);
 
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
 
   const handleTakeJob = async (order) => {
+    const currentCampus = getRunnerCampusInfo(profile, user);
+    if (!currentCampus.isActive || !getRunnerCampusOrders([order], currentCampus.campusId).length) {
+      setOrdersError('Kampus Runner tidak aktif atau pesanan berasal dari kampus lain. Hubungi Admin jika perlu.');
+      return;
+    }
+
     setTakenJobId(order.id);
     setOrdersError('');
     try {
       const { order: acceptedOrder } = await api.post('/runner/accept-order', { orderId: order.id });
+      const campusOrder = {
+        ...acceptedOrder,
+        campusId: order.campusId,
+        campusName: order.campusName,
+        campusCity: order.campusCity,
+      };
       setToastMessage(`Pesanan #${order.id} berhasil diambil. Silakan lanjutkan proses pengantaran.`);
       window.setTimeout(() => {
-        navigate('/runner-portal/detail', { state: { order: acceptedOrder } });
+        navigate('/runner-portal/detail', { state: { order: campusOrder } });
       }, 700);
     } catch (error) {
       setOrdersError(error.message || 'Pesanan tidak dapat diambil.');
@@ -72,13 +85,19 @@ export default function RunnerOrders() {
       displayId: `#GoCan-${order.id}`,
       fee: 'Rp 3.500',
       from: order.canteen?.name || 'Kantin GoCan',
-      fromFloor: order.canteen?.location || 'Kampus UKWMS',
-      to: [order.buildingName, order.meetingPoint].filter(Boolean).join(' - ') || 'Lokasi pemesan',
+      fromFloor: order.canteen?.location || campusInfo.name || 'Lokasi kantin belum tersedia',
+      to: [
+        order.buildingName || order.destinationBuilding || order.destination_building,
+        order.destinationRoom || order.destination_room,
+        order.meetingPoint || order.destinationNote || order.destination_note,
+      ].filter(Boolean).join(' - ') || 'Lokasi pemesan',
       toDetail: [order.classInfo, order.user?.name ? `Pemesan: ${order.user.name}` : ''].filter(Boolean).join(' • '),
+      campusName: order.campusName || campusInfo.name,
+      campusCity: order.campusCity || campusInfo.city,
       distance: '—',
       category: order.buildingName || 'Kampus',
       schedule: 'Langsung Antar',
-      displayItems: order.items.map((item) =>
+      displayItems: (Array.isArray(order.items) ? order.items : []).map((item) =>
         `${item.quantity || 1}x ${item.name || 'Menu'}${item.notes ? ` (Catatan: ${item.notes})` : ''}`
       ).join(', '),
       isHot: true,
@@ -106,23 +125,31 @@ export default function RunnerOrders() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                Job Board Antar Gedung Dinoyo
+                Job Board Antar {campusInfo.name || 'Gedung'}
               </h1>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                 Tarif Flat Rp 3.500
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Pilih orderan delivery terdekat untuk diantar dari stan kantin ke ruang kelas Customer.
+              {campusInfo.name
+                ? `Pesanan kampus ${campusInfo.name}${campusInfo.city ? ` · ${campusInfo.city}` : ''}. Pilih delivery untuk diantar ke Customer.`
+                : 'Kampus Runner belum ditetapkan. Hubungi Admin sebelum menerima pesanan.'}
             </p>
           </div>
         </div>
 
         {/* Offline Warning Banner if runner toggled offline */}
         {!isOnline && (
-          <div className="px-3.5 py-2 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center gap-2 self-start md:self-auto">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+          <div className="px-3.5 py-2 rounded-xl bg-[#dc0413]/15 border border-[#dc0413]/40 text-red-200 text-xs font-bold flex items-center gap-2 self-start md:self-auto">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#dc0413]" />
             <span>Radar Offline. Nyalakan toggle status di pojok atas untuk mengambil order.</span>
+          </div>
+        )}
+        {!campusInfo.isActive && (
+          <div role="alert" className="flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-2 text-xs font-bold text-amber-200">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            Kampus belum ditetapkan atau nonaktif. Hubungi Admin; pesanan tidak dapat diambil.
           </div>
         )}
       </div>
@@ -151,7 +178,7 @@ export default function RunnerOrders() {
       {/* Stacked Floating Order Cards */}
       <div className="space-y-4">
         {ordersError && (
-          <div role="alert" className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-sm text-rose-200">
+          <div role="alert" className="flex items-center justify-between gap-3 rounded-xl border border-[#dc0413]/30 bg-[#dc0413]/10 p-3 text-sm text-red-100">
             <span className="flex items-center gap-2"><AlertCircle className="h-4 w-4 shrink-0" />{ordersError}</span>
             <button type="button" onClick={loadOrders} className="shrink-0 font-bold underline">Coba lagi</button>
           </div>
@@ -161,7 +188,7 @@ export default function RunnerOrders() {
             Memuat pesanan tersedia...
           </div>
         )}
-        {filteredOrders.map((order, index) => (
+        {filteredOrders.map((order) => (
           <div
             key={order.id}
             className="glass-card-dark rounded-3xl p-5 sm:p-6 border border-white/10 shadow-xl transition-all duration-300 antigravity-hover space-y-4 relative overflow-hidden group"
@@ -204,6 +231,9 @@ export default function RunnerOrders() {
                   <span className="text-xs">A</span>
                 </div>
                 <div>
+                    <p className="mb-1 text-[10px] font-semibold text-sky-300">
+                      Kampus: {order.campusName || 'Tidak diketahui'}{order.campusCity ? ` · ${order.campusCity}` : ''}
+                    </p>
                   <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 block">
                     Ambil di Kantin:
                   </span>
@@ -238,7 +268,7 @@ export default function RunnerOrders() {
               </div>
 
               <button
-                disabled={!isOnline || takenJobId === order.id}
+                disabled={!isOnline || !campusInfo.isActive || takenJobId === order.id}
                 onClick={() => handleTakeJob(order)}
                 className={`py-3 px-6 rounded-2xl font-black text-xs transition flex items-center justify-center gap-2 self-stretch sm:self-auto ${!isOnline
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed'

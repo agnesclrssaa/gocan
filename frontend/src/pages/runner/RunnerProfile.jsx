@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   AlertCircle,
+  Building,
   CheckCircle,
   CreditCard,
   ImageUp,
@@ -9,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
+import { getRunnerCampusInfo } from '../../lib/runnerCampus';
 import RunnerBackgroundDecoration from '../../components/common/RunnerBackgroundDecoration';
 
 const bankOptions = [
@@ -24,7 +26,9 @@ const bankOptions = [
 ];
 
 export default function RunnerProfile() {
-  const { profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const location = useLocation();
+  const campusInfo = getRunnerCampusInfo(profile, user);
   const [form, setForm] = useState({
     nrp: '',
     phoneNumber: '',
@@ -36,7 +40,7 @@ export default function RunnerProfile() {
   const [previewUrl, setPreviewUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(location.state?.registrationError || '');
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
@@ -141,7 +145,7 @@ export default function RunnerProfile() {
         </header>
 
         {error && (
-          <div role="alert" className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+          <div role="alert" className="flex items-center gap-2 rounded-xl border border-[#dc0413]/20 bg-[#dc0413]/5 p-3 text-sm text-[#a7030e]">
             <AlertCircle className="h-5 w-5 shrink-0" />
             {error}
           </div>
@@ -152,6 +156,28 @@ export default function RunnerProfile() {
             {notice}
           </div>
         )}
+
+        <section className="rounded-2xl border border-[#116aa5]/20 bg-[#fbf7f1] p-5 shadow-sm">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+            <Building className="h-4 w-4 text-[#116aa5]" />
+            Kampus Terdaftar
+          </h2>
+          <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-xs font-semibold text-slate-500">Nama Kampus</dt>
+              <dd className="mt-1 font-bold text-[#116aa5]">{campusInfo.name || 'Belum ditetapkan'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold text-slate-500">Kota Kampus</dt>
+              <dd className="mt-1 font-bold text-slate-800">{campusInfo.city || '—'}</dd>
+            </div>
+          </dl>
+          {!campusInfo.isActive && (
+            <p role="status" className="mt-3 text-xs font-semibold text-[#dc0413]">
+              Kampus belum ditetapkan atau berstatus nonaktif. Hubungi Admin; kampus tidak dapat diubah dari halaman profil.
+            </p>
+          )}
+        </section>
 
         <form onSubmit={saveProfile} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
           <section className="space-y-4">

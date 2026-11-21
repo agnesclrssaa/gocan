@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Plus, CheckCircle, X, Search, Upload, Image as ImageIcon, LoaderCircle, Trash2 } from 'lucide-react';
+import { belongsToCanteen, filterCanteenOrders, withCanteenOwnership } from '../../lib/canteenCampus';
 
 const defaultImage = 'https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=600&q=80';
 const menuCategories = ['Makanan Berat', 'Minuman', 'Cemilan', 'Healthy', 'Kopi'];
@@ -11,6 +12,10 @@ const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.
 
 export default function CanteenMenuSales() {
   const { canteen, refreshCanteen, isOpen, updateStoreStatus, updatingStoreStatus } = useOutletContext();
+  const canteenId = canteen?.canteenId || canteen?.id || '';
+  const campusId = canteen?.campusId || '';
+  const campusName = canteen?.campusName || '';
+  const campusCity = canteen?.campusCity || '';
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllMenus, setShowAllMenus] = useState(false);
@@ -40,18 +45,25 @@ export default function CanteenMenuSales() {
     if (imagePreview) URL.revokeObjectURL(imagePreview);
   }, [imagePreview]);
 
-  const menuItems = (canteen?.menus || []).filter((item) => !deletedMenuIds.has(item.id));
+  const menuItems = (canteen?.menus || [])
+    .filter((item) => belongsToCanteen(item, canteen) && !deletedMenuIds.has(item.id))
+    .map((item) => withCanteenOwnership(item, canteen));
   const fetchOrders = useCallback(async () => {
     setOrdersLoading(true);
     setOrdersError(null);
     try {
-      setOrders(await api.get('/orders/canteen'));
+      setOrders(filterCanteenOrders(await api.get('/orders/canteen'), {
+        id: canteenId,
+        campusId,
+        campusName,
+        campusCity,
+      }));
     } catch (error) {
       setOrdersError(`Gagal memuat data penjualan: ${error.message}`);
     } finally {
       setOrdersLoading(false);
     }
-  }, []);
+  }, [canteenId, campusId, campusName, campusCity]);
 
   useEffect(() => {
     fetchOrders();

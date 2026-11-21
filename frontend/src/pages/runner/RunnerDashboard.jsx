@@ -1,100 +1,101 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import {
-  Wallet,
+  AlertCircle,
   ArrowDownToLine,
   MapPin,
   Clock,
-  Navigation,
-  Bike,
-  CheckCircle,
   X,
-  CreditCard,
   ChevronRight,
   TrendingUp,
-  Building,
   Zap,
-  Sparkles,
   Compass,
-  Star,
   Check
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { api, asArray } from '../../lib/api';
+import {
+  getRunnerCampusInfo,
+  getRunnerCampusOrders,
+  getRunnerOrderHistory,
+  isRunnerOrderAssignedTo,
+} from '../../lib/runnerCampus';
 
 export default function RunnerDashboard() {
   const { isOnline, setIsOnline } = useOutletContext();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const campusInfo = getRunnerCampusInfo(profile, user);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('185000');
   const [withdrawSuccess, setWithdrawSuccess] = useState(null);
   const [walletBalance, setWalletBalance] = useState(185000);
   const [withdrawError, setWithdrawError] = useState('');
+  const [availableOrders, setAvailableOrders] = useState([]);
+  const [runnerOrders, setRunnerOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState('');
 
-  // Daily stats
-  const todayEarnings = 52500; // 15 trips * 3500
-  const todayCompletedCount = 15;
-
-  // Nearby available jobs
-  const availableOrders = [
-    {
-      id: '#Gocan-82421',
-      total: 'Rp 28.500',
-      fee: 'Rp 3.500',
-      pickup: 'Kantin Pak Brazil (Stan 04)',
-      delivery: 'Gedung Benedictus Lt. 2 (R204)',
-      distance: '0,3 km',
-      prepStatus: 'Siap Diambil'
-    },
-    {
-      id: '#Gocan-82422',
-      total: 'Rp 32.000',
-      fee: 'Rp 3.500',
-      pickup: 'Kantin Dinoyo (Soto Lamongan)',
-      delivery: 'Gedung A Lt. 3 (R302)',
-      distance: '0,5 km',
-      prepStatus: 'Siap Diambil'
-    },
-    {
-      id: '#Gocan-82423',
-      total: 'Rp 24.000',
-      fee: 'Rp 3.500',
-      pickup: 'Kedai Kopi Teman',
-      delivery: 'Perpustakaan Pusat Lt. 2',
-      distance: '0,4 km',
-      prepStatus: 'Menunggu 3 Mnt'
+  const loadOrders = useCallback(async () => {
+    setOrdersLoading(true);
+    setOrdersError('');
+    try {
+      const [availableData, runnerData] = await Promise.all([
+        api.get('/runner/available-orders'),
+        api.get('/orders/courier'),
+      ]);
+      setAvailableOrders(getRunnerCampusOrders(asArray(availableData), campusInfo.campusId));
+      setRunnerOrders(getRunnerCampusOrders(asArray(runnerData), campusInfo.campusId));
+    } catch (error) {
+      console.error('Gagal memuat statistik dan pesanan Runner:', error);
+      setOrdersError(error.message || 'Data pesanan Runner tidak dapat dimuat.');
+    } finally {
+      setOrdersLoading(false);
     }
-  ];
+  }, [campusInfo.campusId]);
 
-  // Delivery history
-  const [history] = useState([
-    {
-      id: '#Gocan-82410',
-      time: '12:15 WIB',
-      canteen: 'Stan 04 Pak Brazil',
-      destination: 'Gedung B Lt. 3 Ruang 302',
-      fee: 'Rp 3.500',
-      recipient: 'David Wijaya',
-      status: 'Selesai'
-    },
-    {
-      id: '#Gocan-82408',
-      time: '11:45 WIB',
-      canteen: 'Stan 02 Soto Ayam',
-      destination: 'Lab Komputer Gedung A Lt. 2',
-      fee: 'Rp 3.500',
-      recipient: 'Siti Sarah',
-      status: 'Selesai'
-    },
-    {
-      id: '#Gocan-82404',
-      time: '11:10 WIB',
-      canteen: 'Stan 07 Kopi Teman',
-      destination: 'Ruang Dosen Gedung Farmasi',
-      fee: 'Rp 3.500',
-      recipient: 'Pak Antonius M.Kom',
-      status: 'Selesai'
-    }
-  ]);
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  const currentUser = user || profile;
+  const activeOrders = runnerOrders.filter((order) => {
+    const status = String(order.status || '').toLowerCase();
+    return isRunnerOrderAssignedTo(order, currentUser) &&
+      !['completed', 'cancelled'].includes(status);
+  });
+  const history = getRunnerOrderHistory(currentUser, campusInfo.campusId);
+  const recentAvailableOrders = availableOrders.slice(0, 3).map((order) => ({
+    ...order,
+    displayId: `#GoCan-${order.id}`,
+    total: `Rp ${Number(order.totalPrice || 0).toLocaleString('id-ID')}`,
+    fee: 'Rp 3.500',
+    pickup: order.canteen?.name || 'Kantin GoCan',
+    delivery: [
+      order.buildingName || order.destinationBuilding || order.destination_building,
+      order.destinationRoom || order.destination_room,
+      order.meetingPoint || order.destinationNote || order.destination_note,
+    ].filter(Boolean).join(' · ') || 'Lokasi tujuan belum tersedia',
+    distance: '—',
+    prepStatus: order.status || 'Menunggu',
+  }));
+  const recentHistory = history.slice(0, 3).map((order) => ({
+    ...order,
+    displayId: `#GoCan-${order.id}`,
+    time: order.completedAt
+      ? new Date(order.completedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      : 'Selesai',
+    canteen: order.canteen?.name || order.canteenName || 'Kantin GoCan',
+    destination: [
+      order.buildingName || order.destinationBuilding || order.destination_building,
+      order.destinationRoom || order.destination_room,
+      order.meetingPoint || order.destinationNote || order.destination_note,
+    ].filter(Boolean).join(' · ') || 'Tujuan pengantaran',
+    fee: 'Rp 3.500',
+    recipient: order.user?.name || order.customerName || 'Customer',
+  }));
+
+  const recordedEarnings = history.length * 3500;
+  const completedCount = history.length;
 
   const handleWithdraw = (e) => {
     e.preventDefault();
@@ -127,7 +128,7 @@ export default function RunnerDashboard() {
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
-                Dompet Runner Customer UKWMS
+                Dompet Runner · {campusInfo.name || 'Kampus belum ditetapkan'}
               </span>
             </div>
 
@@ -146,11 +147,11 @@ export default function RunnerDashboard() {
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 pt-1">
               <div className="flex items-center gap-1.5">
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
-                <span>Ongkir Hari Ini: <strong className="text-white">Rp {todayEarnings.toLocaleString('id-ID')}</strong></span>
+                <span>Total Ongkir Tercatat: <strong className="text-white">Rp {recordedEarnings.toLocaleString('id-ID')}</strong></span>
               </div>
               <span className="text-slate-600">•</span>
               <div>
-                <span>Trip Hari Ini: <strong className="text-white">{todayCompletedCount} Order</strong></span>
+                <span>Total Trip: <strong className="text-white">{completedCount} Order</strong></span>
               </div>
             </div>
           </div>
@@ -175,6 +176,21 @@ export default function RunnerDashboard() {
           </div>
         </div>
       </div>
+
+      {!campusInfo.isActive && (
+        <div role="alert" className="flex items-start gap-3 rounded-2xl border border-amber-400/40 bg-amber-500/10 p-4 text-sm font-semibold text-amber-100">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+          <span>
+            Kampus Runner belum ditetapkan atau berstatus nonaktif. Hubungi Admin; daftar pesanan dan penerimaan order dibatasi.
+          </span>
+        </div>
+      )}
+      {ordersError && (
+        <div role="alert" className="flex items-center justify-between gap-3 rounded-xl border border-red-400/40 bg-red-950/40 p-3 text-sm text-red-100">
+          <span>{ordersError}</span>
+          <button type="button" onClick={loadOrders} className="shrink-0 font-bold underline">Coba lagi</button>
+        </div>
+      )}
 
       {/* 2. TOGGLE STATUS "AKTIF CARI ORDER" (Giant Floating Status Card) */}
       <div className={`rounded-2xl p-4 sm:p-5 border transition-all duration-300 backdrop-blur-xl ${isOnline
@@ -203,7 +219,7 @@ export default function RunnerDashboard() {
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 {isOnline
-                  ? 'Posisi terdeteksi di Kampus Dinoyo. Anda akan menerima notifikasi orderan antar gedung.'
+                  ? `Posisi terdeteksi di ${campusInfo.name || 'kampus Runner'}. Anda akan menerima notifikasi orderan antar gedung.`
                   : 'Aktifkan toggle untuk mulai menerima penawaran antar makanan ke ruang kelas.'}
               </p>
             </div>
@@ -224,32 +240,29 @@ export default function RunnerDashboard() {
         </div>
       </div>
 
-      {/* 3. PERFORMANCE STATS CARDS */}
+      {/* 3. CAMPUS ORDER STATS */}
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <div className="glass-card-dark rounded-2xl p-4 border border-white/10 antigravity-hover text-center sm:text-left">
-          <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Antaran Selesai</p>
-          <p className="text-xl sm:text-2xl font-black text-white mt-1">15 Trip</p>
+          <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Pesanan Tersedia</p>
+          <p className="text-xl sm:text-2xl font-black text-white mt-1">{ordersLoading ? '—' : availableOrders.length}</p>
           <span className="text-[11px] text-emerald-400 font-semibold hidden sm:inline-block mt-0.5">
-            ✓ 100% Selesai Tepat Waktu
+            {campusInfo.name || 'Kampus Runner'}
           </span>
         </div>
 
         <div className="glass-card-dark rounded-2xl p-4 border border-white/10 antigravity-hover text-center sm:text-left">
-          <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Rata-rata Waktu</p>
-          <p className="text-xl sm:text-2xl font-black text-white mt-1">9.4 Mnt</p>
+          <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Pesanan Berjalan</p>
+          <p className="text-xl sm:text-2xl font-black text-white mt-1">{ordersLoading ? '—' : activeOrders.length}</p>
           <span className="text-[11px] text-slate-400 font-medium hidden sm:inline-block mt-0.5">
-            SLA Maks: 15 Menit
+            Ditugaskan ke akun ini
           </span>
         </div>
 
         <div className="glass-card-dark rounded-2xl p-4 border border-white/10 antigravity-hover text-center sm:text-left">
-          <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Rating Pelanggan</p>
-          <div className="flex items-center justify-center sm:justify-start gap-1 mt-1">
-            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-            <span className="text-xl sm:text-2xl font-black text-white">4.95</span>
-          </div>
-          <span className="text-[11px] text-amber-300 font-medium hidden sm:inline-block mt-0.5">
-            Top Runner Dinoyo
+          <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Pesanan Selesai</p>
+          <p className="text-xl sm:text-2xl font-black text-white mt-1">{history.length}</p>
+          <span className="text-[11px] text-slate-400 font-medium hidden sm:inline-block mt-0.5">
+            Tersimpan di perangkat ini
           </span>
         </div>
       </div>
@@ -264,7 +277,9 @@ export default function RunnerDashboard() {
                 <Compass className="w-5 h-5 text-emerald-400 animate-spin" style={{ animationDuration: '8s' }} />
                 <span>Job Radar Antar Gedung</span>
               </h3>
-              <p className="text-xs text-slate-400">Orderan delivery terdekat di area UKWMS Dinoyo</p>
+              <p className="text-xs text-slate-400">
+                Orderan delivery {campusInfo.name ? `di ${campusInfo.name}` : 'di kampus Runner'}
+              </p>
             </div>
             <Link
               to="/runner-portal/orders"
@@ -275,15 +290,20 @@ export default function RunnerDashboard() {
           </div>
 
           <div className="space-y-3">
-            {availableOrders.map((order) => (
+            {ordersLoading && (
+              <p role="status" className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 text-sm text-slate-300">
+                Memuat pesanan kampus...
+              </p>
+            )}
+            {!ordersLoading && recentAvailableOrders.map((order) => (
               <div
-                key={order.id}
+                key={order.displayId}
                 className="glass-card-dark rounded-2xl p-4 sm:p-5 border border-white/10 shadow-lg antigravity-hover space-y-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-sm text-white">{order.id}</span>
+                      <span className="font-black text-sm text-white">{order.displayId}</span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                         {order.distance}
                       </span>
@@ -306,15 +326,20 @@ export default function RunnerDashboard() {
                 <div className="flex items-center justify-between pt-2 border-t border-white/10">
                   <span className="text-[11px] text-slate-400">Harga Makanan: {order.total} (QRIS)</span>
                   <Link
-                    to="/runner-portal/detail"
+                    to="/runner-portal/orders"
                     className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-emerald-600/30 transition flex items-center gap-1.5"
                   >
-                    <span>Ambil Order</span>
+                    <span>Lihat & Ambil</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
             ))}
+            {!ordersLoading && recentAvailableOrders.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-white/15 p-5 text-sm text-slate-400">
+                Belum ada pesanan tersedia untuk kampus ini.
+              </p>
+            )}
           </div>
         </div>
 
@@ -329,9 +354,9 @@ export default function RunnerDashboard() {
           </div>
 
           <div className="space-y-3">
-            {history.map((item) => (
+            {recentHistory.map((item) => (
               <div
-                key={item.id}
+                key={item.displayId}
                 className="glass-card-dark rounded-2xl p-4 border border-white/10 space-y-2 text-xs antigravity-hover"
               >
                 <div className="flex items-center justify-between">
@@ -340,7 +365,7 @@ export default function RunnerDashboard() {
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
                     <div>
-                      <span className="font-bold text-white block">{item.id}</span>
+                      <span className="font-bold text-white block">{item.displayId}</span>
                       <span className="text-[10px] text-slate-400">{item.time} • {item.recipient}</span>
                     </div>
                   </div>
@@ -352,6 +377,11 @@ export default function RunnerDashboard() {
                 </p>
               </div>
             ))}
+            {recentHistory.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-white/15 p-5 text-sm text-slate-400">
+                Riwayat selesai akan tersimpan di perangkat ini.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -416,7 +446,7 @@ export default function RunnerDashboard() {
                   ) : (
                     <p className="mt-1 text-amber-300">Data rekening belum lengkap.</p>
                   )}
-                  {withdrawError && <p role="alert" className="mt-2 text-rose-300">{withdrawError}</p>}
+                  {withdrawError && <p role="alert" className="mt-2 text-red-300">{withdrawError}</p>}
                 </div>
 
                 <div className="pt-2 flex items-center justify-end gap-2">

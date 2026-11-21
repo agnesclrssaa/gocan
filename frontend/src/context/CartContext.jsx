@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
+import { DEFAULT_CAMPUS_ID, useCampus } from './CampusContext';
 
 const CartContext = createContext({});
 
@@ -22,10 +23,12 @@ const sanitizeCartItem = (item) => {
     quantity: isNaN(rawQty) || rawQty <= 0 ? 1 : rawQty,
     notes: typeof item.notes === 'string' ? item.notes : '',
     canteen_id: item.canteenId || item.canteen_id || null,
+    campusId: String(item.campusId || item.campus_id || DEFAULT_CAMPUS_ID),
   };
 };
 
 export const CartProvider = ({ children }) => {
+  const { selectedCampus } = useCampus();
   // 1. Inisialisasi Cart Items dari LocalStorage dengan validasi aman dari null / NaN
   const [cartItems, setCartItems] = useState(() => {
     try {
@@ -96,15 +99,27 @@ export const CartProvider = ({ children }) => {
     if (!item || !item.id) return false;
 
     const effectiveCanteenId = item.canteenId || item.canteen_id || canteen?.id;
+    const effectiveCampusId = String(
+      item.campusId ||
+      item.campus_id ||
+      canteen?.campusId ||
+      selectedCampus?.campusId ||
+      DEFAULT_CAMPUS_ID
+    );
     const sanitizedQty = isNaN(parseInt(quantity, 10)) || parseInt(quantity, 10) <= 0 ? 1 : parseInt(quantity, 10);
     const sanitizedPrice = isNaN(Number(item.price)) || Number(item.price) < 0 ? 0 : Number(item.price);
     const trimmedNotes = (notes || '').trim();
 
     // Single-canteen rule: Jika memilih dari kantin yang berbeda dari pesanan saat ini
-    if (currentCanteen && effectiveCanteenId && currentCanteen.id !== effectiveCanteenId) {
-      const confirmSwitch = window.confirm(
-        `Keranjang Anda saat ini berisi menu dari "${currentCanteen.name}".\n\nGoCan hanya mendukung pemesanan dari 1 kantin per transaksi. Apakah Anda ingin mengosongkan keranjang sebelumnya dan memilih menu dari kantin ini?`
-      );
+    const campusChanged = cartItems.some((cartItem) => cartItem.campusId !== effectiveCampusId);
+    const canteenChanged =
+      currentCanteen &&
+      effectiveCanteenId &&
+      currentCanteen.id !== effectiveCanteenId;
+    if (campusChanged || canteenChanged) {
+      const confirmSwitch = window.confirm(campusChanged
+        ? 'Keranjang Anda saat ini berisi menu dari kampus lain. Apakah Anda ingin mengosongkan keranjang sebelumnya dan memilih menu dari kampus ini?'
+        : `Keranjang Anda saat ini berisi menu dari "${currentCanteen.name}".\n\nGoCan hanya mendukung pemesanan dari 1 kantin per transaksi. Apakah Anda ingin mengosongkan keranjang sebelumnya dan memilih menu dari kantin ini?`);
       if (!confirmSwitch) return false;
 
       // Reset keranjang untuk kantin baru
@@ -117,6 +132,7 @@ export const CartProvider = ({ children }) => {
           price: sanitizedPrice,
           image_url: item.imageUrl || item.image_url,
           canteen_id: effectiveCanteenId,
+          campusId: effectiveCampusId,
           quantity: sanitizedQty,
           notes: trimmedNotes,
         },
@@ -124,9 +140,9 @@ export const CartProvider = ({ children }) => {
 
       setCartItems(newItems);
       if (canteen) {
-        setCurrentCanteen(canteen);
+        setCurrentCanteen({ ...canteen, campusId: effectiveCampusId });
       } else {
-        setCurrentCanteen({ id: effectiveCanteenId, name: 'Kantin Terpilih' });
+        setCurrentCanteen({ id: effectiveCanteenId, name: 'Kantin Terpilih', campusId: effectiveCampusId });
       }
       showCartNotification();
       return true;
@@ -134,9 +150,9 @@ export const CartProvider = ({ children }) => {
 
     // Set info kantin jika belum ada
     if (canteen && !currentCanteen) {
-      setCurrentCanteen(canteen);
+      setCurrentCanteen({ ...canteen, campusId: effectiveCampusId });
     } else if (effectiveCanteenId && !currentCanteen) {
-      setCurrentCanteen({ id: effectiveCanteenId, name: 'Kantin Terpilih' });
+      setCurrentCanteen({ id: effectiveCanteenId, name: 'Kantin Terpilih', campusId: effectiveCampusId });
     }
 
     setCartItems((prev) => {
@@ -162,6 +178,7 @@ export const CartProvider = ({ children }) => {
           price: sanitizedPrice,
           image_url: item.imageUrl || item.image_url,
           canteen_id: effectiveCanteenId,
+          campusId: effectiveCampusId,
           quantity: sanitizedQty,
           notes: trimmedNotes,
         },
@@ -255,9 +272,14 @@ export const CartProvider = ({ children }) => {
     }, 0);
   }, [cartItems]);
 
+  const cartCampusId = cartItems[0]?.campusId || '';
+  const cartHasMixedCampuses = cartItems.some((item) => item.campusId !== cartCampusId);
+
   const value = {
     cartItems,
     currentCanteen,
+    cartCampusId,
+    cartHasMixedCampuses,
     setCurrentCanteen,
     addToCart,
     decreaseQuantity,

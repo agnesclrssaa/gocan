@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Link, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { CampusProvider, RequireSelectedCampus, useCampus } from './context/CampusContext';
 import { AUTH_TOKEN_KEY } from './lib/api';
 import FloatingCart from './components/customer/FloatingCart';
 import { AlertCircle, X } from 'lucide-react';
@@ -26,6 +27,7 @@ import UserProfile from './pages/customer/UserProfile';
 import OrderSuccess from './pages/customer/OrderSuccess';
 import OrderTracking from './pages/customer/OrderTracking';
 import History from './pages/customer/History';
+import CampusSelection from './pages/customer/CampusSelection';
 import MenuPreview from './pages/customer/MenuPreview';
 import Profile from './pages/Profile';
 import Chat from './pages/customer/Chat';
@@ -50,6 +52,7 @@ import CourierDashboard from './pages/CourierDashboard';
 // Super Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCampus from './pages/admin/AdminCampus';
+import AdminCampusManagement from './pages/admin/AdminCampusManagement';
 import AdminFinance from './pages/admin/AdminFinance';
 import AdminManagement from './pages/admin/AdminManagement';
 import AdminRunners from './pages/admin/AdminRunners';
@@ -145,6 +148,7 @@ function PublicEntryFlow() {
 
 function RoleLanding() {
   const { user, profile, loading, authError, refreshProfile, signOut } = useAuth();
+  const { selectedCampus } = useCampus();
 
   if (loading && localStorage.getItem(AUTH_TOKEN_KEY)) {
     return (
@@ -200,7 +204,12 @@ function RoleLanding() {
   }
 
   // Keep the storefront available at the root URL for customers and canteen partners.
-  if (profile.role === 'customer') return <CustomerLayout><Home /></CustomerLayout>;
+  if (profile.role === 'customer') {
+    if (!selectedCampus) {
+      return <Navigate to="/select-campus" replace state={{ from: { pathname: '/' } }} />;
+    }
+    return <CustomerLayout><Home /></CustomerLayout>;
+  }
 
   if (profile.role === 'canteen' || profile.role === 'canteen_staff') return <Home />;
 
@@ -288,9 +297,10 @@ export function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <CartProvider>
-          <ErrorBoundary>
-            <Routes>
+        <CampusProvider>
+          <CartProvider>
+            <ErrorBoundary>
+              <Routes>
             <Route path="/" element={<RoleLanding />} />
             <Route path="/landing" element={<IntroLoadingScreen />} />
             <Route path="/intro" element={<IntroLoadingScreen />} />
@@ -307,25 +317,28 @@ export function App() {
 
             {/* Customer Routes */}
             <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
-              <Route element={<CustomerLayout />}>
-                <Route path="/canteens" element={<Canteens />} />
-                <Route path="/canteen/:canteenId" element={<CanteenDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/profile" element={<UserProfile />} />
-                <Route path="/order-success/:orderId" element={<OrderSuccess />} />
-                <Route path="/orders/:orderId" element={<OrderTracking />} />
-                <Route path="/order/:orderId" element={<OrderTracking />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/customer-preview">
-                  <Route index element={<Home />} />
-                  <Route path="canteen/:canteenId" element={<CanteenDetail />} />
-                  <Route path="cart" element={<Cart />} />
-                  <Route path="checkout" element={<Checkout />} />
-                  <Route path="order-success/:orderId" element={<OrderSuccess />} />
-                  <Route path="orders/:orderId" element={<OrderTracking />} />
-                  <Route path="order/:orderId" element={<OrderTracking />} />
-                  <Route path="history" element={<History />} />
+              <Route path="/select-campus" element={<CustomerLayout><CampusSelection /></CustomerLayout>} />
+              <Route element={<RequireSelectedCampus />}>
+                <Route element={<CustomerLayout />}>
+                  <Route path="/canteens" element={<Canteens />} />
+                  <Route path="/canteen/:canteenId" element={<CanteenDetail />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/profile" element={<UserProfile />} />
+                  <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+                  <Route path="/orders/:orderId" element={<OrderTracking />} />
+                  <Route path="/order/:orderId" element={<OrderTracking />} />
+                  <Route path="/history" element={<History />} />
+                  <Route path="/customer-preview">
+                    <Route index element={<Home />} />
+                    <Route path="canteen/:canteenId" element={<CanteenDetail />} />
+                    <Route path="cart" element={<Cart />} />
+                    <Route path="checkout" element={<Checkout />} />
+                    <Route path="order-success/:orderId" element={<OrderSuccess />} />
+                    <Route path="orders/:orderId" element={<OrderTracking />} />
+                    <Route path="order/:orderId" element={<OrderTracking />} />
+                    <Route path="history" element={<History />} />
+                  </Route>
                 </Route>
               </Route>
             </Route>
@@ -371,6 +384,7 @@ export function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="orders" element={<CanteenOrders />} />
                 <Route path="campus" element={<AdminCampus />} />
+                <Route path="campus-management" element={<AdminCampusManagement />} />
                 <Route path="finance" element={<AdminFinance />} />
                 <Route path="management" element={<AdminManagement />} />
                 <Route path="runners" element={<AdminRunners />} />
@@ -379,11 +393,12 @@ export function App() {
 
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </ErrorBoundary>
-          <FloatingCart />
-          <ApiNotice />
-        </CartProvider>
+              </Routes>
+            </ErrorBoundary>
+            <FloatingCart />
+            <ApiNotice />
+          </CartProvider>
+        </CampusProvider>
       </AuthProvider>
     </BrowserRouter>
   );

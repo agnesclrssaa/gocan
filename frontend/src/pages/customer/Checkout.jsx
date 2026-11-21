@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useCampus } from '../../context/CampusContext';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 
@@ -24,7 +25,15 @@ const getDestinationFloor = (location) => {
 
 export const Checkout = () => {
   const { user } = useAuth();
-  const { cartItems, currentCanteen, totalFoodPrice, clearCart } = useCart();
+  const {
+    cartItems,
+    currentCanteen,
+    cartCampusId,
+    cartHasMixedCampuses,
+    totalFoodPrice,
+    clearCart,
+  } = useCart();
+  const { selectedCampus } = useCampus();
   const navigate = useNavigate();
 
   const [isOrderSubmitted, setIsOrderSubmitted] = useState(false);
@@ -108,6 +117,12 @@ const deliveryDiscount =
 
 const totalAmount =
   totalFoodPrice + deliveryFee - deliveryDiscount + serviceFee;
+const campusMatchesCart = Boolean(
+  selectedCampus &&
+  cartCampusId &&
+  !cartHasMixedCampuses &&
+  cartCampusId === selectedCampus.campusId
+);
 
   useEffect(() => {
     if (cartItems.length === 0 && !isOrderSubmitted) {
@@ -136,6 +151,11 @@ const totalAmount =
 
     if (!user) {
       navigate('/login', { state: { from: '/checkout' } });
+      return;
+    }
+
+    if (!campusMatchesCart) {
+      setError('Kampus keranjang tidak sesuai dengan kampus aktif. Pastikan semua item berasal dari kampus yang dipilih sebelum membayar.');
       return;
     }
 
@@ -194,7 +214,7 @@ if (scheduleType === 'scheduled') {
       setError(null);
 
       const { order } = await api.post('/orders', {
-        items: cartItems,
+        items: cartItems.map(({ campusId: _campusId, ...item }) => item),
         totalPrice: totalAmount,
         canteenId: currentCanteen?.id || cartItems[0]?.canteen_id,
         orderType:
@@ -262,6 +282,11 @@ navigate(`/order-success/${confirmedOrderId}`, {
             >
               Tutup
             </button>
+          </div>
+        )}
+        {!campusMatchesCart && (
+          <div role="alert" className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            Kampus keranjang tidak sesuai dengan kampus aktif. Gunakan tombol Ganti Kampus di navbar untuk memilih kampus yang sesuai.
           </div>
         )}
 
@@ -634,6 +659,11 @@ navigate(`/order-success/${confirmedOrderId}`, {
               </h2>
 
               <div className="space-y-3 text-sm text-slate-600">
+                <div className="rounded-xl border border-[#116aa5]/15 bg-[#fbf7f1] p-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#116aa5]">Kampus</p>
+                  <p className="mt-1 font-bold text-slate-800">{selectedCampus?.name || 'Belum dipilih'}</p>
+                  {selectedCampus?.city && <p className="mt-0.5 text-xs text-slate-500">{selectedCampus.city}</p>}
+                </div>
                 <div className="flex justify-between items-center">
                   <span>Subtotal Makanan</span>
                   <span className="gocan-price font-semibold">
@@ -676,9 +706,9 @@ navigate(`/order-success/${confirmedOrderId}`, {
             <button
               type="button"
               onClick={handlePlaceOrder}
-              disabled={submitting || !user}
+              disabled={submitting || !user || !campusMatchesCart}
               className={`w-full py-4 px-6 rounded-full font-bold text-base text-white shadow-md transition text-center cursor-pointer ${
-                submitting || !user
+                submitting || !user || !campusMatchesCart
                   ? 'bg-slate-400 cursor-not-allowed'
                   : 'bg-[#DC2626] hover:bg-[#B91C1C] active:scale-98'
               }`}

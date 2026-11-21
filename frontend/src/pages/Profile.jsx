@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, CheckCircle, ImageUp, UserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import { findCanteenProfile, getCampusById, saveCanteenProfile } from '../lib/canteenCampus';
+import { getRunnerCampusInfo } from '../lib/runnerCampus';
 
 const emptyForm = {
   name: '',
@@ -47,6 +49,14 @@ const roleHome = {
 export default function Profile() {
   const { user, profile, updateProfile } = useAuth();
   const isCanteen = user?.role === 'canteen';
+  const canteenRecord = isCanteen
+    ? findCanteenProfile(profile?.canteen, user) || profile?.canteen
+    : null;
+  const campusInfo = canteenRecord?.campusId
+    ? getCampusById(canteenRecord.campusId)
+    : null;
+  const isRunner = [user?.role, profile?.role].some((role) => ['runner', 'courier'].includes(role));
+  const runnerCampus = isRunner ? getRunnerCampusInfo(profile, user) : null;
   const [form, setForm] = useState(() => createForm(profile));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -124,7 +134,17 @@ export default function Profile() {
       if (avatarFile) formData.append('avatar', avatarFile);
       if (isCanteen && canteenImageFile) formData.append('canteenImage', canteenImageFile);
 
-      await updateProfile(formData);
+      const updatedProfile = await updateProfile(formData);
+      if (isCanteen) {
+        saveCanteenProfile({
+          ...canteenRecord,
+          name: form.name.trim(),
+          phoneNumber: form.phoneNumber.trim(),
+          email: form.email.trim(),
+          imageUrl: updatedProfile?.canteen?.imageUrl || canteenRecord?.imageUrl || '',
+          campusId: canteenRecord?.campusId || '',
+        }, user);
+      }
       if (avatarPreviewRef.current) {
         URL.revokeObjectURL(avatarPreviewRef.current);
         avatarPreviewRef.current = '';
@@ -221,6 +241,23 @@ export default function Profile() {
           className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"
         >
           {isCanteen && (
+            <section className="rounded-xl border border-[#116aa5]/20 bg-[#fbf7f1] p-4">
+              <h2 className="text-sm font-bold text-slate-800">Kampus Mitra</h2>
+              <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-semibold text-slate-500">Nama Kampus</dt>
+                  <dd className="mt-1 font-bold text-[#116aa5]">{campusInfo?.name || canteenRecord?.campusName || 'Belum ditetapkan'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold text-slate-500">Kota Kampus</dt>
+                  <dd className="mt-1 font-bold text-slate-800">{campusInfo?.city || canteenRecord?.campusCity || '—'}</dd>
+                </div>
+              </dl>
+              <p className="mt-3 text-xs text-slate-500">Kampus tidak dapat diubah dari halaman edit profil.</p>
+            </section>
+          )}
+
+          {isCanteen && (
             <>
               <div className="flex items-center gap-4">
                 {avatarPicker}
@@ -268,6 +305,28 @@ export default function Profile() {
                 </p>
               </div>
             </>
+          )}
+
+          {isRunner && (
+            <section className="rounded-xl border border-[#116aa5]/20 bg-[#fbf7f1] p-4">
+              <h2 className="text-sm font-bold text-slate-800">Kampus Runner</h2>
+              <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-semibold text-slate-500">Nama Kampus</dt>
+                  <dd className="mt-1 font-bold text-[#116aa5]">{runnerCampus.name || 'Belum ditetapkan'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold text-slate-500">Kota Kampus</dt>
+                  <dd className="mt-1 font-bold text-slate-800">{runnerCampus.city || '—'}</dd>
+                </div>
+              </dl>
+              {!runnerCampus.isActive && (
+                <p role="status" className="mt-3 text-xs font-semibold text-[#dc0413]">
+                  Kampus belum tersedia atau nonaktif. Hubungi Admin untuk memperbarui penugasan kampus.
+                </p>
+              )}
+              <p className="mt-2 text-xs text-slate-500">Kampus tidak dapat diubah dari halaman edit profil.</p>
+            </section>
           )}
 
           {(isCanteen ? canteenProfileFields : profileFields).map(({ name, label, type = 'text', required, maxLength }) => (

@@ -11,6 +11,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { filterCanteenOrders } from '../../lib/canteenCampus';
 
 const formatPrice = (price) => `Rp ${Number(price || 0).toLocaleString('id-ID')}`;
 
@@ -29,6 +30,10 @@ const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.
 
 export default function CanteenDashboard() {
   const { canteen } = useOutletContext();
+  const canteenId = canteen?.canteenId || canteen?.id || '';
+  const campusId = canteen?.campusId || '';
+  const campusName = canteen?.campusName || '';
+  const campusCity = canteen?.campusCity || '';
   const [periodFilter, setPeriodFilter] = useState(7);
   const [today] = useState(() => startOfDay(new Date()));
   const [orders, setOrders] = useState([]);
@@ -39,13 +44,18 @@ export default function CanteenDashboard() {
     setLoadingOrders(true);
     setOrdersError(null);
     try {
-      setOrders(await api.get('/orders/canteen'));
+      setOrders(filterCanteenOrders(await api.get('/orders/canteen'), {
+        id: canteenId,
+        campusId,
+        campusName,
+        campusCity,
+      }));
     } catch (error) {
       setOrdersError(`Gagal memuat ringkasan pesanan: ${error.message}`);
     } finally {
       setLoadingOrders(false);
     }
-  }, []);
+  }, [canteenId, campusId, campusName, campusCity]);
 
   useEffect(() => {
     fetchOrders();
@@ -137,6 +147,10 @@ export default function CanteenDashboard() {
         <div>
           <h1 className="text-xl font-bold text-slate-900">Ringkasan Kantin</h1>
           <p className="mt-1 text-sm text-slate-500">{canteen?.name || 'Pantau penjualan dan pesanan kantin Anda.'}</p>
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-600">
+            <p><span className="font-semibold text-[#116aa5]">Nama Kampus:</span> {canteen?.campusName || 'Belum ditetapkan'}</p>
+            <p><span className="font-semibold text-[#116aa5]">Kota Kampus:</span> {canteen?.campusCity || '—'}</p>
+          </div>
         </div>
         <button
           type="button"
@@ -148,6 +162,12 @@ export default function CanteenDashboard() {
           Segarkan Data
         </button>
       </header>
+
+      {String(canteen?.campusStatus || '').toLowerCase() === 'inactive' && (
+        <div role="status" className="rounded-xl border border-[#dc0413]/25 bg-[#fbf7f1] p-4 text-sm text-[#8f1018]">
+          Kampus {canteen.campusName || 'kantin ini'} sedang nonaktif. Menu dan riwayat pesanan tetap tersimpan, tetapi operasional kampus mungkin dibatasi.
+        </div>
+      )}
 
       {ordersError && (
         <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
@@ -113,7 +114,7 @@ const MenuCard = ({ menu, canteen }) => {
       </article>
 
       {/* ADD TO CART MODAL */}
-      {showNotesModal && (
+      {showNotesModal && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
           <div className="customer-card w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
 
@@ -204,7 +205,8 @@ const MenuCard = ({ menu, canteen }) => {
             </button>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

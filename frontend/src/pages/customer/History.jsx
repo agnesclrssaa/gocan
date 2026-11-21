@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Clock3,
@@ -6,9 +6,11 @@ import {
   RefreshCw,
   ShoppingBag,
   MessageCircle,
+  Building2,
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
+import { getCampusId, useCampus } from '../../context/CampusContext';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 import { getCustomerRoute, useCustomerPreview } from '../../lib/customerRoutes';
@@ -22,7 +24,7 @@ import {
   ORDER_TONES,
 } from '../../lib/orderStatus';
 
-const OrderCard = ({ order, preview, active = false }) => {
+const OrderCard = ({ order, preview, active = false, campusName }) => {
   const navigate = useNavigate();
   const [openingChat, setOpeningChat] = useState('');
   const [chatError, setChatError] = useState('');
@@ -68,6 +70,10 @@ const OrderCard = ({ order, preview, active = false }) => {
               }`}
             >
               {presentation.label}
+            </span>
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#116aa5]/15 bg-[#fbf7f1] px-2.5 py-1 text-xs font-semibold text-[#116aa5]">
+              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{campusName}</span>
             </span>
           </div>
 
@@ -174,6 +180,7 @@ const OrderCard = ({ order, preview, active = false }) => {
 export const History = () => {
   const preview = useCustomerPreview();
   const { user } = useAuth();
+  const { campuses } = useCampus();
   const userId = user?.id;
 
   const [orders, setOrders] = useState([]);
@@ -182,6 +189,7 @@ export const History = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loadedUserId, setLoadedUserId] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [campusFilter, setCampusFilter] = useState('all');
 
   const latestRequest = useRef(0);
   const loadedUserRef = useRef(null);
@@ -277,11 +285,33 @@ export const History = () => {
   const currentOrders =
     loadedUserId === userId ? orders : [];
 
+  const campusOptions = useMemo(() => {
+    const options = new Map();
+    campuses.forEach((campus) => {
+      options.set(getCampusId(campus), campus.name || `Kampus ${getCampusId(campus)}`);
+    });
+    orders.forEach((order) => {
+      const campusId = getCampusId(order);
+      if (!options.has(campusId)) options.set(campusId, `Kampus ${campusId}`);
+    });
+    return [...options.entries()];
+  }, [campuses, orders]);
+
+  const getOrderCampusName = (order) => {
+    const campusId = getCampusId(order);
+    return campuses.find((campus) => getCampusId(campus) === campusId)?.name
+      || `Kampus ${campusId}`;
+  };
+
+  const matchesCampusFilter = (order) =>
+    campusFilter === 'all' || getCampusId(order) === campusFilter;
+
   const isLoading =
     loading || loadedUserId !== userId;
 
   const activeOrders = currentOrders.filter(
     (order) =>
+      matchesCampusFilter(order) &&
       !['completed', 'cancelled'].includes(
         normalizeOrderStatus(order.status)
       )
@@ -289,6 +319,7 @@ export const History = () => {
 
   const pastOrders = currentOrders.filter(
     (order) =>
+      matchesCampusFilter(order) &&
       ['completed', 'cancelled'].includes(
         normalizeOrderStatus(order.status)
       )
@@ -354,6 +385,21 @@ export const History = () => {
           </div>
         )}
 
+        <label className="flex flex-col gap-1.5 text-xs font-bold text-slate-600 sm:max-w-xs">
+          Filter kampus
+          <select
+            value={campusFilter}
+            onChange={(event) => setCampusFilter(event.target.value)}
+            aria-label="Filter riwayat berdasarkan kampus"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-[#116aa5] focus:ring-2 focus:ring-[#116aa5]/20"
+          >
+            <option value="all">Semua kampus</option>
+            {campusOptions.map(([campusId, name]) => (
+              <option key={campusId} value={campusId}>{name}</option>
+            ))}
+          </select>
+        </label>
+
         <section className="space-y-3">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
             Pesanan sedang berjalan{' '}
@@ -370,6 +416,7 @@ activeOrders.map((order) => (
     key={order.id}
     order={order}
     preview={preview}
+    campusName={getOrderCampusName(order)}
     active
   />
 ))
@@ -412,6 +459,7 @@ pastOrders.map((order) => (
     key={order.id}
     order={order}
     preview={preview}
+    campusName={getOrderCampusName(order)}
   />
 ))
 ) : error && !currentOrders.length ? null : (

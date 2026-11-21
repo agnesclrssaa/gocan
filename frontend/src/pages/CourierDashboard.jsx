@@ -3,13 +3,26 @@ import { Navigate } from 'react-router-dom';
 import { AlertCircle, Bike, CheckCircle2, PackageCheck, RefreshCw } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../lib/api';
+import { api, asArray } from '../lib/api';
+import {
+  getRunnerCampusInfo,
+  getRunnerCampusOrders,
+  getRunnerOrderHistory,
+  isRunnerOrderAssignedTo,
+  saveRunnerCompletedOrder,
+} from '../lib/runnerCampus';
 
 const formatRupiah = (amount) =>
   `Rp ${Number(amount || 0).toLocaleString('id-ID')}`;
 
-function OrderCard({ order, actionLabel, onAction, busy }) {
+function OrderCard({ order, actionLabel, onAction, busy, disabled, readOnly = false }) {
   const items = Array.isArray(order.items) ? order.items : null;
+  const pickupLocation = order.canteen?.location || order.canteenLocation || order.pickupLocation || 'Lokasi kantin belum tersedia';
+  const destination = [
+    order.buildingName || order.destinationBuilding || order.destination_building,
+    order.destinationRoom || order.destination_room,
+    order.meetingPoint || order.destinationNote || order.destination_note,
+  ].filter(Boolean).join(' · ') || 'Lokasi tujuan belum tersedia';
 
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -21,6 +34,9 @@ function OrderCard({ order, actionLabel, onAction, busy }) {
           <p className="gocan-price mt-1 text-lg font-extrabold">
             {formatRupiah(order.totalPrice)}
           </p>
+            <p className="mt-1 text-xs font-semibold text-[#116aa5]">
+              Kampus: {order.campusName || 'Tidak diketahui'}{order.campusCity ? ` · ${order.campusCity}` : ''}
+            </p>
         </div>
         <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold capitalize text-amber-800">
           {order.status}
@@ -40,23 +56,32 @@ function OrderCard({ order, actionLabel, onAction, busy }) {
           : <li role="alert" className="text-red-700">Data item pesanan tidak valid.</li>}
       </ul>
 
-      <button
-        type="button"
-        onClick={() => onAction(order.id)}
-        disabled={busy}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0A2E6E] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#082252] disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {actionLabel === 'Selesai Diantar'
-          ? <CheckCircle2 className="h-4 w-4" />
-          : <Bike className="h-4 w-4" />}
-        {busy ? 'Memproses...' : actionLabel}
-      </button>
+      <div className="mt-4 space-y-1 border-t border-slate-100 pt-3 text-xs text-slate-600">
+        <p><strong className="text-slate-800">Kantin:</strong> {order.canteen?.name || order.canteenName || 'Kantin GoCan'}</p>
+        <p><strong className="text-slate-800">Lokasi pengambilan:</strong> {pickupLocation}</p>
+        <p><strong className="text-slate-800">Tujuan pengantaran:</strong> {destination}</p>
+      </div>
+
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={() => onAction(order.id)}
+          disabled={busy || disabled}
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0A2E6E] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#082252] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {actionLabel === 'Selesai Diantar'
+            ? <CheckCircle2 className="h-4 w-4" />
+            : <Bike className="h-4 w-4" />}
+          {busy ? 'Memproses...' : actionLabel}
+        </button>
+      )}
     </article>
   );
 }
 
 export default function CourierDashboard() {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const campusInfo = getRunnerCampusInfo(profile, user);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyOrderId, setBusyOrderId] = useState(null);
@@ -67,7 +92,7 @@ export default function CourierDashboard() {
     setError(null);
     try {
       const data = await api.get('/orders/courier');
-      setOrders(data);
+      setOrders(asArray(data));
     } catch (requestError) {
       console.error('Gagal memuat pesanan kurir:', requestError);
       setError(requestError.message || 'Gagal memuat daftar pesanan.');
@@ -85,10 +110,33 @@ export default function CourierDashboard() {
   }
 
   const updateStatus = async (orderId, status) => {
+    const currentCampus = getRunnerCampusInfo(profile, user);
+    const order = campusOrders.find((item) => String(item.id) === String(orderId));
+    const hasAssignment = Boolean(
+      order?.runnerId || order?.runner_id || order?.courierId || order?.courier_id
+    );
+    if (
+      !currentCampus.isActive ||
+      !order ||
+      !getRunnerCampusOrders([order], currentCampus.campusId).length ||
+      (hasAssignment && !isRunnerOrderAssignedTo(order, user || profile)) ||
+      (status === 'completed' && !isRunnerOrderAssignedTo(order, user || profile))
+    ) {
+      setError('Kampus tidak aktif atau pesanan tidak ditugaskan kepada akun ini.');
+      return;
+    }
+
     setBusyOrderId(orderId);
     setError(null);
     try {
-      await api.patch(`/orders/${orderId}/status`, { status });
+      const result = await api.patch(`/orders/${orderId}/status`, { status });
+      if (status === 'completed') {
+        saveRunnerCompletedOrder(
+          result?.order || { ...order, status: 'COMPLETED' },
+          user || profile,
+          currentCampus.campusId
+        );
+      }
       await fetchOrders();
     } catch (requestError) {
       console.error(`Gagal mengubah status pesanan ${orderId}:`, requestError);
@@ -98,8 +146,14 @@ export default function CourierDashboard() {
     }
   };
 
-  const readyOrders = orders.filter((order) => order.status === 'ready');
-  const deliveringOrders = orders.filter((order) => order.status === 'delivering');
+  const campusOrders = getRunnerCampusOrders(orders, campusInfo.campusId);
+  const readyOrders = campusOrders.filter((order) =>
+    ['ready', 'ready_for_pickup'].includes(String(order.status || '').toLowerCase())
+  );
+  const deliveringOrders = campusOrders.filter((order) =>
+    String(order.status || '').toLowerCase() === 'delivering'
+  );
+  const completedOrders = getRunnerOrderHistory(user || profile, campusInfo.campusId);
 
   return (
     <div className="min-h-screen bg-[#F0F4F9] pb-12 text-slate-800">
@@ -115,7 +169,7 @@ export default function CourierDashboard() {
               Dashboard Kurir
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Ambil pesanan siap antar dan perbarui status pengiriman.
+              Kampus: {campusInfo.name || 'Belum ditetapkan'}{campusInfo.city ? ` · ${campusInfo.city}` : ''}. Ambil pesanan dan perbarui status pengiriman.
             </p>
           </div>
           <button
@@ -135,6 +189,27 @@ export default function CourierDashboard() {
             {error}
           </div>
         )}
+
+        {!campusInfo.isActive && (
+          <div role="alert" className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            Kampus Runner belum ditetapkan atau nonaktif. Hubungi Admin; pesanan tidak dapat diterima atau diperbarui.
+          </div>
+        )}
+
+        <section aria-label="Statistik pesanan kampus" className="grid gap-3 sm:grid-cols-3">
+          {[
+            { label: 'Pesanan tersedia', count: readyOrders.length, tone: 'text-emerald-700' },
+            { label: 'Pesanan berjalan', count: deliveringOrders.length, tone: 'text-[#116aa5]' },
+            { label: 'Pesanan selesai', count: completedOrders.length, tone: 'text-slate-700' },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{stat.label}</p>
+              <p className={`mt-1 text-2xl font-black ${stat.tone}`}>{loading ? '—' : stat.count}</p>
+              <p className="mt-1 text-xs text-slate-500">{campusInfo.name || 'Kampus belum ditetapkan'}</p>
+            </div>
+          ))}
+        </section>
 
         {loading ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500">
@@ -161,6 +236,7 @@ export default function CourierDashboard() {
                       actionLabel="Ambil Pesanan"
                       onAction={(id) => updateStatus(id, 'delivering')}
                       busy={busyOrderId === order.id}
+                      disabled={!campusInfo.isActive}
                     />
                   ))}
                 </div>
@@ -190,12 +266,44 @@ export default function CourierDashboard() {
                       actionLabel="Selesai Diantar"
                       onAction={(id) => updateStatus(id, 'completed')}
                       busy={busyOrderId === order.id}
+                      disabled={!campusInfo.isActive}
                     />
                   ))}
                 </div>
               ) : (
                 <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
                   Belum ada pesanan yang sedang diantar.
+                </p>
+              )}
+            </section>
+
+            <section aria-labelledby="completed-orders-heading" className="space-y-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-[#116aa5]" />
+                <h2 id="completed-orders-heading" className="text-lg font-extrabold text-slate-900">
+                  Riwayat Pesanan Selesai
+                </h2>
+                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-800">
+                  {completedOrders.length}
+                </span>
+              </div>
+              {completedOrders.length ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {completedOrders.map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      actionLabel="Selesai Diantar"
+                      onAction={() => {}}
+                      busy={false}
+                      disabled
+                      readOnly
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+                  Belum ada riwayat selesai yang tersimpan di perangkat ini.
                 </p>
               )}
             </section>

@@ -13,6 +13,8 @@ import {
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 import MenuCard from '../../components/customer/MenuCard';
+import { useAuth } from '../../context/AuthContext';
+import { getCampusId, useCampus } from '../../context/CampusContext';
 import './Home.css';
 import SearchInput from '../../components/common/SearchInput';
 
@@ -50,6 +52,11 @@ const matchesSearchQuery = (query, ...values) => {
 };
 
 export const Home = () => {
+  const { profile } = useAuth();
+  const { selectedCampus } = useCampus();
+  const selectedCampusId = profile?.role === 'customer'
+    ? selectedCampus?.campusId || ''
+    : '';
   const [canteens, setCanteens] = useState([]);
   const [canteenMenus, setCanteenMenus] = useState({});
   const [bestSellerItems, setBestSellerItems] = useState([]);
@@ -87,7 +94,9 @@ export const Home = () => {
       setError(null);
 
       const data = await api.get('/canteens');
-      const safeCanteens = Array.isArray(data) ? data : [];
+      const safeCanteens = Array.isArray(data)
+        ? data.map((canteen) => ({ ...canteen, campusId: getCampusId(canteen) }))
+        : [];
 
       setCanteens(safeCanteens);
 
@@ -99,7 +108,7 @@ export const Home = () => {
             );
 
             const menus = Array.isArray(response)
-              ? response
+              ? response.map((menu) => ({ ...menu, campusId: getCampusId(menu) }))
               : [];
 
             return [canteen.id, menus];
@@ -137,7 +146,11 @@ export const Home = () => {
     const fetchBestSellers = async () => {
       try {
         const data = await api.get('/menu/bestsellers');
-        setBestSellerItems(Array.isArray(data) ? data : []);
+        setBestSellerItems(
+          Array.isArray(data)
+            ? data.map((item) => ({ ...item, campusId: getCampusId(item) }))
+            : []
+        );
       } catch (err) {
         console.error('Gagal mengambil daftar best seller:', err);
         setBestSellerItems([]);
@@ -198,10 +211,19 @@ export const Home = () => {
   // 6. FILTER DAN URUTKAN KANTIN
   // ==========================================
 
+  const campusCanteens = useMemo(
+    () => selectedCampusId
+      ? canteens.filter((canteen) => getCampusId(canteen) === selectedCampusId)
+      : canteens,
+    [canteens, selectedCampusId]
+  );
+
   const filteredCanteens = useMemo(() => {
-    return canteens
+    return campusCanteens
       .filter((canteen) => {
-        const menus = canteenMenus[canteen.id] || [];
+        const menus = (canteenMenus[canteen.id] || []).filter(
+          (menu) => !selectedCampusId || getCampusId(menu) === selectedCampusId
+        );
 
         const matchesSearch =
   matchesSearchQuery(
@@ -246,6 +268,7 @@ export const Home = () => {
       .sort((a, b) => {
         const getPrices = (canteen) => {
           return (canteenMenus[canteen.id] || [])
+            .filter((menu) => !selectedCampusId || getCampusId(menu) === selectedCampusId)
             .filter(
               (menu) =>
                 menu.isAvailable !== false &&
@@ -288,13 +311,14 @@ export const Home = () => {
         return 0;
       });
   }, [
-    canteens,
+    campusCanteens,
     canteenMenus,
     searchQuery,
     appliedCanteen,
     appliedLocation,
     appliedCategory,
     appliedSortBy,
+    selectedCampusId,
   ]);
 
   // ==========================================
@@ -305,9 +329,12 @@ export const Home = () => {
     let menus = filteredCanteens.flatMap((canteen) => {
       const canteenMenuList = canteenMenus[canteen.id] || [];
 
-      return canteenMenuList.map((menu) => ({
+      return canteenMenuList
+        .filter((menu) => !selectedCampusId || getCampusId(menu) === selectedCampusId)
+        .map((menu) => ({
         ...menu,
         canteenId: canteen.id,
+        campusId: getCampusId(menu),
 canteen: menu.canteen || canteen,
 canteenName:
   menu.canteen?.name || menu.canteenName || canteen.name,
@@ -357,14 +384,18 @@ canteenDescription:
   }, [
     filteredCanteens,
     canteenMenus,
+    selectedCampusId,
     searchQuery,
     appliedCategory,
     appliedSortBy,
   ]);
 
   const filteredBestSellerItems = useMemo(
-    () => bestSellerItems.filter((item) => matchesMenuCategory(item, activeCategory)),
-    [bestSellerItems, activeCategory]
+    () => bestSellerItems.filter((item) =>
+      (!selectedCampusId || getCampusId(item) === selectedCampusId) &&
+      matchesMenuCategory(item, activeCategory)
+    ),
+    [bestSellerItems, activeCategory, selectedCampusId]
   );
   const displayedBestSellerItems = showAllBestSellers
     ? filteredBestSellerItems
@@ -541,7 +572,7 @@ canteenDescription:
 
                 {[
                   'Semua',
-                  ...canteens.map((canteen) => canteen.name),
+                  ...campusCanteens.map((canteen) => canteen.name),
                 ]
                   .filter(
                     (name, index, arr) =>
@@ -954,7 +985,7 @@ canteenDescription:
             <div>
 
               <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">
-                Kantin Kampus UKWMS
+                {selectedCampus?.name ? `Kantin Kampus ${selectedCampus.name}` : 'Kantin Kampus UKWMS'}
               </h2>
 
               <p className="text-xs text-slate-500 mt-1">

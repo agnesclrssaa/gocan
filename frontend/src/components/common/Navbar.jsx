@@ -15,14 +15,18 @@ import {
   ChevronDown,
   UserRound,
   MessageCircle,
+  Building2,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useCampus } from '../../context/CampusContext';
+import CampusSwitchDialog from '../customer/CampusSwitchDialog';
 import BrandLogo from './BrandLogo';
 
 export const Navbar = () => {
   const { user, profile, signOut } = useAuth();
-  const { totalItems } = useCart();
+  const { totalItems, cartItems, clearCart } = useCart();
+  const { selectedCampus } = useCampus();
   const navigate = useNavigate();
   const location = useLocation();
   const [deliveryLocation, setDeliveryLocation] = useState(
@@ -31,6 +35,7 @@ export const Navbar = () => {
   const [locationInput, setLocationInput] = useState(deliveryLocation);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [campusSwitchOpen, setCampusSwitchOpen] = useState(false);
   const locationPickerRef = useRef(null);
 useEffect(() => {
   return subscribeDeliveryLocation((savedLocation) => {
@@ -103,9 +108,27 @@ const handleSaveLocation = (event) => {
   const isCartActive = location.pathname === '/cart';
   const isCustomer = profile?.role === 'customer';
 
+  const openCampusSelection = () => {
+    navigate('/select-campus', { state: { from: { pathname: '/' } } });
+  };
+
+  const handleCampusSwitch = () => {
+    if (cartItems.length > 0) {
+      setCampusSwitchOpen(true);
+      return;
+    }
+    openCampusSelection();
+  };
+
+  const confirmCampusSwitch = () => {
+    clearCart();
+    setCampusSwitchOpen(false);
+    openCampusSelection();
+  };
+
   return (
     <header className={`${isCustomer ? 'customer-navbar' : ''} px-3 sm:px-6 pt-3 sm:pt-4 sticky top-0 z-40 bg-[#F0F4F9]/90 backdrop-blur-md font-sans`}>
-      <div className={`${profile?.role === 'customer' ? 'customer-card' : ''} max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 shadow-xs px-4 sm:px-6 py-3 flex items-center justify-between gap-4`}>
+      <div className={`${profile?.role === 'customer' ? 'customer-card' : ''} max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 shadow-xs px-4 sm:px-6 py-3 ${isCustomer ? 'flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-4' : 'flex items-center justify-between gap-4'}`}>
         {/* Brand Logo GoCan */}
         <Link to="/" className="flex items-center gap-2.5 group">
           <BrandLogo className="h-10 w-10 rounded-2xl transition group-hover:scale-105" />
@@ -167,7 +190,7 @@ const handleSaveLocation = (event) => {
         </nav>
 
         {/* Right Section: Delivery Location & Cart & User Menu */}
-        <div className="flex items-center gap-2.5">
+        <div className={`${isCustomer ? 'flex w-full min-w-0 flex-wrap items-center justify-end gap-2.5 sm:w-auto sm:flex-nowrap' : 'flex items-center gap-2.5'}`}>
           <div className="relative" ref={locationPickerRef}>
             <button
               type="button"
@@ -246,6 +269,20 @@ const handleSaveLocation = (event) => {
               </div>
             )}
           </div>
+
+          {isCustomer && selectedCampus && (
+            <button
+              type="button"
+              onClick={handleCampusSwitch}
+              title={`Kampus aktif: ${selectedCampus.name}`}
+              aria-label={`Ganti Kampus. Kampus saat ini: ${selectedCampus.name}`}
+              className="flex max-w-[38vw] shrink items-center gap-1.5 rounded-full border border-[#116aa5]/20 bg-[#fbf7f1] px-2.5 py-2 text-[11px] font-bold text-[#116aa5] transition hover:border-[#116aa5] hover:bg-[#116aa5] hover:text-white sm:max-w-64 sm:px-3 sm:text-xs"
+            >
+              <Building2 className="h-4 w-4 shrink-0" />
+              <span className="max-w-[5.5rem] truncate sm:max-w-32">{selectedCampus.name}</span>
+              <span className="shrink-0">Ganti Kampus</span>
+            </button>
+          )}
 
           {/* Customer cart access is rendered as a fixed floating button outside the navbar. */}
           {isCustomer && (
@@ -365,6 +402,12 @@ const handleSaveLocation = (event) => {
           )}
         </div>
       </div>
+      {campusSwitchOpen && (
+        <CampusSwitchDialog
+          onCancel={() => setCampusSwitchOpen(false)}
+          onConfirm={confirmCampusSwitch}
+        />
+      )}
     </header>
   );
 };

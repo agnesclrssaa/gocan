@@ -99,7 +99,7 @@ export default function RunnerJobs() {
                 <span className="font-semibold text-slate-800 truncate">{job.pickupPoint}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#dc0413] shrink-0" />
                 <span className="text-slate-500 text-[11px]">Antar:</span>
                 <span className="font-semibold text-slate-900 truncate">{job.dropoffPoint}</span>
               </div>

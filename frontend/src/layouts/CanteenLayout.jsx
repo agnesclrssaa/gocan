@@ -5,6 +5,11 @@ import './MerchantSidebarDecor.css';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import {
+  getCampusById,
+  saveCanteenProfile,
+  withCanteenOwnership,
+} from '../lib/canteenCampus';
+import {
   LayoutDashboard,
   ClipboardList,
   Utensils,
@@ -27,25 +32,54 @@ export default function CanteenLayout() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
+  const attachCampusDetails = useCallback((profile) => {
+    if (!profile) return profile;
+    const campus = getCampusById(profile.campusId);
+    return {
+      ...profile,
+      campusName: campus?.name || profile.campusName || '',
+      campusCity: campus?.city || profile.campusCity || '',
+      campusStatus: campus?.status || profile.campusStatus || '',
+      menus: Array.isArray(profile.menus)
+        ? profile.menus.map((menu) => withCanteenOwnership(menu, profile))
+        : [],
+    };
+  }, []);
+
   const refreshCanteen = useCallback(async () => {
     setCanteenLoading(true);
     setCanteenError(null);
     try {
       const currentCanteen = await api.get('/canteens/mine');
-      setCanteen(currentCanteen);
+      const localProfile = saveCanteenProfile(currentCanteen, user);
+      const enrichedCanteen = attachCampusDetails(localProfile);
+      setCanteen(enrichedCanteen);
       setIsOpen(currentCanteen.isOpen);
-      return currentCanteen;
+      return enrichedCanteen;
     } catch (error) {
       setCanteenError(`Gagal memuat data kantin: ${error.message}`);
       return null;
     } finally {
       setCanteenLoading(false);
     }
-  }, []);
+  }, [attachCampusDetails, user]);
 
   useEffect(() => {
     refreshCanteen();
   }, [refreshCanteen]);
+
+  useEffect(() => {
+    const refreshCampusDetails = (event) => {
+      if (event?.type === 'storage' && event.key && event.key !== 'gocan_campuses') return;
+      setCanteen((current) => attachCampusDetails(current));
+    };
+    window.addEventListener('storage', refreshCampusDetails);
+    window.addEventListener('focus', refreshCampusDetails);
+    return () => {
+      window.removeEventListener('storage', refreshCampusDetails);
+      window.removeEventListener('focus', refreshCampusDetails);
+    };
+  }, [attachCampusDetails]);
 
   const handleStoreStatusChange = async () => {
     if (updatingStoreStatus) return;
@@ -53,7 +87,13 @@ export default function CanteenLayout() {
     setCanteenError(null);
     try {
       const updatedCanteen = await api.patch('/canteens/mine', { isOpen: !isOpen });
-      setCanteen((current) => ({ ...current, ...updatedCanteen }));
+      setCanteen((current) => attachCampusDetails(
+        saveCanteenProfile({
+          ...current,
+          ...updatedCanteen,
+          campusId: current?.campusId,
+        }, user)
+      ));
       setIsOpen(updatedCanteen.isOpen);
     } catch (error) {
       setCanteenError(`Gagal mengubah status stan: ${error.message}`);
@@ -107,7 +147,11 @@ export default function CanteenLayout() {
           <BrandLogo className="h-8 w-8 rounded-lg" />
           <div>
             <h1 className="text-sm font-bold leading-tight">GoCan Merchant</h1>
-            <p className="text-[10px] text-blue-200">Stan Kantin UKWMS</p>
+            <p className="max-w-48 truncate text-[10px] text-blue-200">
+              {canteen?.campusName
+                ? `${canteen.campusName} · ${canteen.campusCity}`
+                : 'Kampus belum ditetapkan'}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -181,6 +225,11 @@ export default function CanteenLayout() {
               <p className="text-xs text-blue-200 font-medium">Akun Mitra:</p>
               <h2 className="text-sm font-bold text-white truncate">{user?.name || 'Mitra Kantin'}</h2>
               <p className="text-[11px] text-blue-200 truncate">{user?.email}</p>
+              <p className="mt-2 text-[11px] font-semibold text-[#ffd612]">
+                {canteen?.campusName
+                  ? `${canteen.campusName} · ${canteen.campusCity}`
+                  : 'Kampus belum ditetapkan'}
+              </p>
 
               {/* Status Toko Toggle */}
               <div className="mt-3 pt-3 border-t border-blue-800 flex items-center justify-between">
@@ -284,7 +333,7 @@ export default function CanteenLayout() {
             <span>Keluar dari Akun Kantin</span>
           </button>
           <div className="pt-2 border-t border-blue-800 flex items-center justify-between text-[11px] text-blue-300 px-1">
-            <span>GoCan v1.0 • UKWMS</span>
+            <span>GoCan v1.0 • {canteen?.campusName || 'Mitra Kantin'}</span>
             <span className="text-blue-200 font-medium">Merchant Mode</span>
           </div>
         </div>

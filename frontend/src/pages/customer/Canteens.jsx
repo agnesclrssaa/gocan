@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AlertCircle, MapPin, Search, Star, Store } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import { api } from '../../lib/api';
+import { getCampusId, useCampus } from '../../context/CampusContext';
 import './Home.css';
 
 const FALLBACK_IMAGE =
@@ -33,6 +34,8 @@ const matchesSearchQuery = (query, ...values) => {
 };
 
 export const Canteens = () => {
+  const { selectedCampus } = useCampus();
+  const selectedCampusId = selectedCampus?.campusId || '';
   const [canteens, setCanteens] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
@@ -57,7 +60,10 @@ const fetchCanteens = async () => {
 
       seenIds.add(canteen.id);
       return true;
-    });
+    }).map((canteen) => ({
+      ...canteen,
+      campusId: getCampusId(canteen),
+    }));
 
     const results = await Promise.all(
       validCanteens.map(async (canteen) => {
@@ -72,7 +78,10 @@ const fetchCanteens = async () => {
 
           return {
             ...canteen,
-            searchMenus: menus,
+            searchMenus: menus.map((menu) => ({
+              ...menu,
+              campusId: getCampusId(menu),
+            })),
             menuSearchFailed: false,
           };
         } catch {
@@ -107,12 +116,17 @@ const fetchCanteens = async () => {
   };
 
   const categories = useMemo(
-    () => ['Semua', ...new Set(canteens.map(getCanteenCategory))],
-    [canteens]
+    () => ['Semua', ...new Set(
+      canteens
+        .filter((canteen) => getCampusId(canteen) === selectedCampusId)
+        .map(getCanteenCategory)
+    )],
+    [canteens, selectedCampusId]
   );
 
 const filteredCanteens = useMemo(() => {
   return canteens.filter((canteen) => {
+    if (getCampusId(canteen) !== selectedCampusId) return false;
     const canteenFields = [
       canteen.name,
       canteen.description,
@@ -123,6 +137,7 @@ const filteredCanteens = useMemo(() => {
     const matchesSearch =
       matchesSearchQuery(searchQuery, ...canteenFields) ||
       (canteen.searchMenus || []).some((menu) =>
+        getCampusId(menu) === selectedCampusId &&
         matchesSearchQuery(
           searchQuery,
           ...canteenFields,
@@ -138,7 +153,7 @@ const filteredCanteens = useMemo(() => {
 
     return matchesSearch && matchesCategory;
   });
-}, [canteens, searchQuery, selectedCategory]); 
+}, [canteens, searchQuery, selectedCategory, selectedCampusId]); 
 
   return (
     <div className="min-h-screen bg-[#F0F4F9] pb-16 font-sans text-slate-800">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getRunnerCampusInfo } from '../lib/runnerCampus';
 import RunnerBackgroundDecoration from '../components/common/RunnerBackgroundDecoration';
 import {
   Wallet,
@@ -16,6 +17,7 @@ import './RunnerTheme.css';
 export default function RunnerLayout() {
   const [isOnline, setIsOnline] = useState(true);
   const { signOut, profile } = useAuth();
+  const campusInfo = getRunnerCampusInfo(profile, profile);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -51,7 +53,9 @@ export default function RunnerLayout() {
                   NRP {profile?.nrp || 'Runner'}
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-blue-100">UKWMS Dinoyo • Runner</p>
+              <p className="text-[11px] font-medium text-blue-100">
+                {campusInfo.name ? `${campusInfo.name}${campusInfo.city ? ` · ${campusInfo.city}` : ''}` : 'Kampus belum ditetapkan'} • Runner
+              </p>
             </div>
 
             {/* Toggle Status Online / Offline */}

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Trash2, ArrowLeft, ArrowRight, ShoppingBag, Store, Plus, Minus } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { getCampusId, useCampus } from '../../context/CampusContext';
 import Navbar from '../../components/common/Navbar';
 import { getCustomerRoute, useCustomerPreview } from '../../lib/customerRoutes';
 
@@ -9,6 +10,8 @@ export const Cart = () => {
   const {
     cartItems,
     currentCanteen,
+    cartCampusId,
+    cartHasMixedCampuses,
     updateQuantity,
     updateNotes,
     removeFromCart,
@@ -16,6 +19,13 @@ export const Cart = () => {
     totalFoodPrice,
     totalItems,
   } = useCart();
+  const { campuses, selectedCampus } = useCampus();
+  const cartCampus = campuses.find((campus) => getCampusId(campus) === cartCampusId);
+  const campusMatchesCart = Boolean(
+    selectedCampus &&
+    cartCampusId === selectedCampus.campusId &&
+    !cartHasMixedCampuses
+  );
 
   const fallbackImage =
     'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80';
@@ -59,7 +69,7 @@ export const Cart = () => {
             </div>
             <h2 className="mt-4 text-xl font-bold text-slate-900">Keranjang Masih Kosong</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Yuk jelajahi berbagai menu kantin favoritmu di UKWMS!
+              Yuk jelajahi berbagai menu kantin favoritmu di {selectedCampus?.name || 'kampus pilihanmu'}!
             </p>
             <Link
               to={getCustomerRoute('/', preview)}
@@ -102,6 +112,17 @@ export const Cart = () => {
               <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                 RINGKASAN KERANJANG
               </h2>
+              <div className="rounded-xl border border-[#116aa5]/15 bg-[#fbf7f1] p-3">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#116aa5]">Kampus pesanan</p>
+                <p className="mt-1 text-sm font-bold text-slate-800">
+                  {cartCampus?.name || `Kampus ${cartCampusId || 'tidak diketahui'}`}
+                </p>
+                {!campusMatchesCart && (
+                  <p role="alert" className="mt-1 text-xs leading-relaxed text-[#dc0413]">
+                    Kampus keranjang berbeda dari kampus aktif. Ganti kampus melalui navbar untuk mengosongkan keranjang lama.
+                  </p>
+                )}
+              </div>
               <p className="text-xs leading-relaxed text-slate-500">
                 Catatan tiap menu tersimpan sementara di keranjang dan belum tercatat pada pesanan final.
               </p>

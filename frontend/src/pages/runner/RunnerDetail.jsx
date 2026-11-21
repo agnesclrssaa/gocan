@@ -1,30 +1,51 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Phone,
   CheckCircle,
-  Clock,
   MapPin,
   ChevronLeft,
-  KeyRound,
-  X,
-  ExternalLink
+  X
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import {
+  getRunnerCampusInfo,
+  getRunnerCampusOrders,
+  saveRunnerCompletedOrder,
+} from '../../lib/runnerCampus';
 
 export default function RunnerDetail() {
-  const navigate = useNavigate();
   const { state } = useLocation();
-  const activeOrderItems = Array.isArray(state?.order?.items) ? state.order.items : [];
+  const { user, profile } = useAuth();
+  const order = state?.order;
+  const activeOrderItems = Array.isArray(order?.items) ? order.items : [];
+  const campusInfo = getRunnerCampusInfo(profile, user);
+  const orderMatchesCampus = Boolean(
+    order && getRunnerCampusOrders([order], campusInfo.campusId).length
+  );
+  const canProcessOrder = campusInfo.isActive && orderMatchesCampus;
+  const canteenName = order?.canteen?.name || order?.canteenName || 'Kantin GoCan';
+  const pickupLocation = order?.canteen?.location || order?.canteenLocation || order?.pickupLocation || 'Lokasi kantin belum tersedia';
+  const customerName = order?.user?.name || order?.customerName || 'Customer';
+  const customerPhone = order?.user?.phoneNumber || order?.phoneNumber || '';
+  const customerPhoneDigits = customerPhone.replace(/\D/g, '');
+  const destination = [
+    order?.buildingName || order?.destinationBuilding || order?.destination_building,
+    order?.destinationRoom || order?.destination_room,
+    order?.meetingPoint || order?.destinationNote || order?.destination_note,
+  ].filter(Boolean).join(' · ') || 'Lokasi tujuan belum tersedia';
   // Step: 1 = Kurir Menerima, 2 = Sampai di Kantin, 3 = Serah Terima (Input PIN), 4 = Selesai
   const [currentStep, setCurrentStep] = useState(1);
   const [pinDigits, setPinDigits] = useState(['', '', '', '']);
   const [pinError, setPinError] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
+  const [completionError, setCompletionError] = useState('');
   const [showCallModal, setShowCallModal] = useState(false);
 
   const correctPin = '4821';
 
   const handleNextStep = () => {
+    if (!canProcessOrder) return;
     if (currentStep === 1) {
       setCurrentStep(2);
     } else if (currentStep === 2) {
@@ -33,7 +54,7 @@ export default function RunnerDetail() {
   };
 
   const handlePinChange = (index, value) => {
-    if (/^\d?$/.test(value)) {
+    if (canProcessOrder && /^\d?$/.test(value)) {
       const nextPin = [...pinDigits];
       nextPin[index] = value;
       setPinDigits(nextPin);
@@ -50,6 +71,19 @@ export default function RunnerDetail() {
         if (enteredPin === correctPin) {
           setOrderCompleted(true);
           setCurrentStep(4);
+          if (order) {
+            try {
+              saveRunnerCompletedOrder(
+                { ...order, status: 'COMPLETED' },
+                user || profile,
+                campusInfo.campusId
+              );
+              setCompletionError('');
+            } catch (error) {
+              console.error('Gagal menyimpan riwayat pengantaran lokal:', error);
+              setCompletionError(error.message || 'Riwayat pengantaran tidak dapat disimpan.');
+            }
+          }
         } else {
           setPinError(true);
         }
@@ -75,7 +109,9 @@ export default function RunnerDetail() {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-500">
-            Pantau detail order, lokasi pengambilan, informasi customer, dan aksi status kurir dalam satu tampilan desktop.
+            Kampus: {order?.campusName || campusInfo.name || 'Belum ditetapkan'}
+            {order?.campusCity || campusInfo.city ? ` · ${order?.campusCity || campusInfo.city}` : ''}.
+            {' '}Pantau lokasi pengambilan, informasi Customer, dan status pengantaran.
           </p>
         </div>
 
@@ -88,7 +124,7 @@ export default function RunnerDetail() {
           </span>
           <div className="text-right">
             <span className="text-[10px] text-slate-400 block font-medium">Estimasi tiba</span>
-            <strong className="text-base font-extrabold text-slate-900">12:15 WIB</strong>
+            <strong className="text-base font-extrabold text-slate-900">{order?.status || '—'}</strong>
           </div>
         </div>
       </div>
@@ -97,7 +133,7 @@ export default function RunnerDetail() {
         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-sm font-bold flex items-center justify-between gap-3 animate-in fade-in duration-200">
           <div className="flex items-center gap-2.5">
             <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
-            <span>Pengantaran #Gocan-82419 berhasil diselesaikan! Ongkir Rp 3.500 telah masuk ke saldo dompet Anda.</span>
+            <span>Pengantaran #{order?.id || 'GoCan'} berhasil diselesaikan! Ongkir Rp 3.500 telah masuk ke saldo dompet Anda.</span>
           </div>
           <Link
             to="/runner-portal"
@@ -105,6 +141,17 @@ export default function RunnerDetail() {
           >
             Kembali ke Dompet
           </Link>
+        </div>
+      )}
+      {!canProcessOrder && (
+        <div role="alert" className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+          <MapPin className="h-4 w-4 shrink-0" />
+          Pesanan tidak sesuai kampus Runner atau kampus sedang nonaktif. Hubungi Admin sebelum melanjutkan.
+        </div>
+      )}
+      {completionError && (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {completionError}
         </div>
       )}
 
@@ -122,7 +169,7 @@ export default function RunnerDetail() {
           <div className="space-y-2.5 text-xs">
             <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Nomor Order</span>
-              <strong className="text-slate-900 font-bold">#Gocan-82419</strong>
+              <strong className="text-slate-900 font-bold">#GoCan-{order?.id || '—'}</strong>
             </div>
             <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Status</span>
@@ -131,12 +178,14 @@ export default function RunnerDetail() {
               </strong>
             </div>
             <div className="flex items-center justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Estimasi Tiba</span>
-              <strong className="text-slate-900 font-bold">12:15 WIB</strong>
+              <span className="text-slate-500">Kampus</span>
+              <strong className="text-slate-900 font-bold">{order?.campusName || campusInfo.name || '—'}</strong>
             </div>
             <div className="flex items-center justify-between py-1.5">
               <span className="text-slate-500">Tipe Pesanan</span>
-              <strong className="text-slate-900 font-bold">Ayam Geprek</strong>
+              <strong className="text-slate-900 font-bold">
+                {activeOrderItems.map((item) => item.name || item.menu_name || 'Menu').join(', ') || '—'}
+              </strong>
             </div>
           </div>
 
@@ -244,10 +293,10 @@ export default function RunnerDetail() {
               AMBIL DI KANTIN
             </span>
             <h3 className="text-sm font-extrabold text-[#0A2E6E] mt-1">
-              Kantin Pak Brazil
+              {canteenName}
             </h3>
             <p className="text-xs text-slate-600 mt-0.5">
-              Gedung Benedictus, Lt. 1 • Ayam Geprek
+              {pickupLocation}
             </p>
           </div>
 
@@ -257,13 +306,15 @@ export default function RunnerDetail() {
               ANTAR KE CUSTOMER
             </span>
             <h3 className="text-sm font-extrabold text-slate-900 mt-1">
-              Anastasya Widjaja
+              {customerName}
             </h3>
             <p className="text-xs text-slate-600 mt-0.5">
-              Gedung Benedictus, Lt. 3 • Ruang Kuliah 3.02
+              {destination}
             </p>
             <p className="text-xs font-semibold text-[#DC2626] italic mt-1.5">
-              Catatan Titik Temu: Lobby Depan Lift Lt. 3
+              {order?.meetingPoint || order?.destinationNote || order?.destination_note
+                ? `Catatan Titik Temu: ${order.meetingPoint || order.destinationNote || order.destination_note}`
+                : 'Catatan titik temu belum tersedia.'}
             </p>
           </div>
 
@@ -273,7 +324,7 @@ export default function RunnerDetail() {
               CATATAN LOKASI
             </span>
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-              Titik temu ditentukan di lobby depan lift lantai 3 untuk memudahkan proses serah terima.
+              Kampus: {order?.campusName || campusInfo.name || 'Tidak diketahui'}
             </p>
           </div>
         </div>
@@ -293,13 +344,15 @@ export default function RunnerDetail() {
               CUSTOMER
             </span>
             <h3 className="text-base font-extrabold text-slate-900 mt-1">
-              Anastasya Widjaja
+              {customerName}
             </h3>
             <p className="text-xs text-slate-600 mt-0.5">
-              Gedung Benedictus, Lt. 3 • Ruang Kuliah 3.02
+              {destination}
             </p>
             <p className="text-xs font-semibold text-[#DC2626] italic mt-1.5">
-              Catatan Titik Temu: Lobby Depan Lift Lt. 3
+              {order?.meetingPoint || order?.destinationNote || order?.destination_note
+                ? `Catatan Titik Temu: ${order.meetingPoint || order.destinationNote || order.destination_note}`
+                : 'Catatan titik temu belum tersedia.'}
             </p>
           </div>
 
@@ -332,6 +385,7 @@ export default function RunnerDetail() {
                 <button
                   type="button"
                   onClick={handleNextStep}
+                  disabled={!canProcessOrder}
                   className="w-full py-3.5 px-6 rounded-full bg-[#DC2626] hover:bg-[#B91C1C] text-white font-extrabold text-xs sm:text-sm tracking-wider uppercase transition shadow-md cursor-pointer text-center block"
                 >
                   {currentStep === 1 ? 'SAYA SUDAH DI KANTIN' : 'AMBIL MAKANAN DARI STAN'}
@@ -356,6 +410,7 @@ export default function RunnerDetail() {
                         maxLength="1"
                         value={digit}
                         onChange={(e) => handlePinChange(idx, e.target.value)}
+                        disabled={!canProcessOrder}
                         className="w-11 h-12 text-center text-lg font-black bg-white border border-slate-300 rounded-xl focus:border-[#0A2E6E] focus:ring-1 focus:ring-[#0A2E6E] focus:outline-hidden"
                       />
                     ))}
@@ -363,7 +418,7 @@ export default function RunnerDetail() {
 
                   {pinError && (
                     <p className="text-[11px] text-[#DC2626] font-bold text-center">
-                      PIN salah! Mintalah 4-digit PIN kepada Anastasya.
+                      PIN salah! Mintalah 4-digit PIN kepada {customerName}.
                     </p>
                   )}
                 </div>
@@ -383,18 +438,20 @@ export default function RunnerDetail() {
             >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-base font-bold text-slate-900">Hubungi Anastasya Widjaja</h3>
+            <h3 className="text-base font-bold text-slate-900">Hubungi {customerName}</h3>
             <p className="text-xs text-slate-500 mt-1">Nomor WhatsApp & Telepon Terdaftar:</p>
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
-              <span className="font-mono font-bold text-[#0A2E6E] text-sm">+62 812-3456-7890</span>
-              <a
-                href="https://wa.me/6281234567890"
-                target="_blank"
-                rel="noreferrer"
-                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold"
-              >
-                Chat WA
-              </a>
+              <span className="font-mono font-bold text-[#0A2E6E] text-sm">{customerPhone || 'Nomor belum tersedia'}</span>
+              {customerPhoneDigits && (
+                <a
+                  href={`https://wa.me/${customerPhoneDigits}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold"
+                >
+                  Chat WA
+                </a>
+              )}
             </div>
           </div>
         </div>

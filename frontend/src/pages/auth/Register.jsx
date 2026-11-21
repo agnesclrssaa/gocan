@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { CreditCard, ImageUp } from 'lucide-react';
+import { getActiveCampuses, saveCanteenProfile } from '../../lib/canteenCampus';
+import { saveRunnerCampusProfile } from '../../lib/runnerCampus';
 import './Auth.css';
 
 export default function Register() {
@@ -14,8 +16,10 @@ export default function Register() {
     email: '',
     password: '',
     role: 'customer',
+    campusId: '',
   });
 
+  const [activeCampuses, setActiveCampuses] = useState(getActiveCampuses);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,6 +29,16 @@ export default function Register() {
   useEffect(() => () => {
     if (ktmPreview) URL.revokeObjectURL(ktmPreview);
   }, [ktmPreview]);
+
+  useEffect(() => {
+    const refreshCampuses = () => setActiveCampuses(getActiveCampuses());
+    window.addEventListener('storage', refreshCampuses);
+    window.addEventListener('focus', refreshCampuses);
+    return () => {
+      window.removeEventListener('storage', refreshCampuses);
+      window.removeEventListener('focus', refreshCampuses);
+    };
+  }, []);
 
   const update = (field, value) => {
     setFormData((current) => ({
@@ -39,6 +53,15 @@ export default function Register() {
 
     if (!['customer', 'runner', 'canteen'].includes(formData.role)) {
       setError('Role pendaftaran tidak valid.');
+      return;
+    }
+
+    const selectedCampus = ['canteen', 'runner'].includes(formData.role)
+      ? getActiveCampuses().find((campus) => String(campus.campusId || campus.campus_id || '') === formData.campusId)
+      : null;
+    if (['canteen', 'runner'].includes(formData.role) && !selectedCampus) {
+      setActiveCampuses(getActiveCampuses());
+      setError(`Pilih kampus aktif untuk mendaftarkan ${formData.role === 'runner' ? 'Runner' : 'Mitra Kantin'}.`);
       return;
     }
 
@@ -89,7 +112,23 @@ export default function Register() {
       });
 
       registrationCompleted = true;
+      if (formData.role === 'canteen') {
+        const registeredUser = session.user;
+        const campusId = String(selectedCampus.campusId || selectedCampus.campus_id);
+        saveCanteenProfile({
+          id: registeredUser.canteen?.id || registeredUser.canteenId || registeredUser.id,
+          canteenId: registeredUser.canteen?.id || registeredUser.canteenId || registeredUser.id,
+          ownerId: registeredUser.id,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          campusId,
+          campusName: selectedCampus.name || '',
+          campusCity: selectedCampus.city || '',
+        }, registeredUser);
+      }
+
       if (formData.role === 'runner') {
+        saveRunnerCampusProfile(session.user, String(selectedCampus.campusId || selectedCampus.campus_id));
         const uploadData = new FormData();
         uploadData.append('image', ktmPhoto);
         const uploadedPhoto = await api.post('/upload/ktm', uploadData);
@@ -115,7 +154,10 @@ export default function Register() {
 
     } catch (err) {
       if (registrationCompleted && formData.role === 'runner') {
-        navigate('/runner-portal/profile', { replace: true });
+        navigate('/runner-portal/profile', {
+          replace: true,
+          state: { registrationError: err.message || 'Pendaftaran Runner belum selesai.' },
+        });
       } else {
         setError(err.message || 'Gagal mendaftarkan akun.');
       }
@@ -282,8 +324,63 @@ export default function Register() {
               </p>
             )}
 
+            {formData.role === 'canteen' && (
+              <section className="space-y-2 rounded-xl border border-[#116aa5]/20 bg-[#fbf7f1] p-4">
+                <label htmlFor="canteen-campus" className="block text-sm font-bold text-slate-800">
+                  Kampus Mitra Kantin
+                </label>
+                <select
+                  id="canteen-campus"
+                  required
+                  value={formData.campusId}
+                  onChange={(event) => update('campusId', event.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm text-slate-800 outline-none focus:border-[#116aa5] focus:ring-2 focus:ring-[#116aa5]/20"
+                >
+                  <option value="">Pilih kampus aktif</option>
+                  {activeCampuses.map((campus) => {
+                    const campusId = String(campus.campusId || campus.campus_id || '');
+                    return (
+                      <option key={campusId} value={campusId}>
+                        {campus.name} · {campus.city}
+                      </option>
+                    );
+                  })}
+                </select>
+                {activeCampuses.length === 0 && (
+                  <p role="status" className="text-xs text-[#116aa5]">
+                    Belum ada kampus aktif yang tersedia untuk pendaftaran.
+                  </p>
+                )}
+              </section>
+            )}
+
             {formData.role === 'runner' && (
               <section className="space-y-3 rounded-xl border border-slate-200 bg-white/70 p-4">
+                <label className="block text-xs font-semibold text-slate-700" htmlFor="runner-campus">
+                  Kampus Runner
+                  <select
+                    id="runner-campus"
+                    required
+                    value={formData.campusId}
+                    onChange={(event) => update('campusId', event.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm"
+                  >
+                    <option value="">Pilih kampus aktif</option>
+                    {activeCampuses.map((campus) => {
+                      const campusId = String(campus.campusId || campus.campus_id || '');
+                      return (
+                        <option key={campusId} value={campusId}>
+                          {campus.name} · {campus.city}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {activeCampuses.length === 0 && (
+                    <span role="status" className="mt-1 block font-normal text-[#116aa5]">
+                      Belum ada kampus aktif yang tersedia untuk pendaftaran.
+                    </span>
+                  )}
+                </label>
                 <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800">
                   <CreditCard className="h-5 w-5 text-slate-400" />
                   Identitas Runner dan Pencairan Dana

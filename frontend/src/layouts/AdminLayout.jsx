@@ -6,6 +6,7 @@ import {
   ShieldAlert,
   BarChart3,
   Building2,
+  MapPinned,
   Receipt,
   Database,
   Bike,
@@ -68,6 +69,13 @@ export default function AdminLayout() {
       icon: Building2,
       badge: 'UKWMS',
       desc: 'MoU & Stan Aktif'
+    },
+    {
+      to: '/admin-portal/campus-management',
+      end: false,
+      label: 'Manajemen Kampus',
+      icon: MapPinned,
+      desc: 'Daftar & status kampus'
     },
     {
       to: '/admin-portal/finance',

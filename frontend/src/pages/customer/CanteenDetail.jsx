@@ -5,9 +5,12 @@ import { ArrowLeft, MapPin, Star, AlertCircle } from 'lucide-react';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 import MenuCard from '../../components/customer/MenuCard';
+import { getCampusId, useCampus } from '../../context/CampusContext';
 
 export const CanteenDetail = ({ preview = false }) => {
   const { canteenId } = useParams();
+  const { selectedCampus } = useCampus();
+  const selectedCampusId = preview ? '' : selectedCampus?.campusId || '';
   const [canteen, setCanteen] = useState(null);
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,15 +41,25 @@ export const CanteenDetail = ({ preview = false }) => {
             api.get('/canteens'),
             api.get(`/canteens/${encodeURIComponent(canteenId)}/menus`),
           ]);
-          selectedCanteen = canteens.find((item) => item.id === canteenId);
+          selectedCanteen = canteens
+            .map((item) => ({ ...item, campusId: getCampusId(item) }))
+            .find((item) =>
+              item.id === canteenId &&
+              getCampusId(item) === selectedCampusId
+            );
           if (!selectedCanteen) {
-            throw new Error('Kantin tidak ditemukan.');
+            throw new Error('Kantin tidak ditemukan di kampus yang dipilih.');
           }
           menuData = customerMenuData;
         }
 
         setCanteen(selectedCanteen);
-        setMenus(menuData);
+        const campusMenus = Array.isArray(menuData)
+          ? menuData
+            .map((menu) => ({ ...menu, campusId: getCampusId(menu) }))
+            .filter((menu) => preview || getCampusId(menu) === selectedCampusId)
+          : [];
+        setMenus(campusMenus);
       } catch (err) {
         console.error('Gagal memuat detail kantin & menu:', err);
         setCanteen(null);
@@ -58,7 +71,7 @@ export const CanteenDetail = ({ preview = false }) => {
     };
 
     fetchCanteenAndMenus();
-  }, [canteenId, preview]);
+  }, [canteenId, preview, selectedCampusId]);
 
   const categories = useMemo(
     () => ['Semua', ...new Set(menus.map((menu) => menu.category?.trim()).filter(Boolean))],
@@ -144,7 +157,7 @@ export const CanteenDetail = ({ preview = false }) => {
                 </div>
                 <div className="flex items-center gap-1 text-slate-500">
                   <MapPin className="w-4 h-4 text-[#DC2626]" />
-                  <span>{canteen.location || 'Area Kantin UKWMS'}</span>
+                  <span>{canteen.location || `Area ${selectedCampus?.name || 'Kampus'}`}</span>
                 </div>
               </div>
 

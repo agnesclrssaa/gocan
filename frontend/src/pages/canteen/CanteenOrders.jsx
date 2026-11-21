@@ -3,8 +3,10 @@ import DemoPaymentPanel from '../../components/common/DemoPaymentPanel';
 import { formatOrderDate, normalizeOrderStatus } from '../../lib/orderStatus';
 import PickupScanner from '../../components/common/PickupScanner';
 import { useCallback, useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { api, asArray } from '../../lib/api';
-import { CheckCircle2, Clock3, FileText, RefreshCw, Utensils, X } from 'lucide-react';
+import { CheckCircle2, Clock3, FileText, MapPin, RefreshCw, Utensils, X } from 'lucide-react';
+import { belongsToCanteen, filterCanteenOrders } from '../../lib/canteenCampus';
 
 const statusTabs = [
   { id: 'baru', label: 'Baru', statuses: ['pending'] },
@@ -49,6 +51,11 @@ const formatPrice = (value) => {
 
 export default function CanteenOrders() {
   const { profile } = useAuth();
+  const { canteen } = useOutletContext();
+  const canteenId = canteen?.canteenId || canteen?.id || '';
+  const campusId = canteen?.campusId || '';
+  const campusName = canteen?.campusName || '';
+  const campusCity = canteen?.campusCity || '';
   const [activeTab, setActiveTab] = useState('baru');
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -61,19 +68,30 @@ export default function CanteenOrders() {
     setOrdersError(null);
     try {
       const data = await api.get('/orders/canteen');
-      setOrders(normalizeOrders(data));
+      setOrders(normalizeOrders(filterCanteenOrders(asArray(data), {
+        id: canteenId,
+        campusId,
+        campusName,
+        campusCity,
+      })));
     } catch (error) {
       setOrdersError(`Gagal memuat pesanan: ${error.message}`);
     } finally {
       setLoadingOrders(false);
     }
-  }, []);
+  }, [canteenId, campusId, campusName, campusCity]);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
   const updateOrderStatus = async (orderId, status) => {
+    const currentOrder = orders.find((order) => order?.id === orderId);
+    if (!currentOrder || !belongsToCanteen(currentOrder, canteen)) {
+      setOrdersError('Pesanan tidak termasuk kampus atau kantin yang sedang dikelola.');
+      return;
+    }
+
     setUpdatingOrderId(orderId);
     setOrdersError(null);
     try {
@@ -81,7 +99,16 @@ export default function CanteenOrders() {
       if (!response?.order) {
         throw new Error('Respons pesanan dari server tidak valid.');
       }
-      const order = normalizeOrders([response.order])[0];
+      const order = normalizeOrders([{
+        ...response.order,
+        canteenId: response.order.canteenId || currentOrder.canteenId,
+        campusId: response.order.campusId || currentOrder.campusId,
+        campusName: response.order.campusName || currentOrder.campusName,
+        campusCity: response.order.campusCity || currentOrder.campusCity,
+      }])[0];
+      if (!belongsToCanteen(order, canteen)) {
+        throw new Error('Respons pesanan tidak cocok dengan kantin yang sedang dikelola.');
+      }
       setOrders((currentOrders) =>
         normalizeOrders(currentOrders).map((currentOrder) => currentOrder?.id === orderId ? order : currentOrder)
       );
@@ -194,6 +221,11 @@ export default function CanteenOrders() {
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
                   <Clock3 className="h-3.5 w-3.5" />
                   {formatOrderDate(order?.createdAt)}
+                </p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#116aa5]">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  {order?.campusName || canteen?.campusName || 'Kampus belum tercatat'}
+                  {(order?.campusCity || canteen?.campusCity) && ` · ${order?.campusCity || canteen?.campusCity}`}
                 </p>
               </div>
               <div className="text-right">
