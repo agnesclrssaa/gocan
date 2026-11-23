@@ -7,6 +7,31 @@ const LEGACY_TOKEN_KEY = 'gocan_token';
 export const API_AUTH_ERROR_EVENT = 'gocan:api-auth-error';
 export const ADMIN_OVERVIEW_REFRESH_EVENT = 'gocan:admin-overview-refresh';
 
+const getAssetOrigin = () => {
+  const apiOrigin = new URL(API_BASE_URL, window.location.origin);
+  if (['localhost', '127.0.0.1'].includes(apiOrigin.hostname) && apiOrigin.port === '5001') {
+    apiOrigin.port = '5000';
+  }
+  if (import.meta.env.DEV && apiOrigin.origin === window.location.origin) {
+    return 'http://localhost:5000';
+  }
+  return apiOrigin.origin;
+};
+
+const resolveAssetUrl = (path) => {
+  const url = new URL(path, new URL(API_BASE_URL, window.location.origin));
+  const isUpload = url.pathname.startsWith('/uploads/');
+  const isRelativePath = !/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(path);
+  const isLegacyLocalUpload =
+    ['localhost', '127.0.0.1'].includes(url.hostname) && url.port === '5001';
+
+  if (isUpload && (isRelativePath || isLegacyLocalUpload)) {
+    return new URL(`${url.pathname}${url.search}${url.hash}`, getAssetOrigin()).toString();
+  }
+
+  return url.toString();
+};
+
 const migrateLegacyToken = () => {
   try {
     const currentToken = localStorage.getItem(TOKEN_KEY);
@@ -109,8 +134,7 @@ export const api = {
   put: async (path, body, config) => (await client.put(path, body, config)).data,
   patch: async (path, body, config) => (await client.patch(path, body, config)).data,
   delete: async (path, config) => (await client.delete(path, config)).data,
-  assetUrl: (path) =>
-    new URL(path, new URL(API_BASE_URL, window.location.origin)).toString(),
+  assetUrl: resolveAssetUrl,
 };
 
 export const asArray = (response) => {
