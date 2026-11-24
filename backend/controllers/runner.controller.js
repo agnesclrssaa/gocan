@@ -1,6 +1,6 @@
 const prisma = require('../src/lib/prisma');
-const path = require('path');
-const { privateUploadDirectory } = require('../middlewares/upload.middleware');
+const https = require('https');
+const { cloudinary } = require('../utils/cloudinary');
 const { mergeOrderItemNotes, orderItemNotesInclude } = require('../utils/orderItems');
 
 const parseOrderItems = (order) => {
@@ -146,17 +146,33 @@ const getKtmPhoto = async (req, res, next) => {
       where: { id: runnerId, role: 'runner' },
       select: { ktmUrl: true },
     });
-    if (!runner?.ktmUrl || !/^ktm-\d+-[a-f0-9]+\.(jpg|png|webp)$/.test(runner.ktmUrl)) {
+    if (!runner?.ktmUrl || !/^gocan\/ktm\/[A-Za-z0-9_-]+$/.test(runner.ktmUrl)) {
       return res.status(404).json({ error: 'Foto KTM Runner tidak ditemukan.' });
     }
 
-    return res.sendFile(path.join(privateUploadDirectory, runner.ktmUrl), (error) => {
-      if (!error) return;
-      if (!res.headersSent && (error.code === 'ENOENT' || error.status === 404)) {
-        return res.status(404).json({ error: 'Foto KTM Runner tidak ditemukan.' });
-      }
-      return next(error);
+    const signedUrl = cloudinary.url(runner.ktmUrl, {
+      secure: true,
+      sign_url: true,
+      type: 'private',
     });
+    const cloudinaryRequest = https.get(signedUrl, (cloudinaryResponse) => {
+      if (cloudinaryResponse.statusCode !== 200) {
+        cloudinaryResponse.resume();
+        if (cloudinaryResponse.statusCode === 404) {
+          return res.status(404).json({ error: 'Foto KTM Runner tidak ditemukan.' });
+        }
+        return next(new Error(`Cloudinary gagal mengirim foto KTM (HTTP ${cloudinaryResponse.statusCode}).`));
+      }
+
+      res.set('Content-Type', cloudinaryResponse.headers['content-type'] || 'application/octet-stream');
+      res.set('Cache-Control', 'private, no-store');
+      cloudinaryResponse.on('error', (error) => {
+        if (res.headersSent) return res.destroy(error);
+        return next(error);
+      });
+      return cloudinaryResponse.pipe(res);
+    });
+    cloudinaryRequest.on('error', next);
   } catch (error) {
     return next(error);
   }

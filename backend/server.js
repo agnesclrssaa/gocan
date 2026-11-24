@@ -17,7 +17,6 @@ process.on('uncaughtException', (error) => {
 
 const cors = require('cors');
 const express = require('express');
-const path = require('path');
 const prisma = require('./src/lib/prisma');
 const authRoutes = require('./routes/auth.routes');
 const campusRoutes = require('./routes/campus.routes');
@@ -44,14 +43,6 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json({ limit: '1mb' }));
-app.use(
-  '/uploads',
-  express.static(
-    process.env.VERCEL || process.env.NODE_ENV === 'production'
-      ? '/tmp/uploads'
-      : path.join(__dirname, 'uploads'),
-  ),
-);
 app.get('/', (_req, res) => res.json({ status: 'GoCan API is running' }));
 
 app.use('/api/health', healthRoutes);

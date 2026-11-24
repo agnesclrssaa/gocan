@@ -1,35 +1,9 @@
-const fs = require('fs');
-const path = require('path');
 const multer = require('multer');
-const { randomBytes } = require('crypto');
 
-const isServerless = Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production';
-const uploadDirectory = isServerless
-  ? '/tmp/uploads'
-  : path.join(__dirname, '..', 'uploads');
-const avatarUploadDirectory = path.join(uploadDirectory, 'avatars');
-const privateUploadDirectory = isServerless
-  ? '/tmp/private-uploads'
-  : path.join(__dirname, '..', 'private-uploads');
-const allowedImageTypes = new Map([
-  ['image/jpeg', '.jpg'],
-  ['image/png', '.png'],
-  ['image/webp', '.webp'],
-]);
+const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-fs.mkdirSync(uploadDirectory, { recursive: true });
-fs.mkdirSync(avatarUploadDirectory, { recursive: true });
-fs.mkdirSync(privateUploadDirectory, { recursive: true });
-
-const createUploader = (directory, prefix) => multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, callback) => callback(null, directory),
-    filename: (_req, file, callback) => {
-      const extension = allowedImageTypes.get(file.mimetype);
-      const uniqueSuffix = randomBytes(6).toString('hex');
-      callback(null, `${prefix}-${Date.now()}-${uniqueSuffix}${extension}`);
-    },
-  }),
+const createUploader = () => multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, callback) => {
     if (!allowedImageTypes.has(file.mimetype)) {
@@ -39,10 +13,10 @@ const createUploader = (directory, prefix) => multer({
   },
 });
 
-const upload = createUploader(uploadDirectory, 'menu');
-const uploadProfile = createUploader(uploadDirectory, 'profile');
-const uploadAvatar = createUploader(avatarUploadDirectory, 'avatar');
-const uploadKtm = createUploader(privateUploadDirectory, 'ktm');
+const upload = createUploader();
+const uploadProfile = createUploader();
+const uploadAvatar = createUploader();
+const uploadKtm = createUploader();
 
 module.exports = {
   upload,
@@ -50,5 +24,4 @@ module.exports = {
   uploadAvatar,
   uploadKtm,
   multer,
-  privateUploadDirectory,
 };

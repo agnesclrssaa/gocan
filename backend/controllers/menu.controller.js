@@ -117,7 +117,7 @@ const validateMenu = (body) => {
   }
 
   const onlinePrice = Math.ceil((netPrice * 1.05) / 500) * 500;
-  const imageUrl = body.imageUrl?.trim() || 'https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=600&q=80';
+  const imageUrl = body.imageUrl?.trim() || null;
   return {
     name: body.name.trim(),
     price: onlinePrice,
@@ -136,6 +136,9 @@ const createMenu = async (req, res, next) => {
     const data = validateMenu(req.body);
     if (!data) {
       return res.status(400).json({ error: 'Nama menu, harga positif, dan detail menu yang valid wajib diisi.' });
+    }
+    if (!data.imageUrl) {
+      data.imageUrl = 'https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=600&q=80';
     }
 
     const canteen = await getCanteenForUser(req.auth.userId);
@@ -173,11 +176,12 @@ const updateMenu = async (req, res, next) => {
         isDeleted: false,
         isActive: true,
       },
-      select: { id: true },
+      select: { id: true, imageUrl: true },
     });
     if (!existingMenu) {
       return res.status(404).json({ error: 'Menu tidak ditemukan di kantin ini.' });
     }
+    data.imageUrl = data.imageUrl || existingMenu.imageUrl;
 
     const menu = await prisma.menu.update({ where: { id: existingMenu.id }, data });
     return res.json({

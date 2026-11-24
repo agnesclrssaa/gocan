@@ -268,7 +268,7 @@ const updateRunnerProfile = async (req, res, next) => {
         (value) => typeof value !== 'string' || !value.trim()
       ) ||
       typeof ktmUrl !== 'string' ||
-      !/^ktm-\d+-[a-f0-9]+\.(jpg|png|webp)$/.test(ktmUrl.trim())
+      !/^gocan\/ktm\/[A-Za-z0-9_-]+$/.test(ktmUrl.trim())
     ) {
       return res.status(400).json({
         error: 'NRP, nomor telepon, foto KTM, dan data rekening pencairan wajib diisi.',

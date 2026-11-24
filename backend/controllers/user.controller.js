@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../src/lib/prisma');
+const { uploadToCloudinary } = require('../utils/cloudinary');
 
 const profileSelect = {
   id: true,
@@ -201,7 +202,11 @@ const updateProfile = async (req, res, next) => {
       }
     }
     if (avatarFile) {
-      data.avatarUrl = `/uploads/${avatarFile.filename}`;
+      data.avatarUrl = await uploadToCloudinary(avatarFile.buffer, 'gocan/avatars');
+    }
+    let canteenImageUrl;
+    if (canteenImageFile) {
+      canteenImageUrl = await uploadToCloudinary(canteenImageFile.buffer, 'gocan/canteens');
     }
 
     const user = await prisma.$transaction(async (transaction) => {
@@ -218,7 +223,7 @@ const updateProfile = async (req, res, next) => {
       ) {
         const canteenData = {};
         if (body.name !== undefined) canteenData.name = data.name;
-        if (canteenImageFile) canteenData.imageUrl = `/uploads/${canteenImageFile.filename}`;
+        if (canteenImageUrl) canteenData.imageUrl = canteenImageUrl;
 
         const canteen = await transaction.canteen.update({
           where: { id: updatedUser.canteen.id },
