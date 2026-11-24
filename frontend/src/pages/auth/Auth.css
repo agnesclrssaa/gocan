@@ -610,6 +610,12 @@ transform: translateY(-10px);
    RESPONSIVE
 ========================= */
 
+@media (min-width: 851px) {
+  .register-auth-visual {
+    height: 100vh;
+  }
+}
+
 @media (max-width: 850px) {
   .gocan-auth-page {
     grid-template-columns: 1fr;

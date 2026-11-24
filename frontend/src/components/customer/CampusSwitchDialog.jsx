@@ -48,7 +48,7 @@ export default function CampusSwitchDialog({ onCancel, onConfirm }) {
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-xl bg-[#dc0413] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#b80310]"
+            className="rounded-xl bg-[#116AA5] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#116AA5] active:bg-[#116AA5]"
           >
             Ganti Kampus
           </button>

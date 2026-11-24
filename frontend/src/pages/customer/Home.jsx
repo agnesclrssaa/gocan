@@ -27,6 +27,8 @@ const categoryAliases = {
   Healthy: ['healthy', 'sehat'],
   Kopi: ['kopi', 'coffee'],
 };
+const fallbackMenuImage =
+  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
 
 const matchesMenuCategory = (menu, category) => {
   if (category === 'Semua') return true;
@@ -767,10 +769,12 @@ canteenDescription:
                 >
                   <div className="aspect-[5/4] w-full overflow-hidden bg-slate-100">
                     <img
-                      src={item.imageUrl || item.image_url}
+                      src={api.assetUrl(item.imageUrl || item.image_url || fallbackMenuImage)}
                       alt={item.name}
                       onError={(event) => {
-                        event.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
+                        if (event.currentTarget.src !== fallbackMenuImage) {
+                          event.currentTarget.src = fallbackMenuImage;
+                        }
                       }}
                       className="w-full h-full object-cover transition-transform duration-500"
                     />

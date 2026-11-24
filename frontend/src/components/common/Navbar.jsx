@@ -276,7 +276,7 @@ const handleSaveLocation = (event) => {
               onClick={handleCampusSwitch}
               title={`Kampus aktif: ${selectedCampus.name}`}
               aria-label={`Ganti Kampus. Kampus saat ini: ${selectedCampus.name}`}
-              className="flex max-w-[38vw] shrink items-center gap-1.5 rounded-full border border-[#116aa5]/20 bg-[#fbf7f1] px-2.5 py-2 text-[11px] font-bold text-[#116aa5] transition hover:border-[#116aa5] hover:bg-[#116aa5] hover:text-white sm:max-w-64 sm:px-3 sm:text-xs"
+              className="flex max-w-[38vw] shrink items-center gap-1.5 rounded-full border border-[#116AA5] bg-[#116AA5] px-2.5 py-2 text-[11px] font-bold text-white transition hover:border-[#116AA5] hover:bg-[#116AA5] hover:text-white active:bg-[#116AA5] sm:max-w-64 sm:px-3 sm:text-xs"
             >
               <Building2 className="h-4 w-4 shrink-0" />
               <span className="max-w-[5.5rem] truncate sm:max-w-32">{selectedCampus.name}</span>

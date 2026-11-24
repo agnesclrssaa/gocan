@@ -147,7 +147,7 @@ export default function Register() {
   return (
     <main className="gocan-auth-page">
 
-      <section className="gocan-auth-visual">
+      <section className="gocan-auth-visual register-auth-visual">
 
         <Link to="/" className="gocan-auth-logo">
           <img src={`${import.meta.env.BASE_URL}assets/gocan.png`} alt="GoCan" />

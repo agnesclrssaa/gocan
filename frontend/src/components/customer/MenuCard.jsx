@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { api } from '../../lib/api';
 
 const MenuCard = ({ menu, canteen }) => {
   const { addToCart } = useCart();
@@ -38,11 +39,13 @@ const MenuCard = ({ menu, canteen }) => {
         {/* IMAGE */}
         <div className="relative aspect-[5/4] w-full overflow-hidden bg-slate-100">
           <img
-            src={menu.imageUrl || menu.image_url || fallbackImage}
+            src={api.assetUrl(menu.imageUrl || menu.image_url || fallbackImage)}
             alt={menu.name}
             loading="lazy"
             onError={(e) => {
-              e.currentTarget.src = fallbackImage;
+              if (e.currentTarget.src !== fallbackImage) {
+                e.currentTarget.src = fallbackImage;
+              }
             }}
             className={`
               h-full w-full object-cover
