@@ -265,7 +265,7 @@ export default function UserProfile() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-full bg-[#2152B7] px-5 py-3 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-50"
+                  className="rounded-full bg-[#2152B7] px-5 py-3 text-sm font-bold text-white hover:bg-[#193F91] disabled:opacity-50"
                 >
                   {saving ? 'Menyimpan...' : 'Simpan perubahan'}
                 </button>
@@ -287,7 +287,7 @@ export default function UserProfile() {
                   setMessage('');
                   setError('');
                 }}
-                className="rounded-full bg-[#2152B7] px-5 py-3 text-sm font-bold text-white hover:bg-blue-800"
+                className="rounded-full bg-[#2152B7] px-5 py-3 text-sm font-bold text-white hover:bg-[#193F91]"
               >
                 Edit profil
               </button>

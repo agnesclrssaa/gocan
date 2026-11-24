@@ -118,30 +118,45 @@ export default function PickupScanner({ onVerified }) {
 
     async function startCamera() {
       try {
-        const {
-          Html5QrcodeScanner,
-          Html5QrcodeSupportedFormats,
-          Html5QrcodeScanType,
-        } = await import('html5-qrcode');
+        if (!window.isSecureContext) {
+          throw new Error(
+            'Kamera membutuhkan koneksi aman HTTPS atau localhost. Pilih gambar QR sebagai alternatif.'
+          );
+        }
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error(
+            'Browser ini tidak menyediakan akses kamera. Pilih gambar QR atau buka GoCan melalui HTTPS di browser terbaru.'
+          );
+        }
+
+        const { Html5Qrcode, Html5QrcodeSupportedFormats } =
+          await import('html5-qrcode');
 
         if (cancelled) return;
 
-        scanner = new Html5QrcodeScanner(
+        scanner = new Html5Qrcode(
           readerId,
           {
-            fps: 10,
             formatsToSupport: [
               Html5QrcodeSupportedFormats.QR_CODE,
             ],
-            supportedScanTypes: [
-              Html5QrcodeScanType.SCAN_TYPE_CAMERA,
-            ],
-            rememberLastUsedCamera: false,
-          },
-          false
+            verbose: false,
+          }
         );
 
-        scanner.render(
+        await scanner.start(
+          { facingMode: 'environment' },
+          {
+            fps: 10,
+            aspectRatio: 1,
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+              const size = Math.floor(
+                Math.min(viewfinderWidth, viewfinderHeight) * 0.72
+              );
+              return { width: size, height: size };
+            },
+          },
           (decodedText) => {
             if (cancelled || captured) return;
 
@@ -160,14 +175,41 @@ export default function PickupScanner({ onVerified }) {
             setUseCamera(false);
           },
           () => {
-            // Kamera boleh terus mencari sampai QR terbaca.
+            // Frame tanpa QR adalah kondisi normal selama pemindaian.
           }
         );
-      } catch {
+        if (cancelled && scanner.isScanning) {
+          await scanner.stop();
+          scanner.clear();
+        }
+      } catch (cameraError) {
         if (!cancelled) {
-          setError(
-            'Kamera belum dapat dibuka. Coba file PNG atau periksa izin kamera browser.'
-          );
+          const errorName = cameraError?.name;
+          const errorDetails = [
+            errorName,
+            cameraError?.message,
+            String(cameraError),
+          ].join(' ').toLowerCase();
+          if (
+            ['NotAllowedError', 'PermissionDeniedError'].includes(errorName) ||
+            /notallowed|permission denied|permissiondenied|access denied/.test(errorDetails)
+          ) {
+            setError(
+              'Izin kamera ditolak. Aktifkan izin kamera untuk situs GoCan di pengaturan browser, lalu coba lagi atau pilih gambar QR.'
+            );
+          } else if (errorName === 'NotFoundError') {
+            setError('Kamera tidak ditemukan pada perangkat ini. Pilih gambar QR.');
+          } else if (errorName === 'NotReadableError') {
+            setError('Kamera sedang digunakan aplikasi lain. Tutup aplikasi tersebut lalu coba lagi.');
+          } else {
+            setError(
+              cameraError.message ||
+                'Kamera belum dapat dibuka. Periksa izin kamera browser atau pilih gambar QR.'
+            );
+          }
+          setUseCamera(false);
+        } else {
+          console.error('Kamera QR GoCan gagal dihentikan dengan benar:', cameraError);
         }
       }
     }
@@ -178,9 +220,15 @@ export default function PickupScanner({ onVerified }) {
       cancelled = true;
 
       if (scanner) {
-        scanner.clear().catch(() => {
-          // Scanner mungkin sudah ditutup.
-        });
+        if (scanner.isScanning) {
+          scanner.stop()
+            .then(() => scanner.clear())
+            .catch((stopError) => {
+              console.error('Kamera QR GoCan gagal dihentikan:', stopError);
+            });
+        } else {
+          scanner.clear();
+        }
       }
     };
   }, [useCamera, token, result, readerId, cameraAttempt]);
@@ -310,8 +358,11 @@ export default function PickupScanner({ onVerified }) {
           </div>
 
           {useCamera ? (
-            <div className="overflow-hidden rounded-xl border border-slate-200 p-2">
+            <div className="pickup-camera-preview overflow-hidden rounded-xl border border-slate-200 bg-slate-950 p-2">
               <div id={readerId} />
+              <p className="mt-2 text-center text-xs text-white">
+                Arahkan kamera belakang ke QR tiket dalam kondisi terang.
+              </p>
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50 p-4">
@@ -361,7 +412,7 @@ export default function PickupScanner({ onVerified }) {
             type="button"
             onClick={verifyPickup}
             disabled={busy}
-            className="mt-4 rounded-full bg-[#2152B7] px-5 py-3 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-50"
+            className="mt-4 rounded-full bg-[#2152B7] px-5 py-3 text-sm font-bold text-white hover:bg-[#193F91] disabled:opacity-50"
           >
             {busy ? 'Memverifikasi...' : 'Konfirmasi pengambilan'}
           </button>

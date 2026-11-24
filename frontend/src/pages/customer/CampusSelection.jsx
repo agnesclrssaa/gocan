@@ -18,7 +18,7 @@ function CampusImage({ campus }) {
 
   if (!image || failed) {
     return (
-      <div className="flex h-44 items-center justify-center bg-[#fbf7f1] text-[#116aa5]">
+      <div className="flex h-44 items-center justify-center bg-[#fbf7f1] text-[#2152B7]">
         <ImageIcon className="h-10 w-10" aria-hidden="true" />
       </div>
     );
@@ -86,10 +86,10 @@ export default function CampusSelection() {
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
         <header className="mx-auto max-w-2xl text-center">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#116aa5] text-white shadow-sm">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2152B7] text-white shadow-sm">
             <Building2 className="h-7 w-7" aria-hidden="true" />
           </span>
-          <p className="mt-4 text-xs font-extrabold uppercase tracking-[0.16em] text-[#116aa5]">
+          <p className="mt-4 text-xs font-extrabold uppercase tracking-[0.16em] text-[#2152B7]">
             Selamat datang di GoCan
           </p>
           <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
@@ -127,7 +127,7 @@ export default function CampusSelection() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Cari nama atau kota kampus..."
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#116aa5] focus:ring-2 focus:ring-[#116aa5]/20"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#2152B7] focus:ring-2 focus:ring-[#2152B7]/20"
             />
           </label>
         </div>
@@ -163,7 +163,7 @@ export default function CampusSelection() {
                         </span>
                       )}
                     </div>
-                    <p className="flex items-center gap-1.5 text-sm font-semibold text-[#116aa5]">
+                    <p className="flex items-center gap-1.5 text-sm font-semibold text-[#2152B7]">
                       <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
                       {campus.city}
                     </p>

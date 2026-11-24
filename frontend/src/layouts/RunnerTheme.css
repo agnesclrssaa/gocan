@@ -10,6 +10,34 @@
   background: var(--runner-background);
 }
 
+.runner-header-name {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (max-width: 1023px) {
+  .runner-header-name {
+    display: block;
+    overflow-wrap: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    -webkit-line-clamp: unset;
+  }
+}
+
+@media (min-width: 1024px) {
+  .runner-header-name {
+    display: block;
+    overflow-wrap: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    -webkit-line-clamp: unset;
+  }
+}
+
 .runner-theme .glass-card-dark {
   border-color: #D6E2F0;
   background: #FFFFFF;

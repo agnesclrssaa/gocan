@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
-import { DEFAULT_CAMPUS_ID, useCampus } from './CampusContext';
+import { useCampus } from './CampusContext';
 
 const CartContext = createContext({});
 
@@ -23,7 +23,7 @@ const sanitizeCartItem = (item) => {
     quantity: isNaN(rawQty) || rawQty <= 0 ? 1 : rawQty,
     notes: typeof item.notes === 'string' ? item.notes : '',
     canteen_id: item.canteenId || item.canteen_id || null,
-    campusId: String(item.campusId || item.campus_id || DEFAULT_CAMPUS_ID),
+    campusId: String(item.campusId || item.campus_id || ''),
   };
 };
 
@@ -104,7 +104,7 @@ export const CartProvider = ({ children }) => {
       item.campus_id ||
       canteen?.campusId ||
       selectedCampus?.campusId ||
-      DEFAULT_CAMPUS_ID
+      ''
     );
     const sanitizedQty = isNaN(parseInt(quantity, 10)) || parseInt(quantity, 10) <= 0 ? 1 : parseInt(quantity, 10);
     const sanitizedPrice = isNaN(Number(item.price)) || Number(item.price) < 0 ? 0 : Number(item.price);

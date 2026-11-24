@@ -432,7 +432,7 @@ export default function RunnerDetail() {
                     onChange={(event) => setPickupQrCode(event.target.value)}
                     disabled={!canProcessOrder || updatingStatus}
                     autoComplete="off"
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-mono text-xs outline-none focus:border-[#116aa5] focus:ring-2 focus:ring-[#116aa5]/20 disabled:bg-slate-100"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-mono text-xs outline-none focus:border-[#2152B7] focus:ring-2 focus:ring-[#2152B7]/20 disabled:bg-slate-100"
                   />
                 </label>
               )}

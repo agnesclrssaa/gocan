@@ -271,7 +271,7 @@ export default function RunnerRatingForm({
           <button
             type="submit"
             disabled={!available || saving || stars === 0}
-            className="rounded-full bg-[#2152B7] px-5 py-3 text-sm font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full bg-[#2152B7] px-5 py-3 text-sm font-bold text-white hover:bg-[#193F91] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? 'Mengirim...' : 'Kirim rating runner'}
           </button>

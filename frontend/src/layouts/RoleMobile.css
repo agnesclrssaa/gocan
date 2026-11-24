@@ -1,0 +1,119 @@
+@media (max-width: 767px) {
+  .role-mobile-drawer {
+    top: 4rem;
+    height: calc(100vh - 4rem);
+    height: calc(100dvh - 4rem);
+    border-top-right-radius: 1rem;
+    transition-property: translate, visibility;
+    transition-duration: 300ms, 0ms;
+    transition-delay: 0ms, 300ms;
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .role-mobile-drawer-open {
+    transition-delay: 0ms, 0ms;
+  }
+}
+
+@media (min-width: 768px) {
+  .role-mobile-drawer {
+    top: 0;
+    height: 100vh;
+    border-top-right-radius: 0;
+    transition: none;
+  }
+}
+
+.role-mobile-menu-toggle {
+  display: inline-flex;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+}
+
+@media (max-width: 639px) {
+  .canteen-layout button,
+  .admin-layout button,
+  .runner-theme button,
+  .runner-theme nav a {
+    min-height: 2.5rem;
+  }
+
+  .canteen-layout .fixed.inset-0 > :first-child,
+  .admin-layout .fixed.inset-0 > :first-child,
+  .runner-theme .fixed.inset-0 > :first-child {
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .canteen-layout main > div {
+    min-width: 0;
+  }
+
+  .canteen-layout input,
+  .canteen-layout select,
+  .canteen-layout textarea,
+  .admin-layout input,
+  .admin-layout select,
+  .admin-layout textarea {
+    max-width: 100%;
+    font-size: 1rem;
+  }
+
+  .account-profile-page input,
+  .account-profile-page select,
+  .account-profile-page textarea {
+    max-width: 100%;
+    font-size: 1rem;
+  }
+
+  .mobile-role-toast {
+    inset-inline: 1rem;
+    top: calc(env(safe-area-inset-top) + 4.5rem);
+    width: auto;
+    max-width: calc(100vw - 2rem);
+    overflow-wrap: anywhere;
+  }
+
+  .admin-layout .overflow-x-auto > table:not([class*="min-w-"]) {
+    min-width: 42rem;
+  }
+
+  .pickup-camera-preview video {
+    display: block;
+    width: 100% !important;
+    max-height: 55dvh;
+    object-fit: cover;
+  }
+}
+
+@media (min-width: 360px) and (max-width: 639px) {
+  .canteen-menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .canteen-menu-grid article > div:first-child {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .canteen-menu-grid article h3 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 359px) {
+  .canteen-menu-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-layout .fixed.inset-0 .grid.grid-cols-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

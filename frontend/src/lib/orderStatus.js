@@ -276,12 +276,9 @@ export function getOrderPresentation(order = {}) {
     (step) => step.key === activeKey
   );
 
-  // API saat ini menolak pembatalan untuk pesanan tunai/lunas.
-  const canCancel =
-    status === 'pending' &&
-    !isCash &&
-    !isPaid &&
-    method !== '';
+  const canCancel = ['pending', 'PENDING_PAYMENT'].includes(
+    String(order.status || '')
+  );
 
   return {
     status,

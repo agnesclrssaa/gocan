@@ -1,18 +1,50 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, LoaderCircle, Search, Store, Utensils } from 'lucide-react';
 import { api } from '../../lib/api';
+import AssetImage from './AssetImage';
 
-const fallbackImage =
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=120&q=80';
+const normalizeSearchText = (value) =>
+  String(value ?? '')
+    .normalize('NFKC')
+    .toLocaleLowerCase('id-ID')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-export default function SearchInput({ value, onChange, className = '' }) {
+const matchesSearchQuery = (query, ...values) => {
+  const words = normalizeSearchText(query).split(' ').filter(Boolean);
+  const searchableText = values.map(normalizeSearchText).join(' ');
+  return words.every((word) => searchableText.includes(word));
+};
+
+const mergeSearchResults = (localItems, remoteItems) => {
+  const seenIds = new Set();
+  return [...localItems, ...remoteItems].filter((item) => {
+    if (!item || typeof item !== 'object') return false;
+    const id = item.id == null ? `${item.name || ''}-${item.canteenId || ''}` : String(item.id);
+    if (seenIds.has(id)) return false;
+    seenIds.add(id);
+    return true;
+  });
+};
+
+export default function SearchInput({
+  value,
+  onChange,
+  className = '',
+  localCanteens = [],
+  localMenus = [],
+}) {
   const [isFocused, setIsFocused] = useState(false);
   const [searchState, setSearchState] = useState({
     query: '',
     isLoading: false,
     error: '',
     results: { canteens: [], menus: [] },
+  });
+  const [dropdownLayout, setDropdownLayout] = useState({
+    placement: 'below',
+    maxHeight: 544,
   });
   const containerRef = useRef(null);
   const query = value.trim();
@@ -81,11 +113,87 @@ export default function SearchInput({ value, onChange, className = '' }) {
   const currentSearch = searchState.query === query ? searchState : null;
   const isLoading = !currentSearch || currentSearch.isLoading;
   const error = currentSearch?.error || '';
-  const results = currentSearch?.results || { canteens: [], menus: [] };
+
+  useLayoutEffect(() => {
+    if (!showResults) return undefined;
+
+    const updateDropdownLayout = () => {
+      const bounds = containerRef.current?.getBoundingClientRect();
+      if (!bounds) return;
+
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const gap = 12;
+      const viewportPadding = 8;
+      const maxHeight = Math.min(viewportHeight * 0.7, 544);
+      const spaceBelow = viewportHeight - bounds.bottom - gap - viewportPadding;
+      const spaceAbove = bounds.top - gap - viewportPadding;
+      const placeAbove =
+        spaceBelow < Math.min(maxHeight, 180) &&
+        spaceAbove > spaceBelow;
+      const availableHeight = placeAbove ? spaceAbove : spaceBelow;
+
+      setDropdownLayout((current) => {
+        const nextMaxHeight = Math.max(0, Math.min(maxHeight, availableHeight));
+        const nextPlacement = placeAbove ? 'above' : 'below';
+        return current.placement === nextPlacement &&
+          current.maxHeight === nextMaxHeight
+          ? current
+          : { placement: nextPlacement, maxHeight: nextMaxHeight };
+      });
+    };
+
+    updateDropdownLayout();
+    window.addEventListener('resize', updateDropdownLayout);
+    window.addEventListener('scroll', updateDropdownLayout, true);
+    window.visualViewport?.addEventListener('resize', updateDropdownLayout);
+    window.visualViewport?.addEventListener('scroll', updateDropdownLayout);
+
+    return () => {
+      window.removeEventListener('resize', updateDropdownLayout);
+      window.removeEventListener('scroll', updateDropdownLayout, true);
+      window.visualViewport?.removeEventListener('resize', updateDropdownLayout);
+      window.visualViewport?.removeEventListener('scroll', updateDropdownLayout);
+    };
+  }, [showResults]);
+
+  const localResults = useMemo(() => ({
+    canteens: localCanteens.filter((canteen) =>
+      matchesSearchQuery(
+        query,
+        canteen.name,
+        canteen.description,
+        canteen.location,
+        canteen.building
+      )
+    ),
+    menus: localMenus.filter((menu) =>
+      matchesSearchQuery(
+        query,
+        menu.name,
+        menu.description,
+        menu.category,
+        menu.canteen?.name,
+        menu.canteenName
+      )
+    ),
+  }), [query, localCanteens, localMenus]);
+  const results = useMemo(() => ({
+    canteens: mergeSearchResults(
+      localResults.canteens,
+      currentSearch?.results.canteens || []
+    ),
+    menus: mergeSearchResults(
+      localResults.menus,
+      currentSearch?.results.menus || []
+    ),
+  }), [localResults, currentSearch]);
   const hasResults = results.canteens.length > 0 || results.menus.length > 0;
 
   return (
-    <div ref={containerRef} className={`relative min-w-0 flex-1 ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative min-w-0 flex-1 ${showResults ? 'z-[60]' : ''} ${className}`}
+    >
       <div className="flex items-center gap-3">
         <Search className="h-5 w-5 shrink-0 text-slate-400" />
         <input
@@ -104,7 +212,12 @@ export default function SearchInput({ value, onChange, className = '' }) {
       {showResults && (
         <div
           id="gocan-search-results"
-          className="absolute left-0 right-0 top-full z-50 mt-3 max-h-[min(70vh,34rem)] overflow-y-auto rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-[0_24px_60px_rgba(15,23,42,0.2)] backdrop-blur-xl"
+          className={`absolute left-0 right-0 z-50 overflow-y-auto rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-[0_24px_60px_rgba(15,23,42,0.2)] backdrop-blur-xl ${
+            dropdownLayout.placement === 'above'
+              ? 'bottom-full mb-3'
+              : 'top-full mt-3'
+          }`}
+          style={{ maxHeight: `${dropdownLayout.maxHeight}px` }}
         >
           {isLoading && (
             <div className="flex items-center gap-2 px-3 py-4 text-sm text-slate-500" role="status">
@@ -124,7 +237,7 @@ export default function SearchInput({ value, onChange, className = '' }) {
             </p>
           )}
 
-          {!isLoading && !error && results.canteens.length > 0 && (
+          {results.canteens.length > 0 && (
             <section aria-labelledby="search-canteens-heading">
               <h2
                 id="search-canteens-heading"
@@ -141,8 +254,8 @@ export default function SearchInput({ value, onChange, className = '' }) {
                     onClick={() => setIsFocused(false)}
                     className="flex items-center gap-3 rounded-xl p-2.5 transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
                   >
-                    <img
-                      src={canteen.imageUrl || fallbackImage}
+                    <AssetImage
+                      src={canteen.imageUrl || canteen.image_url}
                       alt=""
                       loading="lazy"
                       className="h-11 w-11 rounded-lg object-cover"
@@ -161,7 +274,7 @@ export default function SearchInput({ value, onChange, className = '' }) {
             </section>
           )}
 
-          {!isLoading && !error && results.menus.length > 0 && (
+          {results.menus.length > 0 && (
             <section
               aria-labelledby="search-menus-heading"
               className={results.canteens.length > 0 ? 'mt-3 border-t border-slate-100 pt-3' : ''}
@@ -181,8 +294,8 @@ export default function SearchInput({ value, onChange, className = '' }) {
                     onClick={() => setIsFocused(false)}
                     className="flex items-center gap-3 rounded-xl p-2.5 transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
                   >
-                    <img
-                      src={menu.imageUrl || fallbackImage}
+                    <AssetImage
+                      src={menu.imageUrl || menu.image_url}
                       alt=""
                       loading="lazy"
                       className="h-11 w-11 rounded-lg object-cover"

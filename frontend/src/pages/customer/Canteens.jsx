@@ -2,12 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, MapPin, Search, Star, Store } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
+import AssetImage from '../../components/common/AssetImage';
 import { api } from '../../lib/api';
 import { getCampusId, useCampus } from '../../context/CampusContext';
 import './Home.css';
-
-const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
 
 const getCanteenCategory = (canteen) => {
   const category = [
@@ -330,9 +328,6 @@ const filteredCanteens = useMemo(() => {
               {filteredCanteens.map((canteen) => {
                 const isOpen = canteen.isOpen ?? canteen.is_open;
                 const image = canteen.imageUrl || canteen.image_url;
-                const imageSrc = image?.startsWith('/uploads')
-                  ? api.assetUrl(image)
-                  : image || FALLBACK_IMAGE;
 
                 return (
                   <article
@@ -344,13 +339,10 @@ const filteredCanteens = useMemo(() => {
                       aria-label={`Lihat kantin ${canteen.name}`}
                       className="relative block h-48 overflow-hidden bg-slate-100"
                     >
-                      <img
-                        src={imageSrc}
+                      <AssetImage
+                        src={image}
                         alt={canteen.name || 'Foto kantin'}
                         loading="lazy"
-                        onError={(event) => {
-                          event.currentTarget.src = FALLBACK_IMAGE;
-                        }}
                         className="h-full w-full object-cover transition-transform duration-500"
                       />
                       <span

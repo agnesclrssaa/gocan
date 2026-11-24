@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, MapPin, Star, AlertCircle } from 'lucide-react';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
+import AssetImage from '../../components/common/AssetImage';
 import MenuCard from '../../components/customer/MenuCard';
 import { getCampusId, useCampus } from '../../context/CampusContext';
 
@@ -120,8 +121,8 @@ export const CanteenDetail = ({ preview = false }) => {
           <div className="customer-card bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
             {/* Left Image: Canteen Dining */}
             <div className="md:col-span-5 h-56 sm:h-64 rounded-2xl overflow-hidden bg-slate-100">
-              <img
-                src={canteen.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80'}
+              <AssetImage
+                src={canteen.imageUrl || canteen.image_url}
                 alt={canteen.name}
                 className="w-full h-full object-cover"
               />
@@ -199,7 +200,7 @@ export const CanteenDetail = ({ preview = false }) => {
           </div>
 
           {/* Menu grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="customer-menu-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {displayedMenus.map((menu) => (
               <MenuCard
                 key={menu.id}
@@ -212,7 +213,7 @@ export const CanteenDetail = ({ preview = false }) => {
             <button
               type="button"
               onClick={() => setShowAllMenus((current) => !current)}
-              className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+              className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-[#193F91] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
               aria-expanded={showAllMenus}
             >
               {showAllMenus ? 'Lihat Lebih Sedikit' : 'Lihat Semua'}

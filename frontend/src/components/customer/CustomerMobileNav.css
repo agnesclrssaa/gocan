@@ -1,0 +1,49 @@
+.customer-mobile-nav {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .customer-mobile-nav {
+    position: fixed;
+    inset-inline: 0.75rem;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    z-index: 90;
+    display: flex;
+    width: auto;
+    max-width: 36rem;
+    align-items: center;
+    justify-content: space-around;
+    gap: 0.25rem;
+    margin-inline: auto;
+    border: 1px solid #D6E2F0;
+    border-radius: 1rem;
+    background: rgb(255 255 255 / 95%);
+    padding: 0.5rem;
+    box-shadow: 0 10px 15px rgb(15 23 42 / 10%);
+    backdrop-filter: blur(16px);
+  }
+
+  .customer-mobile-nav-link {
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .customer-mobile-nav-link.is-active {
+    color: #2152B7;
+    font-weight: 900;
+  }
+
+  .customer-layout-content {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+
+  .customer-account-profile-page {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+
+  .customer-floating-cart {
+    bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+}

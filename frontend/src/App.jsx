@@ -4,6 +4,7 @@ import { CartProvider } from './context/CartContext';
 import { CampusProvider, RequireSelectedCampus, useCampus } from './context/CampusContext';
 import { AUTH_TOKEN_KEY } from './lib/api';
 import FloatingCart from './components/customer/FloatingCart';
+import CustomerMobileNav from './components/customer/CustomerMobileNav';
 import { AlertCircle, X } from 'lucide-react';
 
 // Intro Loading Screen
@@ -424,6 +425,7 @@ export function App() {
               </Routes>
             </ErrorBoundary>
             <FloatingCart />
+            <CustomerMobileNav />
             <ApiNotice />
           </CartProvider>
         </CampusProvider>

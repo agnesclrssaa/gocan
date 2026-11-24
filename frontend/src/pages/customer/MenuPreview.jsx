@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Star } from 'lucide-react';
+import AssetImage from '../../components/common/AssetImage';
 
 const bestSellers = [
   {
@@ -54,24 +55,33 @@ export default function MenuPreview() {
             </Link>
           </div>
 
-          <div className="mt-8 grid gap-5 sm:grid-cols-2">
+          <div
+            className="customer-best-seller-track mt-8"
+            role="region"
+            aria-label="Menu Best Seller, geser ke samping untuk melihat menu lainnya"
+            tabIndex={0}
+          >
             {bestSellers.map((item) => (
               <article
                 key={item.name}
-                className="customer-card overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm"
+                className="customer-card customer-menu-card menu-card-hover group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white"
               >
-                <div className="h-52 overflow-hidden bg-slate-100">
-                  <img
+                <div className="aspect-[5/4] w-full overflow-hidden bg-slate-100">
+                  <AssetImage
                     src={item.image}
                     alt={item.imageAlt}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
-                <div className="p-5">
-                  <h2 className="font-extrabold text-slate-900">{item.name}</h2>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="gocan-price font-extrabold">{item.price}</span>
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
+                <div className="customer-menu-content flex min-w-0 flex-1 flex-col p-3 sm:p-4">
+                  <h2 className="customer-menu-title min-h-[2.5rem] line-clamp-2 text-sm font-extrabold leading-snug text-slate-900 sm:text-base">
+                    {item.name}
+                  </h2>
+                  <div className="mt-auto flex flex-col items-start gap-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="customer-menu-price gocan-price whitespace-nowrap text-xs font-extrabold sm:text-sm">
+                      {item.price}
+                    </span>
+                    <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap text-[11px] font-semibold text-slate-500 sm:text-xs">
                       <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
                       {item.rating} ({item.orders})
                     </span>

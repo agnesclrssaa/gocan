@@ -535,7 +535,7 @@ export default function OrderSuccess() {
             <div className="flex flex-col gap-3">
               <Link
                 to={`/orders/${currentOrder.id}`}
-                className="rounded-full bg-[#2152B7] px-5 py-3 text-center text-sm font-bold text-white hover:bg-blue-800"
+                className="rounded-full bg-[#2152B7] px-5 py-3 text-center text-sm font-bold text-white hover:bg-[#193F91]"
               >
                 Lacak pesanan
               </Link>

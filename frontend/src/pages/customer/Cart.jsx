@@ -3,6 +3,7 @@ import { Trash2, ArrowLeft, ArrowRight, ShoppingBag, Store, Plus, Minus } from '
 import { useCart } from '../../context/CartContext';
 import { getCampusId, useCampus } from '../../context/CampusContext';
 import Navbar from '../../components/common/Navbar';
+import AssetImage from '../../components/common/AssetImage';
 import { getCustomerRoute, useCustomerPreview } from '../../lib/customerRoutes';
 
 export const Cart = () => {
@@ -26,9 +27,6 @@ export const Cart = () => {
     cartCampusId === selectedCampus.campusId &&
     !cartHasMixedCampuses
   );
-
-  const fallbackImage =
-    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80';
 
   // Highlighted first item for detailed preview card matching mockup
   const previewItem = cartItems[0] || null;
@@ -85,13 +83,10 @@ export const Cart = () => {
             <div className="lg:col-span-7 space-y-5">
               {previewItem && (
                 <div className="customer-card bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-6 items-center">
-                  <img
-                    src={previewItem.image_url || fallbackImage}
+                  <AssetImage
+                    src={previewItem.image_url || previewItem.imageUrl}
                     alt={previewItem.name}
                     className="w-full sm:w-56 h-48 rounded-2xl object-cover shrink-0"
-                    onError={(e) => {
-                      e.currentTarget.src = fallbackImage;
-                    }}
                   />
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold text-[#2152B7]">{previewItem.name}</h2>
@@ -112,8 +107,8 @@ export const Cart = () => {
               <h2 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
                 RINGKASAN KERANJANG
               </h2>
-              <div className="rounded-xl border border-[#116aa5]/15 bg-[#fbf7f1] p-3">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-[#116aa5]">Kampus pesanan</p>
+              <div className="rounded-xl border border-[#2152B7]/15 bg-[#fbf7f1] p-3">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#2152B7]">Kampus pesanan</p>
                 <p className="mt-1 text-sm font-bold text-slate-800">
                   {cartCampus?.name || `Kampus ${cartCampusId || 'tidak diketahui'}`}
                 </p>

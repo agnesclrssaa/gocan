@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -8,10 +8,13 @@ import {
   Star,
   X,
   PackageX,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
+import AssetImage from '../../components/common/AssetImage';
 import MenuCard from '../../components/customer/MenuCard';
 import { useAuth } from '../../context/AuthContext';
 import { getCampusId, useCampus } from '../../context/CampusContext';
@@ -27,9 +30,6 @@ const categoryAliases = {
   Healthy: ['healthy', 'sehat'],
   Kopi: ['kopi', 'coffee'],
 };
-const fallbackMenuImage =
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
-
 const matchesMenuCategory = (menu, category) => {
   if (category === 'Semua') return true;
 
@@ -62,6 +62,7 @@ export const Home = () => {
   const [canteens, setCanteens] = useState([]);
   const [canteenMenus, setCanteenMenus] = useState({});
   const [bestSellerItems, setBestSellerItems] = useState([]);
+  const bestSellerTrackRef = useRef(null);
   const [showAllBestSellers, setShowAllBestSellers] = useState(false);
   const [showAllMenuCards, setShowAllMenuCards] = useState(false);
 
@@ -409,9 +410,31 @@ canteenDescription:
   const displayedBestSellerItems = showAllBestSellers
     ? filteredBestSellerItems
     : filteredBestSellerItems.slice(0, 6);
+  const scrollBestSellerTrack = (direction) => {
+    const track = bestSellerTrackRef.current;
+    if (track) {
+      track.scrollBy({
+        left: direction * track.clientWidth * 0.8,
+        behavior: 'smooth',
+      });
+    }
+  };
   const displayedMenus = showAllMenuCards
     ? filteredMenus
     : filteredMenus.slice(0, 6);
+  const searchableMenus = useMemo(
+    () => campusCanteens.flatMap((canteen) =>
+      (canteenMenus[canteen.id] || [])
+        .filter((menu) => !selectedCampusId || getCampusId(menu) === selectedCampusId)
+        .map((menu) => ({
+          ...menu,
+          canteenId: canteen.id,
+          canteen: menu.canteen || canteen,
+          canteenName: menu.canteen?.name || menu.canteenName || canteen.name,
+        }))
+    ),
+    [campusCanteens, canteenMenus, selectedCampusId]
+  );
 
   // ==========================================
   // 8. TOMBOL FILTER BIRU GOCAN
@@ -448,11 +471,13 @@ canteenDescription:
         {/* 1. SEARCH BAR */}
         {/* ================================== */}
 
-        <div className="customer-card bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center justify-between gap-3">
+        <div className="customer-card customer-search-bar bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center justify-between gap-3">
 
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
+            localCanteens={campusCanteens}
+            localMenus={searchableMenus}
           />
 
           <button
@@ -463,6 +488,7 @@ canteenDescription:
                 ? 'bg-[#2152B7] text-white'
                 : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
             }`}
+            aria-label={isFilterOpen ? 'Tutup filter pencarian' : 'Buka filter pencarian'}
           >
             {isFilterOpen ? (
               <X className="w-5 h-5" />
@@ -716,7 +742,7 @@ canteenDescription:
         {/* 4. CATEGORY PILLS */}
         {/* ================================== */}
 
-        <div className="customer-card bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center gap-2 overflow-x-auto">
+        <div className="customer-card customer-category-list bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 p-3 sm:p-4 shadow-sm flex items-center gap-2 overflow-x-auto">
 
           {[
             'Semua',
@@ -751,57 +777,85 @@ canteenDescription:
 
         <div className="space-y-3">
 
-          <div className="flex items-center justify-between">
-
+          <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-1.5">
               <span>Best Seller Kampus</span>
             </h2>
-
+            {displayedBestSellerItems.length > 1 && (
+              <div className="hidden shrink-0 items-center gap-1 sm:flex">
+                <button
+                  type="button"
+                  onClick={() => scrollBestSellerTrack(-1)}
+                  aria-label="Geser Best Seller ke kiri"
+                  aria-controls="customer-best-seller-track"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-blue-100 bg-white text-[#2152B7] shadow-sm transition hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+                >
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollBestSellerTrack(1)}
+                  aria-label="Geser Best Seller ke kanan"
+                  aria-controls="customer-best-seller-track"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-blue-100 bg-white text-[#2152B7] shadow-sm transition hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+                >
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </div>
 
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            id="customer-best-seller-track"
+            ref={bestSellerTrackRef}
+            className="customer-best-seller-track"
+            role="region"
+            aria-label="Menu Best Seller, geser ke samping untuk melihat menu lainnya"
+            tabIndex={0}
+          >
             {displayedBestSellerItems.map((item) => (
-                <Link
-                  key={item.id}
-                  to={`/canteen/${item.canteenId}`}
-                  className="customer-card menu-card-hover bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm group"
-                >
-                  <div className="aspect-[5/4] w-full overflow-hidden bg-slate-100">
-                    <img
-                      src={api.assetUrl(item.imageUrl || item.image_url || fallbackMenuImage)}
-                      alt={item.name}
-                      onError={(event) => {
-                        if (event.currentTarget.src !== fallbackMenuImage) {
-                          event.currentTarget.src = fallbackMenuImage;
-                        }
-                      }}
-                      className="w-full h-full object-cover transition-transform duration-500"
-                    />
+              <Link
+                key={item.id}
+                to={`/canteen/${item.canteenId}`}
+                className="customer-card customer-menu-card menu-card-hover group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white"
+              >
+                <div className="relative aspect-[5/4] w-full overflow-hidden bg-slate-100">
+                  <AssetImage
+                    src={item.imageUrl || item.image_url}
+                    alt={item.name}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+
+                <div className="customer-menu-content flex min-w-0 flex-1 flex-col p-3 sm:p-4">
+                  <p
+                    title={`Dari ${item.canteen?.name || item.canteenName || 'Kantin GoCan'}`}
+                    className="customer-menu-canteen truncate text-xs font-semibold text-slate-500"
+                  >
+                    Dari {item.canteen?.name || item.canteenName || 'Kantin GoCan'}
+                  </p>
+                  <h3 className="customer-menu-title mt-1.5 min-h-[2.5rem] line-clamp-2 text-sm font-extrabold leading-snug text-slate-900 transition group-hover:text-[#2152B7] sm:text-base">
+                    {item.name}
+                  </h3>
+
+                  <div className="customer-menu-footer customer-menu-sold-footer mt-auto flex min-w-0 flex-wrap items-center justify-between gap-0.5 pt-3 sm:flex-nowrap sm:gap-1.5">
+                    <span className="customer-menu-price gocan-price min-w-0 flex-1 whitespace-nowrap text-xs font-extrabold sm:text-sm">
+                      Rp {Number(item.price).toLocaleString('id-ID')}
+                    </span>
+
+                    <span className="customer-menu-sold-badge inline-flex shrink-0 whitespace-nowrap rounded-full bg-amber-50 px-1.5 py-1 text-[9px] font-bold text-amber-700 sm:px-2.5 sm:text-xs">
+                      {item.totalSold > 0
+                        ? `Terjual ${item.totalSold}+`
+                        : 'Terjual 0'}
+                    </span>
                   </div>
-
-                  <div className="p-4">
-                    <h3 className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-[#2152B7] transition">
-                      {item.name}
-                    </h3>
-
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="gocan-price text-sm font-extrabold">
-                        Rp {Number(item.price).toLocaleString('id-ID')}
-                      </span>
-
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
-                        {item.totalSold > 0
-                          ? `Terjual ${item.totalSold}+`
-                          : 'Terjual 0'}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                </div>
+              </Link>
+            ))}
 
             {filteredBestSellerItems.length === 0 && (
-              <div className="customer-card sm:col-span-2 lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-8 text-center">
+              <div className="customer-best-seller-empty customer-card rounded-2xl border border-slate-200 bg-white p-8 text-center">
                 <PackageX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="font-bold text-slate-700 text-sm">
                   Belum ada best seller untuk kategori ini
@@ -821,7 +875,7 @@ canteenDescription:
             <button
               type="button"
               onClick={() => setShowAllBestSellers((current) => !current)}
-              className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+              className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-[#193F91] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
               aria-expanded={showAllBestSellers}
             >
               {showAllBestSellers ? 'Lihat Lebih Sedikit' : 'Lihat Semua'}
@@ -865,7 +919,7 @@ canteenDescription:
 
           {loading && (
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="customer-menu-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
               {[1, 2, 3].map((item) => (
 
@@ -899,7 +953,7 @@ canteenDescription:
 
           {!loading && !error && filteredMenus.length > 0 && (
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="customer-menu-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
               {displayedMenus.map((menu) => {
 
@@ -911,20 +965,13 @@ canteenDescription:
 
                   <div
                     key={menu.id}
-                    className="space-y-2 transition-all duration-300 hover:-translate-y-1.5"
+                    className="h-full transition-all duration-300 hover:-translate-y-1.5"
                   >
 
                     <MenuCard
                       menu={menu}
                       canteen={menu.canteen || canteen}
                     />
-
-                    <Link
-                      to={`/canteen/${menu.canteenId}`}
-                      className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-slate-500 hover:text-[#2152B7] transition"
-                    >
-                      Dari {menu.canteen?.name || menu.canteenName}
-                    </Link>
 
                   </div>
 
@@ -940,7 +987,7 @@ canteenDescription:
             <button
               type="button"
               onClick={() => setShowAllMenuCards((current) => !current)}
-              className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+              className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-[#193F91] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
               aria-expanded={showAllMenuCards}
             >
               {showAllMenuCards ? 'Lihat Lebih Sedikit' : 'Lihat Semua'}
@@ -996,7 +1043,9 @@ canteenDescription:
             <div>
 
               <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">
-                {selectedCampus?.name ? `Kantin Kampus ${selectedCampus.name}` : 'Kantin Kampus UKWMS'}
+                {selectedCampus?.name
+                  ? `Kantin Kampus ${selectedCampus.name}`
+                  : 'Pilih Kampus untuk melihat kantin'}
               </h2>
 
               <p className="text-xs text-slate-500 mt-1">
@@ -1119,12 +1168,8 @@ canteenDescription:
 
                   <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-slate-100">
 
-                    <img
-                      src={
-                        canteen.imageUrl ||
-                        canteen.image_url ||
-                        'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80'
-                      }
+                    <AssetImage
+                      src={canteen.imageUrl || canteen.image_url}
                       alt={canteen.name}
                       loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-500"

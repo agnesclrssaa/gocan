@@ -1,0 +1,103 @@
+@media (max-width: 767px) {
+  .customer-navbar {
+    padding: max(0.5rem, env(safe-area-inset-top)) 0.5rem 0;
+  }
+
+  .customer-navbar-content {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand location logout"
+      "campus campus campus";
+    align-items: center;
+    column-gap: 0.5rem;
+    row-gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 1.125rem;
+  }
+
+  .customer-navbar-brand {
+    grid-area: brand;
+    min-height: 2.75rem;
+  }
+
+  .customer-navbar-actions {
+    display: contents;
+  }
+
+  .customer-location-control {
+    grid-area: location;
+    width: fit-content;
+    min-width: 0;
+    max-width: 100%;
+    justify-self: end;
+  }
+
+  .customer-campus-button {
+    grid-area: campus;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    justify-content: flex-start;
+    gap: 0.375rem;
+    padding-inline: 0.5rem;
+  }
+
+  .customer-location-button {
+    min-height: 2.5rem;
+    min-width: 0;
+    width: auto;
+    max-width: min(100%, 42vw, 12rem);
+    justify-content: flex-start;
+    padding-inline: 0.625rem;
+  }
+
+  .customer-location-name {
+    display: block;
+    flex: 1;
+    font-size: 0.6875rem;
+  }
+
+  .customer-campus-button > span:first-of-type {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .customer-navbar-user-actions {
+    grid-area: logout;
+    justify-self: end;
+    justify-content: flex-end;
+    border-left: 0;
+    border-top: 0;
+    padding: 0;
+  }
+
+  .customer-navbar-user-actions > a {
+    display: none;
+  }
+
+  .customer-navbar-actions > a[aria-label="Live chat"] {
+    display: none;
+  }
+
+  .customer-navbar-user-actions > button {
+    width: 2.5rem;
+    height: 2.5rem;
+    min-height: 2.5rem;
+    justify-content: center;
+    padding: 0;
+  }
+
+  #delivery-location-popover {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 767px) {
+  .customer-navbar-user-actions > a {
+    display: none;
+  }
+}

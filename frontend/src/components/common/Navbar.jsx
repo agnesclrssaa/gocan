@@ -22,6 +22,7 @@ import { useCart } from '../../context/CartContext';
 import { useCampus } from '../../context/CampusContext';
 import CampusSwitchDialog from '../customer/CampusSwitchDialog';
 import BrandLogo from './BrandLogo';
+import './Navbar.css';
 
 export const Navbar = () => {
   const { user, profile, signOut } = useAuth();
@@ -128,9 +129,9 @@ const handleSaveLocation = (event) => {
 
   return (
     <header className={`${isCustomer ? 'customer-navbar' : ''} px-3 sm:px-6 pt-3 sm:pt-4 sticky top-0 z-40 bg-[#F0F4F9]/90 backdrop-blur-md font-sans`}>
-      <div className={`${profile?.role === 'customer' ? 'customer-card' : ''} max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 shadow-xs px-4 sm:px-6 py-3 ${isCustomer ? 'flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-4' : 'flex items-center justify-between gap-4'}`}>
+      <div className={`${profile?.role === 'customer' ? 'customer-card customer-navbar-content' : ''} max-w-7xl mx-auto bg-white rounded-2xl md:rounded-3xl border border-slate-200/80 shadow-xs px-4 sm:px-6 py-3 ${isCustomer ? 'flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-4' : 'flex items-center justify-between gap-4'}`}>
         {/* Brand Logo GoCan */}
-        <Link to="/" className="flex items-center gap-2.5 group">
+        <Link to="/" className={`flex items-center gap-2.5 group ${isCustomer ? 'customer-navbar-brand' : ''}`}>
           <BrandLogo className="h-10 w-10 rounded-2xl transition group-hover:scale-105" />
           <div className="flex items-center gap-1.5">
             <span className={`text-xl font-extrabold tracking-tight ${isCustomer ? '' : 'text-[#0A2E6E]'}`}>
@@ -190,8 +191,8 @@ const handleSaveLocation = (event) => {
         </nav>
 
         {/* Right Section: Delivery Location & Cart & User Menu */}
-        <div className={`${isCustomer ? 'flex w-full min-w-0 flex-wrap items-center justify-end gap-2.5 sm:w-auto sm:flex-nowrap' : 'flex items-center gap-2.5'}`}>
-          <div className="relative" ref={locationPickerRef}>
+        <div className={`${isCustomer ? 'customer-navbar-actions flex w-full min-w-0 flex-wrap items-center justify-end gap-2.5 sm:w-auto sm:flex-nowrap' : 'flex items-center gap-2.5'}`}>
+          <div className={`relative ${isCustomer ? 'customer-location-control' : ''}`} ref={locationPickerRef}>
             <button
               type="button"
               onClick={() => {
@@ -199,7 +200,7 @@ const handleSaveLocation = (event) => {
                 setLocationError('');
                 setIsLocationOpen((isOpen) => !isOpen);
               }}
-              className={`group flex max-w-[42vw] sm:max-w-64 items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs transition ${
+              className={`customer-location-button group flex max-w-[42vw] sm:max-w-64 items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs transition ${
                 isCustomer ? 'hover:bg-[#2152B7] hover:border-[#2152B7] hover:text-white' : 'hover:bg-blue-50 hover:border-blue-200'
               }`}
               aria-expanded={isLocationOpen}
@@ -211,6 +212,11 @@ const handleSaveLocation = (event) => {
               <strong className={`hidden sm:block truncate font-bold ${isCustomer ? 'text-[#2152B7] group-hover:text-white' : 'text-[#0A2E6E]'}`}>
                 {deliveryLocation}
               </strong>
+              {isCustomer && (
+                <strong className="customer-location-name hidden min-w-0 truncate font-bold text-[#2152B7]">
+                  {deliveryLocation || 'Pilih lokasi'}
+                </strong>
+              )}
               <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isCustomer ? 'text-slate-500 group-hover:text-white' : 'text-slate-500'}`} />
             </button>
 
@@ -270,17 +276,17 @@ const handleSaveLocation = (event) => {
             )}
           </div>
 
-          {isCustomer && selectedCampus && (
+          {isCustomer && (
             <button
               type="button"
               onClick={handleCampusSwitch}
-              title={`Kampus aktif: ${selectedCampus.name}`}
-              aria-label={`Ganti Kampus. Kampus saat ini: ${selectedCampus.name}`}
-              className="flex max-w-[38vw] shrink items-center gap-1.5 rounded-full border border-[#116AA5] bg-[#116AA5] px-2.5 py-2 text-[11px] font-bold text-white transition hover:border-[#116AA5] hover:bg-[#116AA5] hover:text-white active:bg-[#116AA5] sm:max-w-64 sm:px-3 sm:text-xs"
+              title={selectedCampus ? `Kampus aktif: ${selectedCampus.name}` : 'Pilih Kampus'}
+              aria-label={selectedCampus ? `Ganti Kampus. Kampus saat ini: ${selectedCampus.name}` : 'Pilih Kampus'}
+              className="customer-campus-button flex max-w-[45vw] shrink items-center gap-1.5 rounded-full border border-[#2152B7] bg-[#2152B7] px-2.5 py-2 text-[11px] font-bold text-white transition hover:border-[#2152B7] hover:bg-[#2152B7] hover:text-white active:bg-[#2152B7] sm:max-w-64 sm:px-3 sm:text-xs"
             >
               <Building2 className="h-4 w-4 shrink-0" />
-              <span className="max-w-[5.5rem] truncate sm:max-w-32">{selectedCampus.name}</span>
-              <span className="shrink-0">Ganti Kampus</span>
+              <span className="max-w-[7rem] truncate sm:max-w-32">{selectedCampus?.name || 'Pilih Kampus'}</span>
+              {selectedCampus && <span className="shrink-0">Ganti Kampus</span>}
             </button>
           )}
 
@@ -321,7 +327,7 @@ const handleSaveLocation = (event) => {
 
           {/* User Profile / Portal / Logout Section */}
           {user ? (
-            <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-200">
+            <div className={`flex items-center gap-1.5 pl-1.5 border-l border-slate-200 ${isCustomer ? 'customer-navbar-user-actions' : ''}`}>
               {/* Portal Links (sesuai role) */}
               {profile?.role === 'admin' && (
                 <Link
@@ -383,6 +389,7 @@ const handleSaveLocation = (event) => {
                 onClick={handleLogout}
                 className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#DC2626] hover:bg-red-50 px-2.5 py-1.5 rounded-xl font-medium transition cursor-pointer"
                 title="Keluar dari akun GoCan"
+                aria-label="Keluar dari akun GoCan"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Keluar</span>

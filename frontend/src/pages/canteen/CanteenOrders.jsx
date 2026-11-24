@@ -129,7 +129,7 @@ export default function CanteenOrders() {
   return (
     <div className="space-y-6">
       {notificationMsg && (
-        <div className="fixed right-6 top-20 z-50 flex items-center gap-3 rounded-xl border border-blue-500/40 bg-slate-900 px-5 py-3.5 text-white shadow-sm">
+        <div className="mobile-role-toast fixed right-6 top-20 z-50 flex items-center gap-3 rounded-xl border border-blue-500/40 bg-slate-900 px-5 py-3.5 text-white shadow-sm">
           <CheckCircle2 className="h-5 w-5 text-blue-400" />
           <span className="text-xs font-semibold sm:text-sm">{notificationMsg}</span>
           <button
@@ -222,7 +222,7 @@ export default function CanteenOrders() {
                   <Clock3 className="h-3.5 w-3.5" />
                   {formatOrderDate(order?.createdAt)}
                 </p>
-                <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#116aa5]">
+                <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#2152B7]">
                   <MapPin className="h-3.5 w-3.5 shrink-0" />
                   {order?.campusName || canteen?.campusName || 'Kampus belum tercatat'}
                   {(order?.campusCity || canteen?.campusCity) && ` · ${order?.campusCity || canteen?.campusCity}`}

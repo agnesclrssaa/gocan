@@ -19,7 +19,7 @@ export const FloatingCart = () => {
   if (profile?.role !== 'customer') return null;
 
   return (
-    <div className="pointer-events-none fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 z-50 flex flex-col items-end gap-3 sm:right-6">
+    <div className="customer-floating-cart pointer-events-none fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 z-50 flex flex-col items-end gap-3 sm:right-6">
       {totalItems > 0 && cartNotificationPhase !== 'hidden' && (
         <div
           role="status"

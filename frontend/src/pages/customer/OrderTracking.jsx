@@ -19,6 +19,7 @@ import {
   formatRupiah,
   getOrderPresentation,
   getOrderTotal,
+  normalizeOrderStatus,
   ORDER_TONES,
 } from '../../lib/orderStatus';
 
@@ -217,7 +218,6 @@ export const OrderTracking = () => {
     }
 
     const cancellation = {
-      status: 'cancelled',
       cancelReason: selectedReason,
       cancelNote: cancelNote.trim(),
     };
@@ -233,12 +233,17 @@ export const OrderTracking = () => {
 
       if (activeOrderId.current !== orderId) return;
 
-      setOrder((currentOrder) => ({
-        ...currentOrder,
-        ...response.order,
-        ...cancellation,
-        status: 'cancelled',
-      }));
+      if (
+        response?.success !== true ||
+        String(response.order?.id) !== String(orderId) ||
+        normalizeOrderStatus(response.order?.status) !== 'cancelled'
+      ) {
+        throw new Error('Server belum mengonfirmasi pembatalan pesanan.');
+      }
+
+      setOrder((currentOrder) =>
+        currentOrder ? { ...currentOrder, ...response.order } : currentOrder
+      );
 
       setIsCancelModalOpen(false);
       await fetchOrder();
@@ -780,7 +785,7 @@ export const OrderTracking = () => {
         type="button"
         disabled={Boolean(openingChat)}
         onClick={() => openOrderChat(order.courier?.id || order.runner?.id, 'Runner')}
-        className="inline-flex items-center justify-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-[#116aa5] transition hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60"
+        className="inline-flex items-center justify-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-[#2152B7] transition hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60"
       >
         <MessageCircle className="h-4 w-4" />
         {openingChat === 'Runner' ? 'Membuka chat...' : 'Chat dengan Runner'}
@@ -802,7 +807,7 @@ export const OrderTracking = () => {
 
   <Link
     to={`/order-success/${order.id}`}
-    className="mt-4 block rounded-full bg-[#2152B7] px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-blue-800"
+    className="mt-4 block rounded-full bg-[#2152B7] px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-[#193F91]"
   >
     Lihat E-ticket
   </Link>

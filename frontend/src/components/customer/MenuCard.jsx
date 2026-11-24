@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { Plus, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
-import { api } from '../../lib/api';
+import AssetImage from '../common/AssetImage';
 
 const MenuCard = ({ menu, canteen }) => {
   const { addToCart } = useCart();
@@ -10,12 +11,15 @@ const MenuCard = ({ menu, canteen }) => {
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
-
-  const fallbackImage =
-    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   const isAvailable =
     menu.isAvailable !== false && menu.is_available !== false;
+  const canteenName =
+    menu.canteen?.name || menu.canteenName || canteen?.name || 'Kantin GoCan';
+  const canteenId = menu.canteenId || menu.canteen?.id || canteen?.id;
+  const description =
+    menu.description || `${menu.category || 'Menu'} pilihan dari ${canteenName}.`;
 
   const handleAddToCart = () => {
     const success = addToCart(menu, quantity, notes, canteen);
@@ -29,24 +33,12 @@ const MenuCard = ({ menu, canteen }) => {
 
   return (
     <>
-      <article className="
-        customer-card menu-card-hover
-        group flex flex-col overflow-hidden
-        rounded-[26px] border border-slate-200
-        bg-white
-        shadow-[0_8px_25px_rgba(15,23,42,0.04)]
-      ">
-        {/* IMAGE */}
+      <article className="customer-card customer-menu-card menu-card-hover group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div className="relative aspect-[5/4] w-full overflow-hidden bg-slate-100">
-          <img
-            src={api.assetUrl(menu.imageUrl || menu.image_url || fallbackImage)}
+          <AssetImage
+            src={menu.imageUrl || menu.image_url}
             alt={menu.name}
             loading="lazy"
-            onError={(e) => {
-              if (e.currentTarget.src !== fallbackImage) {
-                e.currentTarget.src = fallbackImage;
-              }
-            }}
             className={`
               h-full w-full object-cover
               transition-transform duration-500
@@ -64,27 +56,51 @@ const MenuCard = ({ menu, canteen }) => {
           )}
         </div>
 
-        {/* CONTENT */}
-        <div className="flex flex-1 flex-col justify-between p-4">
+        <div className="customer-menu-content flex min-w-0 flex-1 flex-col p-3 sm:p-4">
+          <div className="customer-menu-details min-w-0">
+            {canteenId ? (
+              <Link
+                to={`/canteen/${encodeURIComponent(canteenId)}`}
+                title={`Dari ${canteenName}`}
+                className="customer-menu-canteen block truncate text-xs font-semibold text-slate-500 hover:text-[#2152B7]"
+              >
+                Dari {canteenName}
+              </Link>
+            ) : (
+              <p
+                title={`Dari ${canteenName}`}
+                className="customer-menu-canteen truncate text-xs font-semibold text-slate-500"
+              >
+                Dari {canteenName}
+              </p>
+            )}
 
-          <div>
-            <p className="text-sm font-medium text-slate-500">
-              {menu.canteen?.name || menu.canteenName || canteen?.name || 'Kantin GoCan'}
-            </p>
-
-            <h3 className="mt-2 text-sm sm:text-base font-extrabold leading-snug text-slate-800 transition-colors duration-200 group-hover:text-[#2152B7]">
+            <h3 className="customer-menu-title mt-1.5 min-h-[2.5rem] line-clamp-2 text-sm font-extrabold leading-snug text-slate-800 transition-colors duration-200 group-hover:text-[#2152B7] sm:text-base">
               {menu.name}
             </h3>
 
-            <p className="mt-3 min-h-[48px] text-sm leading-relaxed text-slate-500">
-              {menu.description || `${menu.category || 'Menu'} pilihan dari ${menu.canteen?.name || menu.canteenName || canteen?.name || 'kantin kampus'}.`}
+            <p
+              title={description}
+              className={`customer-menu-description mt-2 min-h-[3rem] text-xs leading-relaxed text-slate-500 sm:text-sm ${
+                descriptionExpanded ? '' : 'line-clamp-3'
+              }`}
+            >
+              {description}
             </p>
+            {description.length > 72 && (
+              <button
+                type="button"
+                aria-expanded={descriptionExpanded}
+                onClick={() => setDescriptionExpanded((expanded) => !expanded)}
+                className="mt-1 min-h-8 text-left text-xs font-bold text-[#2152B7] hover:underline"
+              >
+                {descriptionExpanded ? 'Lebih sedikit' : 'Baca deskripsi'}
+              </button>
+            )}
           </div>
 
-          {/* PRICE AND BUTTON */}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5">
-
-            <span className="gocan-price text-[17px] font-extrabold">
+          <div className="customer-menu-footer mt-auto flex min-w-0 items-center justify-between gap-1.5 pt-3">
+            <span className="customer-menu-price gocan-price min-w-0 flex-1 whitespace-nowrap text-xs font-extrabold sm:text-[17px]">
               Rp {Number(menu.price).toLocaleString('id-ID')}
             </span>
 
@@ -92,22 +108,16 @@ const MenuCard = ({ menu, canteen }) => {
               <button
                 type="button"
                 onClick={() => setShowNotesModal(true)}
-                className="
-                  flex items-center gap-2 rounded-2xl
-                  px-4 py-2.5 text-sm sm:text-base font-extrabold text-black
-                  transition-all duration-200
-                  hover:scale-105 active:scale-95
-                  bg-[#F7BD00] hover:bg-[#E5AE00]
-                "
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-1 rounded-xl bg-[#ffd612] px-2 text-[11px] font-extrabold text-slate-900 transition-colors hover:bg-[#f2c900] active:scale-95 sm:gap-2 sm:px-4 sm:text-sm"
               >
-                <Plus size={16} strokeWidth={3} />
+                <Plus size={15} strokeWidth={3} aria-hidden="true" />
                 Tambah
               </button>
             ) : (
               <button
                 type="button"
                 disabled
-                className="rounded-2xl bg-slate-400 px-4 py-2.5 text-base font-bold text-white cursor-not-allowed"
+                className="inline-flex h-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-slate-400 px-3 text-xs font-bold text-white sm:px-4 sm:text-sm"
               >
                 Habis
               </button>
@@ -118,8 +128,8 @@ const MenuCard = ({ menu, canteen }) => {
 
       {/* ADD TO CART MODAL */}
       {showNotesModal && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-          <div className="customer-card w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <div className="customer-add-menu-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <div className="customer-add-menu-dialog customer-card w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
 
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-extrabold text-slate-900">
@@ -136,8 +146,8 @@ const MenuCard = ({ menu, canteen }) => {
             </div>
 
             <div className="mt-4 flex gap-4">
-              <img
-                src={menu.imageUrl || fallbackImage}
+              <AssetImage
+                src={menu.imageUrl || menu.image_url}
                 alt={menu.name}
                 className="h-20 w-20 rounded-xl object-cover"
               />

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/common/BrandLogo';
 import './MerchantSidebarDecor.css';
+import './RoleMobile.css';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { withCanteenOwnership } from '../lib/canteenCampus';
@@ -76,6 +77,17 @@ export default function CanteenLayout() {
     };
   }, [refreshCanteen]);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setMobileMenuOpen(false);
+    };
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [mobileMenuOpen]);
+
   const handleStoreStatusChange = async () => {
     if (updatingStoreStatus) return;
     setUpdatingStoreStatus(true);
@@ -134,15 +146,15 @@ export default function CanteenLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800 font-sans selection:bg-blue-200 selection:text-blue-950">
+    <div className="canteen-layout min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800 font-sans selection:bg-blue-200 selection:text-blue-950">
 
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-[#123B72] text-white px-4 py-3 flex items-center justify-between border-b border-[#0D2C55] sticky top-0 z-50">
-        <div className="flex items-center gap-2">
-          <BrandLogo className="h-8 w-8 rounded-lg" />
-          <div>
+      <div className="md:hidden h-16 shrink-0 bg-[#123B72] text-white px-4 flex items-center justify-between border-b border-[#0D2C55] sticky top-0 z-50">
+        <div className="flex min-w-0 items-center gap-2">
+          <BrandLogo className="h-10 w-10 shrink-0 rounded-xl object-contain md:h-9 md:w-9" />
+          <div className="min-w-0">
             <h1 className="text-sm font-bold leading-tight">GoCan Merchant</h1>
-            <p className="max-w-48 truncate text-[10px] text-blue-200">
+            <p className="max-w-[42vw] truncate text-[10px] text-blue-200">
               {canteen?.campusName
                 ? `${canteen.campusName} · ${canteen.campusCity}`
                 : 'Kampus belum ditetapkan'}
@@ -153,7 +165,7 @@ export default function CanteenLayout() {
           <button
             onClick={handleStoreStatusChange}
             disabled={canteenLoading || updatingStoreStatus}
-            className={`px-2 py-1 rounded-full text-[10px] font-bold border transition ${isOpen
+            className={`min-h-10 shrink-0 px-2 py-1 rounded-full text-[10px] font-bold border transition ${isOpen
                 ? 'bg-blue-500/20 text-blue-100 border-blue-400/40'
                 : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
               } disabled:cursor-wait disabled:opacity-60`}
@@ -161,8 +173,12 @@ export default function CanteenLayout() {
             {isOpen ? '🟢 BUKA' : '🔴 TUTUP'}
           </button>
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 rounded-lg bg-blue-800 hover:bg-blue-700 text-blue-100"
+            aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="canteen-mobile-navigation"
+            className="role-mobile-menu-toggle shrink-0 border border-white/15 bg-blue-950/40 text-white transition hover:bg-blue-900"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -170,8 +186,18 @@ export default function CanteenLayout() {
       </div>
 
       {/* Merchant Sidebar (Desktop + Mobile Drawer) */}
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Tutup menu"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-[35] bg-slate-950/45 md:hidden"
+        />
+      )}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-40 isolate overflow-hidden h-full md:h-screen w-64 md:w-72 bg-[#123B72] text-white flex flex-col justify-between border-r border-[#0D2C55] transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        id="canteen-mobile-navigation"
+        aria-label="Navigasi Mitra Kantin"
+        className={`role-mobile-drawer fixed md:sticky left-0 md:top-0 z-40 isolate overflow-x-hidden overflow-y-auto overscroll-contain w-64 md:w-72 bg-[#123B72] text-white flex flex-col justify-between border-r border-[#0D2C55] rounded-r-2xl md:rounded-r-none ${mobileMenuOpen ? 'role-mobile-drawer-open visible translate-x-0' : 'invisible -translate-x-full md:visible md:translate-x-0'
           }`}
       >
         {/* Merchant Sidebar Decorations */}
@@ -202,7 +228,7 @@ export default function CanteenLayout() {
           <div>
             <div className="flex items-center justify-between">
               <Link to="/" className="flex items-center gap-2 group">
-                <BrandLogo className="h-9 w-9 rounded-xl" />
+                <BrandLogo className="h-10 w-10 shrink-0 rounded-xl object-contain md:h-9 md:w-9" />
                 <div>
                   <span className="text-lg font-black tracking-tight text-[#ED2028]">
                     <span className="text-[#ED2028]">Go</span>
@@ -255,7 +281,7 @@ export default function CanteenLayout() {
           </div>
 
           {/* Navigation Menu */}
-          <nav className="flex flex-col gap-1.5">
+          <nav className="flex flex-col gap-2 md:gap-1.5">
             <p className="text-[11px] font-bold text-blue-200 uppercase tracking-wider px-3 mb-1">
               Menu Utama
             </p>
@@ -268,8 +294,8 @@ export default function CanteenLayout() {
                   end={item.end}
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition group ${isActive
-                      ? 'bg-blue-500 text-white font-bold'
+                    `flex items-center justify-between px-3 py-3 md:px-3.5 md:py-2.5 rounded-xl text-sm font-semibold md:font-medium transition group ${isActive
+                      ? 'bg-blue-500 text-white font-bold md:font-bold'
                       : 'text-blue-100 hover:bg-blue-900 hover:text-white'
                     }`
                   }
@@ -278,7 +304,7 @@ export default function CanteenLayout() {
                     <>
                       <div className="flex items-center gap-3">
                         <Icon
-                          className={`w-4 h-4 ${isActive ? 'text-white' : 'text-blue-200 group-hover:text-white'
+                          className={`h-5 w-5 shrink-0 md:h-4 md:w-4 ${isActive ? 'text-white' : 'text-blue-200 group-hover:text-white'
                             }`}
                         />
                         <span>{item.label}</span>
@@ -302,10 +328,10 @@ export default function CanteenLayout() {
         </div>
 
         {/* Footer Actions */}
-        <div className="relative z-10 p-4 border-t border-blue-800 bg-[#102F5A] flex flex-col gap-2">
+        <div className="relative z-10 flex flex-col gap-2 border-t border-blue-800 bg-[#102F5A] p-4">
           <Link
             to="/"
-            className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-blue-200 hover:bg-blue-900 hover:text-white transition"
+            className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold text-blue-200 transition hover:bg-blue-900 hover:text-white md:rounded-lg md:py-2 md:font-normal"
           >
             <span className="flex items-center gap-2">
               <ExternalLink className="w-3.5 h-3.5" />
@@ -315,14 +341,14 @@ export default function CanteenLayout() {
           </Link>
           <Link
             to="/profile"
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-blue-200 hover:bg-blue-900 hover:text-white transition"
+            className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold text-blue-200 transition hover:bg-blue-900 hover:text-white md:rounded-lg md:py-2 md:font-normal"
           >
             Edit Profil Akun
           </Link>
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-rose-300 hover:bg-rose-950/50 hover:text-rose-200 transition text-left cursor-pointer"
+            className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold text-rose-300 transition hover:bg-rose-950/50 hover:text-rose-200 cursor-pointer md:rounded-lg md:py-2 md:font-normal"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Keluar dari Akun Kantin</span>

@@ -29,7 +29,7 @@
   height: 285px;
   right: -110px;
   bottom: -125px;
-  background: #2152b7;
+  background: #2152B7;
   animation: blueFloat 7s ease-in-out infinite;
 }
 
@@ -74,7 +74,7 @@
 .splash-arc-bottom {
   left: -120px;
   bottom: -125px;
-  border: 2px solid rgba(33,82,183,.22);
+  border: 2px solid rgba(33, 82, 183,.22);
 }
 
 /* STARS */
@@ -103,7 +103,7 @@
 }
 
 .star-blue {
-  background: #2152b7;
+  background: #2152B7;
 }
 
 .star-red {
@@ -194,7 +194,7 @@
 }
 
 .dot-blue {
-  background: #2152b7;
+  background: #2152B7;
 }
 
 .dot-red {

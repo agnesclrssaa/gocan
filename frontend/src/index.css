@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #F26522;
-  --color-primary-hover: #EA580C;
-  --color-primary-dark: #C2410C;
-  --color-primary-light: #FFEDD5;
+  --color-primary: #2152B7;
+  --color-primary-hover: #193F91;
+  --color-primary-dark: #163D8F;
+  --color-primary-light: #EEF6FB;
   --color-navy: #14366A;
   --color-navy-light: #1A365D;
   --color-status-success: #10B981;
@@ -137,7 +137,7 @@
 }
 
 .home-blob-blue {
-  background: #2D63D2;
+  background: #2152B7;
   opacity: 0.23;
 }
 
@@ -319,7 +319,7 @@
 }
 
 .home-ring-red { border-color: #F52B33; }
-.home-ring-blue { border-color: #2D63D2; }
+.home-ring-blue { border-color: #2152B7; }
 .home-ring-yellow { border-color: #FFC928; }
 
 .home-ring.home-decor-at-8,
@@ -361,7 +361,7 @@
 }
 
 .home-arc-red { border-color: #F52B33; }
-.home-arc-blue { border-color: #2D63D2; }
+.home-arc-blue { border-color: #2152B7; }
 .home-arc-yellow { border-color: #FFC928; }
 
 .home-arc.home-decor-at-12,
@@ -385,7 +385,7 @@
 }
 
 .home-star-yellow { background: #FFC928; }
-.home-star-blue { background: #2D63D2; }
+.home-star-blue { background: #2152B7; }
 .home-star-red { background: #F52B33; }
 
 .home-star.home-decor-at-6,
@@ -438,7 +438,7 @@
 
 .home-sparkle-red { color: #F52B33; }
 .home-sparkle-yellow { color: #FFC928; }
-.home-sparkle-blue { color: #2D63D2; }
+.home-sparkle-blue { color: #2152B7; }
 
 .home-sparkle.home-decor-at-14,
 .home-sparkle.home-decor-at-58,
@@ -466,7 +466,7 @@
 }
 
 .home-dot-yellow { background: #FFC928; }
-.home-dot-blue { background: #2D63D2; }
+.home-dot-blue { background: #2152B7; }
 .home-dot-red { background: #F52B33; }
 
 .home-dot.home-decor-at-4,

@@ -308,7 +308,7 @@ export default function Register() {
             )}
 
             {formData.role === 'canteen' && (
-              <section className="space-y-2 rounded-xl border border-[#116aa5]/20 bg-[#fbf7f1] p-4">
+              <section className="space-y-2 rounded-xl border border-[#2152B7]/20 bg-[#fbf7f1] p-4">
                 <label htmlFor="canteen-campus" className="block text-sm font-bold text-slate-800">
                   Kampus Mitra Kantin
                 </label>
@@ -318,7 +318,7 @@ export default function Register() {
                   disabled={campusesLoading || activeCampuses.length === 0}
                   value={formData.campusId}
                   onChange={(event) => update('campusId', event.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm text-slate-800 outline-none focus:border-[#116aa5] focus:ring-2 focus:ring-[#116aa5]/20"
+                  className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm text-slate-800 outline-none focus:border-[#2152B7] focus:ring-2 focus:ring-[#2152B7]/20"
                 >
                   <option value="">{campusesLoading ? 'Memuat kampus...' : 'Pilih kampus aktif'}</option>
                   {activeCampuses.map((campus) => {
@@ -331,7 +331,7 @@ export default function Register() {
                   })}
                 </select>
                 {activeCampuses.length === 0 && (
-                  <p role="status" className="text-xs text-[#116aa5]">
+                  <p role="status" className="text-xs text-[#2152B7]">
                     Belum ada kampus aktif yang tersedia untuk pendaftaran.
                   </p>
                 )}
@@ -361,7 +361,7 @@ export default function Register() {
                     })}
                   </select>
                   {activeCampuses.length === 0 && (
-                    <span role="status" className="mt-1 block font-normal text-[#116aa5]">
+                    <span role="status" className="mt-1 block font-normal text-[#2152B7]">
                       Belum ada kampus aktif yang tersedia untuk pendaftaran.
                     </span>
                   )}

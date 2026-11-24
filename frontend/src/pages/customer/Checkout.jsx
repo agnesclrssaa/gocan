@@ -660,8 +660,8 @@ navigate(`/order-success/${confirmedOrderId}`, {
               </h2>
 
               <div className="space-y-3 text-sm text-slate-600">
-                <div className="rounded-xl border border-[#116aa5]/15 bg-[#fbf7f1] p-3">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#116aa5]">Kampus</p>
+                <div className="rounded-xl border border-[#2152B7]/15 bg-[#fbf7f1] p-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#2152B7]">Kampus</p>
                   <p className="mt-1 font-bold text-slate-800">{selectedCampus?.name || 'Belum dipilih'}</p>
                   {selectedCampus?.city && <p className="mt-0.5 text-xs text-slate-500">{selectedCampus.city}</p>}
                 </div>

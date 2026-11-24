@@ -71,7 +71,7 @@ const OrderCard = ({ order, preview, active = false, campusName }) => {
             >
               {presentation.label}
             </span>
-            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#116aa5]/15 bg-[#fbf7f1] px-2.5 py-1 text-xs font-semibold text-[#116aa5]">
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#2152B7]/15 bg-[#fbf7f1] px-2.5 py-1 text-xs font-semibold text-[#2152B7]">
               <Building2 className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">{campusName}</span>
             </span>
@@ -163,7 +163,7 @@ const OrderCard = ({ order, preview, active = false, campusName }) => {
                 type="button"
                 disabled={Boolean(openingChat)}
                 onClick={() => openChat(order.courier?.id || order.runner?.id, 'Runner')}
-                className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-[#116aa5] transition hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-[#2152B7] transition hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60"
               >
                 <MessageCircle className="h-3.5 w-3.5" />
                 {openingChat === 'Runner' ? 'Membuka...' : 'Chat Runner'}
@@ -364,7 +364,7 @@ export const History = () => {
               type="button"
               disabled={refreshing}
               onClick={handleRefresh}
-              className="inline-flex items-center gap-2 rounded-full bg-[#2152B7] px-4 py-2 text-xs font-bold text-white hover:bg-blue-800 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full bg-[#2152B7] px-4 py-2 text-xs font-bold text-white hover:bg-[#193F91] disabled:opacity-50"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 ${
@@ -394,7 +394,7 @@ export const History = () => {
             value={campusFilter}
             onChange={(event) => setCampusFilter(event.target.value)}
             aria-label="Filter riwayat berdasarkan kampus"
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-[#116aa5] focus:ring-2 focus:ring-[#116aa5]/20"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-[#2152B7] focus:ring-2 focus:ring-[#2152B7]/20"
           >
             <option value="all">Semua kampus</option>
             {campusOptions.map(([campusId, name]) => (

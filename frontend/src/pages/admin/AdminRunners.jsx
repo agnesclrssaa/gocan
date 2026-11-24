@@ -219,9 +219,9 @@ export default function AdminRunners() {
                       <CreditCard className="h-4 w-4" />Data Pencairan Dana
                     </h3>
                     <dl className="mt-3 space-y-2 text-sm">
-                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Bank / E-Wallet</dt><dd className="text-right font-bold text-slate-900">{runner?.bankName || '—'}</dd></div>
-                      <div className="flex justify-between gap-3"><dt className="text-slate-500">No. Rekening</dt><dd className="break-all text-right font-bold text-slate-900">{runner?.accountNumber || '—'}</dd></div>
-                      <div className="flex justify-between gap-3"><dt className="text-slate-500">Nama Pemilik</dt><dd className="text-right font-bold text-slate-900">{runner?.accountHolderName || '—'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="shrink-0 text-slate-500">Bank / E-Wallet</dt><dd className="min-w-0 break-words text-right font-bold text-slate-900">{runner?.bankName || '—'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="shrink-0 text-slate-500">No. Rekening</dt><dd className="min-w-0 break-all text-right font-bold text-slate-900">{runner?.accountNumber || '—'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="shrink-0 text-slate-500">Nama Pemilik</dt><dd className="min-w-0 break-words text-right font-bold text-slate-900">{runner?.accountHolderName || '—'}</dd></div>
                     </dl>
                     {holderMismatch && (
                       <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs font-semibold text-amber-900">

@@ -35,7 +35,7 @@
 }
 
 .welcome-brand h2 span:first-child {
-  color: #2152b7;
+  color: #2152B7;
 }
 
 .welcome-brand h2 span:last-child {
@@ -60,7 +60,7 @@
 }
 
 .welcome-blue {
-  color: #2152b7;
+  color: #2152B7;
 }
 
 .welcome-red {
@@ -78,7 +78,7 @@
   padding: 14px 32px;
   border: none;
   border-radius: 22px;
-  background: #2152b7;
+  background: #2152B7;
   color: white;
   font-size: 16px;
   font-weight: 900;
@@ -88,7 +88,7 @@
 
 .welcome-button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(33,82,183,.2);
+  box-shadow: 0 12px 25px rgba(33, 82, 183,.2);
 }
 
 /* ANIMATED STARS */
@@ -127,7 +127,7 @@
   top: 28%;
   width: 27px;
   height: 27px;
-  background: #2152b7;
+  background: #2152B7;
   animation-delay: .5s,1.5s;
 }
 
@@ -156,7 +156,7 @@
   bottom: 27%;
   width: 19px;
   height: 19px;
-  background: #2152b7;
+  background: #2152B7;
   animation-delay: 1s,2.2s;
 }
 
@@ -183,7 +183,7 @@
   bottom: 16%;
   width: 12px;
   height: 12px;
-  background: #2152b7;
+  background: #2152B7;
   animation-delay: 1.4s,2.1s;
 }
 
@@ -226,7 +226,7 @@
 .hd4 {
   right: 11%;
   top: 51%;
-  background: #2152b7;
+  background: #2152B7;
   animation-delay: 1.35s,2.2s;
 }
 

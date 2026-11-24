@@ -266,7 +266,7 @@ export default function CanteenMenuSales() {
   return (
     <div className="space-y-6">
       {toastMessage && (
-        <div role="status" className="fixed right-6 top-20 z-50 flex items-center gap-3 rounded-xl bg-[#0A2E6E] px-5 py-3 text-white shadow-lg">
+        <div role="status" className="mobile-role-toast fixed right-6 top-20 z-50 flex items-center gap-3 rounded-xl bg-[#0A2E6E] px-5 py-3 text-white shadow-lg">
           <CheckCircle className="h-5 w-5 text-blue-300" />
           <span className="text-xs font-semibold sm:text-sm">{toastMessage}</span>
           <button type="button" onClick={() => setToastMessage(null)} aria-label="Tutup notifikasi" className="ml-2 p-1 text-white/70 hover:text-white">
@@ -392,7 +392,7 @@ export default function CanteenMenuSales() {
         ) : filteredItems.length === 0 ? (
           <p className="merchant-card-glow rounded-xl border p-8 text-center text-sm text-slate-500">Tidak ada menu yang cocok dengan pencarian.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="canteen-menu-grid grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {displayedItems.map((item) => (
               <article key={item.id} className="merchant-card-glow overflow-hidden rounded-xl border border-slate-200">
                 <div className="h-48 w-full bg-slate-100">
@@ -411,7 +411,7 @@ export default function CanteenMenuSales() {
                     <button
                       type="button"
                       onClick={() => toggleAvailability(item)}
-                      className="text-xs font-medium text-[#2152B7] hover:text-[#163D8F]"
+                      className="text-xs font-medium text-[#2152B7] hover:text-[#193F91]"
                     >
                       Ubah Stok
                     </button>
@@ -444,7 +444,7 @@ export default function CanteenMenuSales() {
           <button
             type="button"
             onClick={() => setShowAllMenus((current) => !current)}
-            className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
+            className="mx-auto mt-4 block rounded-full bg-[#2152B7] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-[#193F91] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2152B7]"
             aria-expanded={showAllMenus}
           >
             {showAllMenus ? 'Lihat Lebih Sedikit' : 'Lihat Semua'}
@@ -466,7 +466,7 @@ export default function CanteenMenuSales() {
                 Nama Menu:
                 <input type="text" required value={menuForm.name} onChange={(event) => setMenuForm({ ...menuForm, name: event.target.value })} placeholder="Contoh: Jus Mangga Brazil" className="mt-1 w-full rounded-lg border border-slate-200 p-2.5 font-normal" />
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block font-bold text-slate-700">
                   Harga (Rp):
                   <input type="text" required value={menuForm.price} onChange={(event) => setMenuForm({ ...menuForm, price: event.target.value })} placeholder="Contoh: 10000" className="mt-1 w-full rounded-lg border border-slate-200 p-2.5 font-normal" />

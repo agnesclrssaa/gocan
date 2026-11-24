@@ -116,10 +116,204 @@
   50% { opacity: 1; transform: translateY(-7px) rotate(24deg) scale(1.1); }
 }
 
+.customer-best-seller-track {
+  display: flex;
+  width: 100%;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.125rem 0.25rem 0.625rem;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 0.25rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: rgb(33 82 183 / 0.45) transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.customer-best-seller-track > .customer-menu-card {
+  flex: 0 0 clamp(15rem, 64vw, 18.75rem);
+  scroll-snap-align: start;
+}
+
+.customer-best-seller-track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.customer-best-seller-track::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(33 82 183 / 0.45);
+}
+
+.customer-best-seller-track::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.customer-best-seller-track:focus-visible {
+  outline: 2px solid #2152B7;
+  outline-offset: 3px;
+  border-radius: 1rem;
+}
+
+.customer-best-seller-empty {
+  flex: 0 0 100%;
+}
+
+@media (min-width: 640px) {
+  .customer-best-seller-track {
+    gap: 1rem;
+  }
+
+  .customer-best-seller-track > .customer-menu-card {
+    flex-basis: clamp(18rem, 36vw, 24rem);
+  }
+}
+
 @media (max-width: 639px) {
+  .customer-best-seller-track {
+    scrollbar-width: none;
+  }
+
+  .customer-best-seller-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .customer-home-page > main {
+    padding-top: 0.875rem;
+  }
+
+  .customer-home-page > main > :not(:first-child) {
+    margin-top: 1rem;
+  }
+
+  .customer-search-bar {
+    position: relative;
+    z-index: 60;
+    gap: 0.5rem;
+    padding: 0.625rem;
+  }
+
+  .customer-search-bar > button {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 2.75rem;
+  }
+
+  .customer-search-bar input {
+    font-size: 1rem;
+  }
+
+  .customer-category-list {
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-inline: contain;
+  }
+
+  .customer-category-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .customer-category-list > button {
+    min-height: 2.75rem;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .customer-menu-grid {
+    gap: 0.75rem;
+  }
+
+  .customer-menu-card {
+    min-width: 0;
+    border-radius: 1rem;
+  }
+
+  .customer-menu-content {
+    min-width: 0;
+    padding: 0.75rem;
+  }
+
+  .customer-menu-canteen {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .customer-menu-title {
+    min-height: 2.5rem;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .customer-menu-description {
+    min-height: 3rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .customer-menu-content > div:last-child {
+    margin-top: auto;
+    padding-top: 0.75rem;
+  }
+
+  .customer-menu-price {
+    font-size: clamp(0.6875rem, 3vw, 0.875rem);
+  }
+
+  .customer-menu-sold-badge {
+    padding-inline: 0.1875rem;
+    font-size: clamp(0.53125rem, 2.2vw, 0.625rem);
+  }
+
+  .customer-menu-sold-footer .customer-menu-price {
+    flex: 1 0 max-content;
+  }
+
+  .customer-menu-sold-footer .customer-menu-sold-badge {
+    margin-left: auto;
+  }
+
+  .customer-menu-content > div:last-child > button {
+    min-height: 2.5rem;
+    gap: 0.25rem;
+    padding-inline: 0.5rem;
+    font-size: 0.6875rem;
+  }
+
+  .customer-add-menu-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .customer-add-menu-dialog {
+    max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem;
+  }
+
   .promo-banner {
     min-height: 0;
+    padding: 1rem;
     background-position: center bottom;
+  }
+
+  .promo-banner-copy {
+    text-shadow: 0 1px 5px rgb(0 0 0 / 0.2);
+  }
+
+  .promo-banner-copy h1 {
+    font-size: clamp(1.25rem, 6vw, 1.75rem);
+  }
+
+  .promo-banner-copy > p {
+    font-size: 0.75rem;
   }
 
   .promo-banner-copy {
@@ -129,8 +323,13 @@
 
   .promo-banner-art {
     width: min(100%, 430px);
-    height: clamp(124px, 38vw, 171px);
+    height: clamp(112px, 34vw, 150px);
     margin-inline: auto;
+  }
+
+  .promo-food-image {
+    width: min(100%, 340px);
+    height: 100%;
   }
 
   .explore-canteens-banner {
@@ -139,9 +338,26 @@
 
   .explore-canteens-art {
     width: min(100%, 260px);
-    height: 220px;
+    height: clamp(150px, 48vw, 200px);
     margin-right: 0;
     margin-inline: auto;
+  }
+
+  .explore-canteens-mascot {
+    width: min(100%, 220px);
+    height: 100%;
+  }
+}
+
+@media (min-width: 360px) and (max-width: 639px) {
+  .customer-menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 359px) {
+  .customer-menu-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

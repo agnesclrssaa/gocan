@@ -3,7 +3,6 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
 
 export const SELECTED_CAMPUS_STORAGE_KEY = 'gocan_selected_campus';
-export const DEFAULT_CAMPUS_ID = 'CAMPUS001';
 
 const CampusContext = createContext(null);
 

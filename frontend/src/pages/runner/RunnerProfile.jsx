@@ -157,15 +157,15 @@ export default function RunnerProfile() {
           </div>
         )}
 
-        <section className="rounded-2xl border border-[#116aa5]/20 bg-[#fbf7f1] p-5 shadow-sm">
+        <section className="rounded-2xl border border-[#2152B7]/20 bg-[#fbf7f1] p-5 shadow-sm">
           <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800">
-            <Building className="h-4 w-4 text-[#116aa5]" />
+            <Building className="h-4 w-4 text-[#2152B7]" />
             Kampus Terdaftar
           </h2>
           <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-xs font-semibold text-slate-500">Nama Kampus</dt>
-              <dd className="mt-1 font-bold text-[#116aa5]">{campusInfo.name || 'Belum ditetapkan'}</dd>
+              <dd className="mt-1 font-bold text-[#2152B7]">{campusInfo.name || 'Belum ditetapkan'}</dd>
             </div>
             <div>
               <dt className="text-xs font-semibold text-slate-500">Kota Kampus</dt>

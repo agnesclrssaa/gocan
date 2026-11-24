@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Star, ArrowRight } from 'lucide-react';
+import AssetImage from '../common/AssetImage';
 
 export const CanteenCard = ({ canteen }) => {
-  const fallbackImage =
-    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80';
-
   return (
     <Link
       to={`/canteen/${canteen.id}`}
@@ -12,14 +10,11 @@ export const CanteenCard = ({ canteen }) => {
     >
       {/* Canteen Image */}
       <div className="relative h-44 w-full overflow-hidden bg-gray-100">
-        <img
-          src={canteen.imageUrl || canteen.image_url || fallbackImage}
+        <AssetImage
+          src={canteen.imageUrl || canteen.image_url}
           alt={canteen.name}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src = fallbackImage;
-          }}
         />
         {/* Rating Badge: Warm Gold UKWMS */}
         <div className="absolute top-3 right-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold text-amber-700 shadow-sm backdrop-blur-sm flex items-center gap-1 border border-amber-200">

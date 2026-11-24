@@ -32,7 +32,7 @@ function OrderCard({ order, actionLabel, onAction, busy, disabled, readOnly = fa
           <p className="gocan-price mt-1 text-lg font-extrabold">
             {formatRupiah(order.totalPrice)}
           </p>
-            <p className="mt-1 text-xs font-semibold text-[#116aa5]">
+            <p className="mt-1 text-xs font-semibold text-[#2152B7]">
               Kampus: {order.campusName || 'Tidak diketahui'}{order.campusCity ? ` · ${order.campusCity}` : ''}
             </p>
         </div>
@@ -197,7 +197,7 @@ export default function CourierDashboard() {
         <section aria-label="Statistik pesanan kampus" className="grid gap-3 sm:grid-cols-3">
           {[
             { label: 'Pesanan tersedia', count: readyOrders.length, tone: 'text-emerald-700' },
-            { label: 'Pesanan berjalan', count: deliveringOrders.length, tone: 'text-[#116aa5]' },
+            { label: 'Pesanan berjalan', count: deliveringOrders.length, tone: 'text-[#2152B7]' },
             { label: 'Pesanan selesai', count: completedOrders.length, tone: 'text-slate-700' },
           ].map((stat) => (
             <div key={stat.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -276,7 +276,7 @@ export default function CourierDashboard() {
 
             <section aria-labelledby="completed-orders-heading" className="space-y-4">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-[#116aa5]" />
+                <CheckCircle2 className="h-5 w-5 text-[#2152B7]" />
                 <h2 id="completed-orders-heading" className="text-lg font-extrabold text-slate-900">
                   Riwayat Pesanan Selesai
                 </h2>

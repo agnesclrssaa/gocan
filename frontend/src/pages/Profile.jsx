@@ -4,6 +4,7 @@ import { AlertCircle, ArrowLeft, CheckCircle, ImageUp, UserRound } from 'lucide-
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { getRunnerCampusInfo } from '../lib/runnerCampus';
+import Navbar from '../components/common/Navbar';
 
 const emptyForm = {
   name: '',
@@ -182,7 +183,17 @@ export default function Profile() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-800 sm:px-6">
+    <>
+      {profile?.role === 'customer' && (
+        <div className="md:hidden">
+          <Navbar />
+        </div>
+      )}
+    <main
+      className={`account-profile-page min-h-screen bg-slate-100 px-4 py-8 text-slate-800 sm:px-6 ${
+        profile?.role === 'customer' ? 'customer-account-profile-page' : ''
+      }`}
+    >
       <div className="mx-auto max-w-2xl space-y-5">
         <Link
           to={roleHome[profile?.role] || '/'}
@@ -293,12 +304,12 @@ export default function Profile() {
           )}
 
           {isRunner && (
-            <section className="rounded-xl border border-[#116aa5]/20 bg-[#fbf7f1] p-4">
+            <section className="rounded-xl border border-[#2152B7]/20 bg-[#fbf7f1] p-4">
               <h2 className="text-sm font-bold text-slate-800">Kampus Runner</h2>
               <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
                 <div>
                   <dt className="text-xs font-semibold text-slate-500">Nama Kampus</dt>
-                  <dd className="mt-1 font-bold text-[#116aa5]">{runnerCampus.name || 'Belum ditetapkan'}</dd>
+                  <dd className="mt-1 font-bold text-[#2152B7]">{runnerCampus.name || 'Belum ditetapkan'}</dd>
                 </div>
                 <div>
                   <dt className="text-xs font-semibold text-slate-500">Kota Kampus</dt>
@@ -359,5 +370,6 @@ export default function Profile() {
         </form>
       </div>
     </main>
+    </>
   );
 }

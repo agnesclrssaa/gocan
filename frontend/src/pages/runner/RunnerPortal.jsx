@@ -45,7 +45,13 @@ export default function RunnerPortal() {
     );
   }
 
-  if (isProfilePage) return <RunnerProfile />;
+  if (isProfilePage) {
+    return (
+      <RunnerLayout>
+        <RunnerProfile />
+      </RunnerLayout>
+    );
+  }
 
   if (status !== 'approved') {
     const rejected = status === 'rejected';
