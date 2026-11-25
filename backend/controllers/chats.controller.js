@@ -14,6 +14,69 @@ const conversationInclude = {
   messages: { take: 1, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] },
 };
 
+const getTimestamp = (value) => {
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
+
+const getConversationActivity = (conversation) =>
+  Math.max(
+    getTimestamp(conversation.lastMessageAt),
+    getTimestamp(conversation.updatedAt),
+  );
+
+const deduplicateConversations = (conversations) => {
+  const grouped = new Map();
+
+  for (const conversation of conversations) {
+    const partnerId = conversation.partner.id;
+    const activityAt = getConversationActivity(conversation);
+    const latestMessage = conversation.lastMessage
+      ? conversation
+      : null;
+    const existing = grouped.get(partnerId);
+    if (!existing) {
+      grouped.set(partnerId, {
+        conversation,
+        unreadCount: conversation.unreadCount,
+        activityAt,
+        latestMessage,
+      });
+      continue;
+    }
+
+    const existingMessageAt = existing.latestMessage
+      ? getTimestamp(existing.latestMessage.lastMessageAt)
+      : 0;
+    const currentMessageAt = latestMessage
+      ? getTimestamp(latestMessage.lastMessageAt)
+      : 0;
+    grouped.set(partnerId, {
+      conversation: activityAt > existing.activityAt
+        ? conversation
+        : existing.conversation,
+      unreadCount: existing.unreadCount + conversation.unreadCount,
+      activityAt: Math.max(activityAt, existing.activityAt),
+      latestMessage: currentMessageAt > existingMessageAt
+        ? latestMessage
+        : existing.latestMessage,
+    });
+  }
+
+  return Array.from(grouped.values())
+    .sort((left, right) => right.activityAt - left.activityAt)
+    .map(({ conversation, unreadCount, latestMessage }) => ({
+      ...conversation,
+      ...(latestMessage
+        ? {
+            lastMessage: latestMessage.lastMessage,
+            lastMessageAt: latestMessage.lastMessageAt,
+          }
+        : {}),
+      unreadCount,
+    }));
+};
+
 const roleLabel = (role) => {
   if (role === 'customer') return 'Customer';
   if (role === 'canteen' || role === 'canteen_staff') return 'Kantin';
@@ -27,7 +90,7 @@ const getConversationForUser = async (conversationId, userId) =>
       id: conversationId,
       OR: [{ participantOneId: userId }, { participantTwoId: userId }],
     },
-    select: { id: true },
+    select: { id: true, participantOneId: true, participantTwoId: true },
   });
 
 const serializeConversation = (conversation, userId, unreadCount) => {
@@ -96,7 +159,7 @@ const listChats = async (req, res, next) => {
       }),
     );
 
-    return res.json(result);
+    return res.json(deduplicateConversations(result));
   } catch (error) {
     return next(error);
   }
@@ -180,20 +243,30 @@ const createChat = async (req, res, next) => {
 
     const participantOneId = Math.min(currentUser.id, targetUser.id);
     const participantTwoId = Math.max(currentUser.id, targetUser.id);
-    const key = `${participantOneId}:${participantTwoId}:${orderId ?? 'direct'}`;
+    const key = `${participantOneId}:${participantTwoId}`;
     const where = {
-      participantOneId,
-      participantTwoId,
-      orderId,
+      OR: [
+        { participantOneId: currentUser.id, participantTwoId: targetUser.id },
+        { participantOneId: targetUser.id, participantTwoId: currentUser.id },
+      ],
     };
 
     let conversation = await prisma.conversation.findFirst({
       where,
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
       include: conversationInclude,
     });
     let created = false;
 
-    if (!conversation) {
+    if (conversation) {
+      if (orderId !== null) {
+        conversation = await prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { orderId, updatedAt: new Date() },
+          include: conversationInclude,
+        });
+      }
+    } else {
       try {
         conversation = await prisma.conversation.create({
           data: { key, participantOneId, participantTwoId, orderId },
@@ -204,9 +277,17 @@ const createChat = async (req, res, next) => {
         if (error.code !== 'P2002') throw error;
         conversation = await prisma.conversation.findFirst({
           where,
+          orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
           include: conversationInclude,
         });
         if (!conversation) throw error;
+        if (orderId !== null) {
+          conversation = await prisma.conversation.update({
+            where: { id: conversation.id },
+            data: { orderId, updatedAt: new Date() },
+            include: conversationInclude,
+          });
+        }
       }
     }
 
@@ -231,16 +312,33 @@ const listMessages = async (req, res, next) => {
     }
 
     const messages = await prisma.$transaction(async (transaction) => {
+      const conversations = await transaction.conversation.findMany({
+        where: {
+          OR: [
+            {
+              participantOneId: conversation.participantOneId,
+              participantTwoId: conversation.participantTwoId,
+            },
+            {
+              participantOneId: conversation.participantTwoId,
+              participantTwoId: conversation.participantOneId,
+            },
+          ],
+        },
+        select: { id: true },
+      });
+      const conversationIds = conversations.map((item) => item.id);
+
       await transaction.message.updateMany({
         where: {
-          conversationId,
+          conversationId: { in: conversationIds },
           senderId: { not: req.auth.userId },
           isRead: false,
         },
         data: { isRead: true },
       });
       return transaction.message.findMany({
-        where: { conversationId },
+        where: { conversationId: { in: conversationIds } },
         orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         select: {
           id: true,
