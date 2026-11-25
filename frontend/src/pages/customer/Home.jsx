@@ -18,6 +18,7 @@ import AssetImage from '../../components/common/AssetImage';
 import MenuCard from '../../components/customer/MenuCard';
 import { useAuth } from '../../context/AuthContext';
 import { getCampusId, useCampus } from '../../context/CampusContext';
+import { useCart } from '../../context/CartContext';
 import './Home.css';
 import SearchInput from '../../components/common/SearchInput';
 
@@ -56,6 +57,7 @@ const matchesSearchQuery = (query, ...values) => {
 export const Home = () => {
   const { profile } = useAuth();
   const { selectedCampus } = useCampus();
+  const { setPromoCode, setAppliedPromo } = useCart();
   const selectedCampusId = profile?.role === 'customer'
     ? selectedCampus?.campusId || ''
     : '';
@@ -86,6 +88,26 @@ export const Home = () => {
   const [appliedCategory, setAppliedCategory] = useState('Semua');
   const [appliedCanteen, setAppliedCanteen] = useState('Semua');
   const [appliedLocation, setAppliedLocation] = useState('Semua');
+  const [promoToast, setPromoToast] = useState('');
+  const promoToastTimeout = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(promoToastTimeout.current), []);
+
+  const handlePromoBannerClick = async () => {
+    setPromoCode('LAPERUTS');
+    setAppliedPromo(null);
+    window.clearTimeout(promoToastTimeout.current);
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard tidak tersedia.');
+      }
+      await navigator.clipboard.writeText('LAPERUTS');
+      setPromoToast('Kode LAPERUTS sudah disalin dan siap digunakan saat checkout.');
+    } catch {
+      setPromoToast('Kode LAPERUTS tersimpan dan siap digunakan saat checkout.');
+    }
+    promoToastTimeout.current = window.setTimeout(() => setPromoToast(''), 3500);
+  };
 
   // ==========================================
   // 1. AMBIL DATA KANTIN DAN MENU DARI API
@@ -464,6 +486,14 @@ canteenDescription:
   return (
     <div className="customer-home-page relative isolate min-h-screen bg-[#F0F4F9] text-slate-800 font-sans selection:bg-[#2152B7] selection:text-white pb-28">
       <Navbar />
+      {promoToast && (
+        <div
+          role="status"
+          className="fixed right-4 top-20 z-50 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg sm:right-6"
+        >
+          {promoToast}
+        </div>
+      )}
 
       <main className="relative z-[1] max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6">
 
@@ -683,8 +713,11 @@ canteenDescription:
         {/* 3. PROMO BANNER */}
         {/* ================================== */}
 
-        <div
-          className="customer-card promo-banner text-white rounded-2xl md:rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6"
+        <button
+          type="button"
+          aria-label="Salin kode promo LAPERUTS"
+          onClick={handlePromoBannerClick}
+          className="customer-card promo-banner w-full cursor-pointer border-0 text-left text-white rounded-2xl md:rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2152B7]"
           style={{
             backgroundImage: `url("${import.meta.env.BASE_URL}assets/promo-banner-bg.png")`,
           }}
@@ -735,7 +768,7 @@ canteenDescription:
             <span className="promo-sparkle promo-sparkle-star promo-sparkle-white promo-sparkle-small" style={{ '--sparkle-x': '97%', '--sparkle-y': '71%', '--sparkle-size': '25px', '--sparkle-delay': '1.2s', '--sparkle-duration': '2.6s' }} />
           </div>
 
-        </div>
+        </button>
 
 
         {/* ================================== */}

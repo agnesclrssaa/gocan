@@ -63,6 +63,8 @@ model Order {
   deliveryDiscount    Float     @default(0) @map("delivery_discount")
   foodDiscount        Float     @default(0) @map("food_discount")
   totalAmount         Float     @default(0) @map("total_amount")
+  promoCode           String?
+  discountAmount      Int       @default(0)
   canteenEarnings     Float     @default(0) @map("canteen_earnings")
   runnerEarnings      Float     @default(0) @map("runner_earnings")
   platformRevenue     Float     @default(0) @map("platform_revenue")
@@ -103,6 +105,20 @@ model Order {
   @@index([userId, createdAt])
   @@index([canteenId, status])
   @@index([campusId, status])
+}
+
+model Promo {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique
+  title         String
+  discountType  String
+  discountValue Int
+  maxDiscount   Int?
+  minOrder      Int      @default(0)
+  campusId      String?
+  isActive      Boolean  @default(true)
+  validUntil    DateTime?
+  createdAt     DateTime @default(now())
 }
 
 model OrderItem {

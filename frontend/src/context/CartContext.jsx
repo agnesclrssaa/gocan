@@ -42,6 +42,8 @@ export const CartProvider = ({ children }) => {
       return [];
     }
   });
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
 
   // 2. Simpan info Kantin aktif (agar 1 checkout = 1 kantin)
   const [currentCanteen, setCurrentCanteen] = useState(() => {
@@ -56,6 +58,16 @@ export const CartProvider = ({ children }) => {
   });
   const [cartNotificationPhase, setCartNotificationPhase] = useState('hidden');
   const cartNotificationTimeout = useRef(null);
+  const previousSelectedCampusId = useRef(selectedCampus?.campusId || '');
+
+  useEffect(() => {
+    const currentCampusId = selectedCampus?.campusId || '';
+    if (previousSelectedCampusId.current && currentCampusId !== previousSelectedCampusId.current) {
+      setPromoCode('');
+      setAppliedPromo(null);
+    }
+    previousSelectedCampusId.current = currentCampusId;
+  }, [selectedCampus?.campusId]);
 
   const showCartNotification = () => {
     window.clearTimeout(cartNotificationTimeout.current);
@@ -80,6 +92,8 @@ export const CartProvider = ({ children }) => {
       if (validItems.length === 0) {
         localStorage.removeItem(CANTEEN_STORAGE_KEY);
         setCurrentCanteen(null);
+        setPromoCode('');
+        setAppliedPromo(null);
       } else if (currentCanteen) {
         localStorage.setItem(CANTEEN_STORAGE_KEY, JSON.stringify(currentCanteen));
       }
@@ -249,6 +263,8 @@ export const CartProvider = ({ children }) => {
   const clearCart = () => {
     setCartItems([]);
     setCurrentCanteen(null);
+    setPromoCode('');
+    setAppliedPromo(null);
     localStorage.removeItem(CART_STORAGE_KEY);
     localStorage.removeItem(CANTEEN_STORAGE_KEY);
   };
@@ -290,6 +306,10 @@ export const CartProvider = ({ children }) => {
     totalFoodPrice,
     totalAmount: totalFoodPrice, // Alias kompatibilitas
     totalItems,
+    promoCode,
+    setPromoCode,
+    appliedPromo,
+    setAppliedPromo,
     cartNotificationPhase,
   };
 

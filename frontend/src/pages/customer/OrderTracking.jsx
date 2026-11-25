@@ -591,6 +591,12 @@ export const OrderTracking = () => {
                   </div>
                 ))}
 
+                {order.promoCode && (
+                  <div className="flex justify-between gap-4 text-sm font-semibold text-emerald-700">
+                    <span>Kode promo {order.promoCode}</span>
+                    <span className="gocan-price">− {formatRupiah(order.discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between border-t border-slate-100 pt-3 font-bold">
                   <span>Total</span>
                   <span className="gocan-price">

@@ -17,6 +17,7 @@ import { useCart } from '../../context/CartContext';
 import { useCampus } from '../../context/CampusContext';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
+import PromoCodeForm from '../../components/customer/PromoCodeForm';
 
 const getDestinationFloor = (location) => {
   const floorMatch = location.match(/(?:lantai|lt\.?)\s*(\d+)/i);
@@ -32,6 +33,7 @@ export const Checkout = () => {
     cartHasMixedCampuses,
     totalFoodPrice,
     clearCart,
+    appliedPromo,
   } = useCart();
   const { selectedCampus } = useCampus();
   const navigate = useNavigate();
@@ -115,8 +117,15 @@ const deliveryDiscount =
     ? Math.min(1000, deliveryFee)
     : 0;
 
+const promoMatchesCart = Boolean(
+  appliedPromo &&
+  appliedPromo.validatedSubtotal === totalFoodPrice &&
+  appliedPromo.validatedCampusId === cartCampusId
+);
+const promoNeedsRevalidation = Boolean(appliedPromo && !promoMatchesCart);
+const promoDiscount = promoMatchesCart ? Number(appliedPromo.discountAmount) || 0 : 0;
 const totalAmount =
-  totalFoodPrice + deliveryFee - deliveryDiscount + serviceFee;
+  totalFoodPrice + deliveryFee - deliveryDiscount + serviceFee - promoDiscount;
 const campusMatchesCart = Boolean(
   selectedCampus &&
   cartCampusId &&
@@ -227,6 +236,7 @@ scheduledTime,
   gocan_pay: 'QRIS',
   debit: 'DEBIT',
 }[paymentMethod],
+        promoCode: promoMatchesCart ? appliedPromo.code : undefined,
         buildingName: orderType === 'delivery' ? building.trim() : null,
         destinationFloor: orderType === 'delivery' ? destinationFloor : null,
         meetingPoint: orderType === 'delivery' ? meetingPoint.trim() : null,
@@ -665,6 +675,7 @@ navigate(`/order-success/${confirmedOrderId}`, {
                   <p className="mt-1 font-bold text-slate-800">{selectedCampus?.name || 'Belum dipilih'}</p>
                   {selectedCampus?.city && <p className="mt-0.5 text-xs text-slate-500">{selectedCampus.city}</p>}
                 </div>
+                <PromoCodeForm subtotal={totalFoodPrice} campusId={cartCampusId} />
                 <div className="flex justify-between items-center">
                   <span>Subtotal Makanan</span>
                   <span className="gocan-price font-semibold">
@@ -686,6 +697,14 @@ navigate(`/order-success/${confirmedOrderId}`, {
     </span>
   </div>
 )}
+                {promoDiscount > 0 && (
+                  <div className="flex items-center justify-between gap-3 text-emerald-700">
+                    <span>Diskon Promo{appliedPromo?.code ? ` (${appliedPromo.code})` : ''}</span>
+                    <span className="gocan-price font-semibold">
+                      − Rp {promoDiscount.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span>Biaya Layanan Aplikasi</span>
                   <span className="gocan-price font-semibold">
@@ -707,14 +726,18 @@ navigate(`/order-success/${confirmedOrderId}`, {
             <button
               type="button"
               onClick={handlePlaceOrder}
-              disabled={submitting || !user || !campusMatchesCart}
+              disabled={submitting || !user || !campusMatchesCart || promoNeedsRevalidation}
               className={`w-full py-4 px-6 rounded-full font-bold text-base text-white shadow-md transition text-center cursor-pointer ${
-                submitting || !user || !campusMatchesCart
+                submitting || !user || !campusMatchesCart || promoNeedsRevalidation
                   ? 'bg-slate-400 cursor-not-allowed'
                   : 'bg-[#DC2626] hover:bg-[#B91C1C] active:scale-98'
               }`}
             >
-              {submitting ? 'Memproses Pesanan...' : 'Konfirmasi Pesanan'}
+              {submitting
+                ? 'Memproses Pesanan...'
+                : promoNeedsRevalidation
+                  ? 'Memeriksa Promo...'
+                  : 'Konfirmasi Pesanan'}
             </button>
           </div>
         </div>

@@ -42,6 +42,8 @@ const listOrders = async (req, res, next) => {
         deliveryNote: true,
         status: true,
         subtotal: true,
+        promoCode: true,
+        discountAmount: true,
         deliveryFee: true,
         serviceFee: true,
         deliveryDiscount: true,

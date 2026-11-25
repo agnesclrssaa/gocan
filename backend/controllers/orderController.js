@@ -3,6 +3,7 @@ const prisma = require('../src/lib/prisma');
 const { createPickupQrCode } = require('../utils/qrGenerator');
 const { mergeOrderItemNotes, orderItemNotesInclude } = require('../utils/orderItems');
 const { ensureDefaultCampuses } = require('../services/campus.service');
+const { validatePromo } = require('../utils/promos');
 
 const SERVICE_FEE = 1000;
 const DELIVERY_PROMO_MINIMUM = 25000;
@@ -61,6 +62,7 @@ const createOrder = async (req, res, next) => {
       orderType: requestedOrderType,
       fulfillmentType: requestedFulfillmentType,
       paymentMethod: requestedPaymentMethod = 'QRIS',
+      promoCode: requestedPromoCode,
       scheduledTime,
       destinationBuilding,
       destinationFloor,
@@ -227,6 +229,23 @@ const createOrder = async (req, res, next) => {
       };
     });
     const subtotal = orderItems.reduce((total, item) => total + item.onlinePrice * item.quantity, 0);
+    let promoCode = null;
+    let discountAmount = 0;
+    if (requestedPromoCode != null && requestedPromoCode !== '') {
+      if (typeof requestedPromoCode !== 'string') {
+        return res.status(400).json({ error: 'Kode promo tidak valid.' });
+      }
+      const promoResult = await validatePromo({
+        code: requestedPromoCode,
+        subtotal,
+        campusId,
+      });
+      if (promoResult.error) {
+        return res.status(promoResult.status).json({ error: promoResult.error });
+      }
+      promoCode = promoResult.code;
+      discountAmount = promoResult.discountAmount;
+    }
     const deliveryFee = fulfillmentType === 'delivery'
       ? 3000 + (Math.max(0, floor - 1) * 1000)
       : 0;
@@ -234,10 +253,11 @@ const createOrder = async (req, res, next) => {
       ? Math.min(DELIVERY_PROMO_DISCOUNT, deliveryFee)
       : 0;
     const serviceFee = SERVICE_FEE;
-    const totalAmount = subtotal + (deliveryFee - deliveryDiscount) + serviceFee;
+    const totalAmount = subtotal + (deliveryFee - deliveryDiscount) + serviceFee - discountAmount;
     const canteenEarnings = subtotal * 0.95;
     const runnerEarnings = deliveryFee * 0.9;
-    const platformRevenue = (subtotal * 0.05) + (deliveryFee * 0.1) + serviceFee - deliveryDiscount;
+    const platformRevenue =
+      (subtotal * 0.05) + (deliveryFee * 0.1) + serviceFee - deliveryDiscount - discountAmount;
     const isCash = paymentMethod === 'CASH';
     const initialStatus = isCash ? 'PAID' : 'PENDING_PAYMENT';
 
@@ -260,6 +280,8 @@ const createOrder = async (req, res, next) => {
         },
         totalPrice: totalAmount,
         subtotal,
+        promoCode,
+        discountAmount,
         deliveryFee,
         serviceFee,
         deliveryDiscount,

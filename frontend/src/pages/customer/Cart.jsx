@@ -5,6 +5,7 @@ import { getCampusId, useCampus } from '../../context/CampusContext';
 import Navbar from '../../components/common/Navbar';
 import AssetImage from '../../components/common/AssetImage';
 import { getCustomerRoute, useCustomerPreview } from '../../lib/customerRoutes';
+import PromoCodeForm from '../../components/customer/PromoCodeForm';
 
 export const Cart = () => {
   const preview = useCustomerPreview();
@@ -19,9 +20,15 @@ export const Cart = () => {
     clearCart,
     totalFoodPrice,
     totalItems,
+    appliedPromo,
   } = useCart();
   const { campuses, selectedCampus } = useCampus();
   const cartCampus = campuses.find((campus) => getCampusId(campus) === cartCampusId);
+  const promoMatchesCart = Boolean(
+    appliedPromo &&
+    appliedPromo.validatedSubtotal === totalFoodPrice &&
+    appliedPromo.validatedCampusId === cartCampusId
+  );
   const campusMatchesCart = Boolean(
     selectedCampus &&
     cartCampusId === selectedCampus.campusId &&
@@ -188,12 +195,30 @@ export const Cart = () => {
                 ))}
               </div>
 
+              <PromoCodeForm subtotal={totalFoodPrice} campusId={cartCampusId} />
+
               {/* Divider & Total */}
-              <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-600">Total Pesanan</span>
-                <span className="gocan-price text-xl font-bold">
-                  Rp {totalFoodPrice.toLocaleString('id-ID')}
-                </span>
+              <div className="space-y-2 border-t border-slate-100 pt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-600">Subtotal Makanan</span>
+                  <span className="gocan-price font-semibold">
+                    Rp {totalFoodPrice.toLocaleString('id-ID')}
+                  </span>
+                </div>
+                {promoMatchesCart && appliedPromo.discountAmount > 0 && (
+                  <div className="flex items-center justify-between text-emerald-700">
+                    <span className="text-sm font-semibold">Diskon Promo</span>
+                    <span className="gocan-price font-semibold">
+                      − Rp {Number(appliedPromo.discountAmount).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+                  <span className="text-sm font-bold text-slate-800">Total Makanan</span>
+                  <span className="gocan-price text-xl font-bold">
+                    Rp {(totalFoodPrice - (promoMatchesCart ? appliedPromo.discountAmount : 0)).toLocaleString('id-ID')}
+                  </span>
+                </div>
               </div>
 
               {/* Action Button: Deep Navy */}

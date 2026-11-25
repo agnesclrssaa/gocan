@@ -467,6 +467,12 @@ export default function OrderSuccess() {
                 </p>
               )}
 
+              {currentOrder.promoCode && (
+                <div className="flex justify-between gap-4 text-sm font-semibold text-emerald-700">
+                  <span>Kode promo {currentOrder.promoCode}</span>
+                  <span className="gocan-price">− {formatRupiah(currentOrder.discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between gap-4 border-t border-dashed border-slate-200 pt-4 font-bold">
                 <span>Total pesanan</span>
 
