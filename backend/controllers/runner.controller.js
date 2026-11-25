@@ -16,6 +16,41 @@ const parseOrderItems = (order) => {
   }
 };
 
+const parseRunnerOrder = (order) => {
+  const parsedOrder = parseOrderItems(order);
+  const customer = order.customer || order.user;
+  const { users = [], ...canteen } = order.canteen || {};
+  return {
+    ...parsedOrder,
+    customerId: order.customerId || customer?.id || order.userId,
+    customer: customer
+      ? { ...customer, phone: customer.phoneNumber || null }
+      : null,
+    canteen: order.canteen
+      ? { ...canteen, ownerId: users[0]?.id || null }
+      : null,
+  };
+};
+
+const runnerOrderCustomerInclude = {
+  select: { id: true, name: true, phoneNumber: true, email: true },
+};
+
+const runnerOrderCanteenInclude = {
+  select: {
+    id: true,
+    name: true,
+    location: true,
+    campusId: true,
+    campus: { select: { campusId: true, name: true, city: true, status: true } },
+    users: {
+      where: { role: 'canteen' },
+      select: { id: true },
+      take: 1,
+    },
+  },
+};
+
 const listAvailableOrders = async (req, res, next) => {
   try {
     const runner = await prisma.user.findUnique({
@@ -45,20 +80,13 @@ const listAvailableOrders = async (req, res, next) => {
           select: { campusId: true, name: true, city: true, address: true, status: true },
         },
         orderItems: orderItemNotesInclude,
-        user: { select: { name: true, phoneNumber: true } },
-        canteen: {
-          select: {
-            id: true,
-            name: true,
-            location: true,
-            campusId: true,
-            campus: { select: { campusId: true, name: true, city: true, status: true } },
-          },
-        },
+        user: { select: { id: true, name: true, phoneNumber: true, email: true } },
+        customer: runnerOrderCustomerInclude,
+        canteen: runnerOrderCanteenInclude,
       },
       orderBy: { updatedAt: 'asc' },
     });
-    return res.json(orders.map(parseOrderItems));
+    return res.json(orders.map(parseRunnerOrder));
   } catch (error) {
     return next(error);
   }
@@ -114,19 +142,12 @@ const acceptOrder = async (req, res, next) => {
           select: { campusId: true, name: true, city: true, address: true, status: true },
         },
         orderItems: orderItemNotesInclude,
-        user: { select: { name: true, phoneNumber: true } },
-        canteen: {
-          select: {
-            id: true,
-            name: true,
-            location: true,
-            campusId: true,
-            campus: { select: { campusId: true, name: true, city: true, status: true } },
-          },
-        },
+        user: { select: { id: true, name: true, phoneNumber: true, email: true } },
+        customer: runnerOrderCustomerInclude,
+        canteen: runnerOrderCanteenInclude,
       },
     });
-    return res.json({ order: parseOrderItems(order) });
+    return res.json({ order: parseRunnerOrder(order) });
   } catch (error) {
     return next(error);
   }

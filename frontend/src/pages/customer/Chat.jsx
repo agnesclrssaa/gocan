@@ -249,10 +249,13 @@ export default function Chat() {
     }
   };
 
-  const isCustomer = profile?.role === 'customer';
-  const portalPath = profile?.role === 'canteen' || profile?.role === 'canteen_staff'
+  const role = String(profile?.role || '').toLowerCase();
+  const isCustomer = role === 'customer';
+  const portalPath = role === 'canteen' || role === 'canteen_staff'
     ? '/canteen-portal'
-    : '/runner-portal';
+    : role === 'courier'
+      ? '/courier-portal'
+      : '/runner-portal';
 
   return (
     <div className={`chat-page ${isCustomer ? 'is-customer' : 'is-partner'}`}>

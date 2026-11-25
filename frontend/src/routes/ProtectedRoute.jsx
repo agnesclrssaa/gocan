@@ -68,9 +68,13 @@ export const ProtectedRoute = ({ allowedRoles = [], requireApproval = true }) =>
   }
 
   // 4. Pemeriksaan kecocokan Role (Role-Based Access Control)
-  if (allowedRoles.length > 0 && !allowedRoles.includes(profile.role)) {
+  const normalizedRole = String(profile.role || '').toLowerCase();
+  if (
+    allowedRoles.length > 0 &&
+    !allowedRoles.some((role) => String(role).toLowerCase() === normalizedRole)
+  ) {
     // Jika role tidak diizinkan, arahkan ke portal yang sesuai dengan rolenya
-    const safeTarget = roleHome[profile.role] || '/unauthorized';
+    const safeTarget = roleHome[normalizedRole] || '/unauthorized';
     if (safeTarget !== location.pathname) {
       return <Navigate to={safeTarget} replace />;
     }
@@ -78,7 +82,7 @@ export const ProtectedRoute = ({ allowedRoles = [], requireApproval = true }) =>
   }
 
   // 5. Pemeriksaan Status Persetujuan Admin (Runner)
-  if (requireApproval && profile.role === 'runner') {
+  if (requireApproval && normalizedRole === 'runner') {
     if (profile.approval_status !== 'approved') {
       return (
         <PendingApprovalScreen

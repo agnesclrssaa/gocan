@@ -371,6 +371,22 @@ const parseOrderItems = (order) => ({
   isScheduled: order.orderType === 'SCHEDULED',
 });
 
+const parseCourierOrder = (order) => {
+  const parsedOrder = parseOrderItems(order);
+  const customer = order.customer || order.user;
+  const { users = [], ...canteen } = order.canteen || {};
+  return {
+    ...parsedOrder,
+    customerId: order.customerId || customer?.id || order.userId,
+    customer: customer
+      ? { ...customer, phone: customer.phoneNumber || null }
+      : null,
+    canteen: order.canteen
+      ? { ...canteen, ownerId: users[0]?.id || null }
+      : null,
+  };
+};
+
 const listCanteenOrders = async (req, res, next) => {
   try {
   if (req.auth.role === 'admin') {
@@ -637,14 +653,20 @@ const listCourierOrders = async (req, res, next) => {
             campus: {
               select: { campusId: true, name: true, city: true, status: true },
             },
+            users: {
+              where: { role: 'canteen' },
+              select: { id: true },
+              take: 1,
+            },
           },
         },
-        user: { select: { id: true, name: true, phoneNumber: true } },
+        customer: { select: { id: true, name: true, phoneNumber: true, email: true } },
+        user: { select: { id: true, name: true, phoneNumber: true, email: true } },
         orderItems: orderItemNotesInclude,
       },
       orderBy: { updatedAt: 'asc' },
     });
-    return res.json(orders.map(parseOrderItems));
+    return res.json(orders.map(parseCourierOrder));
   } catch (error) {
     return next(error);
   }

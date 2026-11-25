@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Phone,
   CheckCircle,
   MapPin,
   ChevronLeft,
-  X
+  X,
+  MessageCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
@@ -13,6 +14,7 @@ import { getRunnerCampusInfo, getRunnerCampusOrders } from '../../lib/runnerCamp
 
 export default function RunnerDetail() {
   const { state } = useLocation();
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const order = state?.order;
   const activeOrderItems = Array.isArray(order?.items) ? order.items : [];
@@ -23,8 +25,16 @@ export default function RunnerDetail() {
   const canProcessOrder = campusInfo.isActive && orderMatchesCampus;
   const canteenName = order?.canteen?.name || order?.canteenName || 'Kantin GoCan';
   const pickupLocation = order?.canteen?.location || order?.canteenLocation || order?.pickupLocation || 'Lokasi kantin belum tersedia';
-  const customerName = order?.user?.name || order?.customerName || 'Customer';
-  const customerPhone = order?.user?.phoneNumber || order?.phoneNumber || '';
+  const customerName = order?.customer?.name || order?.user?.name || order?.customerName || 'Customer';
+  const customerId = Number(
+    order?.customer?.id ?? order?.customerId ?? order?.user?.id ?? order?.userId
+  );
+  const customerPhone =
+    order?.customer?.phone ||
+    order?.customer?.phoneNumber ||
+    order?.user?.phoneNumber ||
+    order?.phoneNumber ||
+    '';
   const customerPhoneDigits = customerPhone.replace(/\D/g, '');
   const destination = [
     order?.buildingName || order?.destinationBuilding || order?.destination_building,
@@ -46,8 +56,36 @@ export default function RunnerDetail() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [completionError, setCompletionError] = useState('');
   const [showCallModal, setShowCallModal] = useState(false);
+  const [openingCustomerChat, setOpeningCustomerChat] = useState(false);
+  const [chatError, setChatError] = useState('');
 
   const correctPin = '4821';
+
+  const handleChatCustomer = async () => {
+    if (!Number.isSafeInteger(customerId) || customerId <= 0 || !order?.id) {
+      setChatError('Data Customer atau pesanan tidak tersedia untuk membuka Live Chat.');
+      return;
+    }
+
+    setOpeningCustomerChat(true);
+    setChatError('');
+    try {
+      const result = await api.post('/chats', {
+        targetUserId: customerId,
+        orderId: order.id,
+      });
+      const conversationId = result?.conversation?.id;
+      if (!Number.isSafeInteger(Number(conversationId)) || Number(conversationId) <= 0) {
+        throw new Error('Server belum mengembalikan percakapan yang valid.');
+      }
+      navigate(`/chat/${encodeURIComponent(conversationId)}`);
+    } catch (requestError) {
+      console.error(`Gagal membuka Live Chat untuk pesanan ${order.id}:`, requestError);
+      setChatError(requestError.message || 'Live Chat dengan Customer gagal dibuka.');
+    } finally {
+      setOpeningCustomerChat(false);
+    }
+  };
 
   const handleNextStep = async () => {
     if (!canProcessOrder) return;
@@ -389,6 +427,16 @@ export default function RunnerDetail() {
               AKSI STATUS
             </span>
 
+            <button
+              type="button"
+              onClick={handleChatCustomer}
+              disabled={openingCustomerChat || !Number.isSafeInteger(customerId) || customerId <= 0}
+              className="w-full py-2.5 px-4 rounded-xl border border-blue-200 bg-blue-50 text-[#2152B7] hover:bg-blue-100 text-xs font-bold flex items-center justify-center gap-2 transition disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>{openingCustomerChat ? 'Membuka Chat...' : 'Chat Customer'}</span>
+            </button>
+
             {/* Hubungi Customer Button */}
             <button
               type="button"
@@ -398,6 +446,11 @@ export default function RunnerDetail() {
               <Phone className="w-4 h-4 text-[#0A2E6E]" />
               <span>Hubungi Customer</span>
             </button>
+            {chatError && (
+              <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
+                {chatError}
+              </p>
+            )}
 
             {/* Action Box with Red Button */}
             <div className="pt-2">
@@ -475,7 +528,7 @@ export default function RunnerDetail() {
 
       {/* CALL MODAL */}
       {showCallModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 border border-slate-200 shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setShowCallModal(false)}

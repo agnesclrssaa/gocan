@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getRunnerCampusInfo } from '../lib/runnerCampus';
+import { api } from '../lib/api';
 import RunnerBackgroundDecoration from '../components/common/RunnerBackgroundDecoration';
 import {
   Wallet,
@@ -16,12 +17,38 @@ import './RunnerTheme.css';
 
 export default function RunnerLayout({ children }) {
   const [isOnline, setIsOnline] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { signOut, profile } = useAuth();
   const campusInfo = getRunnerCampusInfo(profile, profile);
   const campusLabel = campusInfo.name
     ? `${campusInfo.name}${campusInfo.city ? ` · ${campusInfo.city}` : ''}`
     : 'Kampus belum ditetapkan';
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+    const refreshUnreadCount = async () => {
+      try {
+        const conversations = await api.get('/chats');
+        if (active) {
+          setUnreadCount(
+            Array.isArray(conversations)
+              ? conversations.reduce((total, conversation) => total + (Number(conversation.unreadCount) || 0), 0)
+              : 0
+          );
+        }
+      } catch (error) {
+        if (active) console.error('Gagal memuat jumlah pesan Runner yang belum dibaca:', error);
+      }
+    };
+
+    refreshUnreadCount();
+    const intervalId = window.setInterval(refreshUnreadCount, 15000);
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   const handleLogout = async () => {
     await signOut();
@@ -131,6 +158,7 @@ export default function RunnerLayout({ children }) {
             </NavLink>
             <NavLink
               to="/chat"
+              aria-label={`Live Chat${unreadCount ? `, ${unreadCount} pesan belum dibaca` : ''}`}
               className={({ isActive }) =>
                 `flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition ${isActive
                   ? 'bg-white text-[#2152B7] shadow-sm'
@@ -138,7 +166,14 @@ export default function RunnerLayout({ children }) {
                 }`
               }
             >
-              <MessageCircle className="w-3.5 h-3.5" />
+              <span className="relative">
+                <MessageCircle className="w-3.5 h-3.5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-2 -top-2 min-w-4 rounded-full bg-[#ED2028] px-1 text-center text-[9px] leading-4 text-white">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </span>
               <span>Live Chat</span>
             </NavLink>
           </nav>
@@ -214,12 +249,20 @@ export default function RunnerLayout({ children }) {
 
           <NavLink
             to="/chat"
+            aria-label={`Chat${unreadCount ? `, ${unreadCount} pesan belum dibaca` : ''}`}
             className={({ isActive }) =>
               `flex min-w-0 flex-col items-center gap-1 px-1 py-1 transition ${isActive ? 'font-black text-[#2152B7]' : 'text-slate-500 hover:text-[#2152B7]'
               }`
             }
           >
-            <MessageCircle className="h-5 w-5" />
+            <span className="relative">
+              <MessageCircle className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-2 -top-1 min-w-4 rounded-full bg-[#ED2028] px-1 text-center text-[9px] leading-4 text-white">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </span>
             <span className="text-[9px] sm:text-[10px]">Chat</span>
           </NavLink>
 
