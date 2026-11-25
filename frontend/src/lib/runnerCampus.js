@@ -1,5 +1,28 @@
 import { getCampusId } from './canteenCampus';
 
+export const RUNNER_ACTIVE_ORDER_STORAGE_KEY = 'gocan_runner_active_order_id';
+
+export const getRunnerActiveOrderId = () => {
+  try {
+    return window.sessionStorage.getItem(RUNNER_ACTIVE_ORDER_STORAGE_KEY) || '';
+  } catch (error) {
+    console.error('Gagal membaca pesanan aktif Runner:', error);
+    return '';
+  }
+};
+
+export const setRunnerActiveOrderId = (orderId) => {
+  try {
+    if (orderId == null || orderId === '') {
+      window.sessionStorage.removeItem(RUNNER_ACTIVE_ORDER_STORAGE_KEY);
+      return;
+    }
+    window.sessionStorage.setItem(RUNNER_ACTIVE_ORDER_STORAGE_KEY, String(orderId));
+  } catch (error) {
+    console.error('Gagal menyimpan pesanan aktif Runner:', error);
+  }
+};
+
 const getUserId = (user) =>
   String(user?.id || user?.userId || user?.user_id || '');
 

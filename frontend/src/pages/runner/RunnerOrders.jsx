@@ -15,6 +15,7 @@ import { api, asArray } from '../../lib/api';
 import {
   getRunnerCampusInfo,
   getRunnerCampusOrders,
+  setRunnerActiveOrderId,
 } from '../../lib/runnerCampus';
 
 export default function RunnerOrders() {
@@ -63,9 +64,12 @@ export default function RunnerOrders() {
         campusName: order.campusName,
         campusCity: order.campusCity,
       };
+      setRunnerActiveOrderId(campusOrder.id);
       setToastMessage(`Pesanan #${order.id} berhasil diambil. Silakan lanjutkan proses pengantaran.`);
       window.setTimeout(() => {
-        navigate('/runner-portal/detail', { state: { order: campusOrder } });
+        navigate(`/runner-portal/detail?orderId=${encodeURIComponent(campusOrder.id)}`, {
+          state: { order: campusOrder },
+        });
       }, 700);
     } catch (error) {
       setOrdersError(error.message || 'Pesanan tidak dapat diambil.');

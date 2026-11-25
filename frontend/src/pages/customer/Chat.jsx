@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Search,
@@ -11,6 +11,11 @@ import {
 import Navbar from '../../components/common/Navbar';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
+import {
+  getRunnerActiveOrderId,
+  isRunnerOrderAssignedTo,
+  setRunnerActiveOrderId,
+} from '../../lib/runnerCampus';
 import './Chat.css';
 
 const formatTime = (date) => {
@@ -126,8 +131,11 @@ function ChatBubble({ message, conversation }) {
 
 export default function Chat() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { conversationId } = useParams();
   const { profile } = useAuth();
+  const role = String(profile?.role || '').toLowerCase();
+  const runnerUserId = profile?.id;
   const [loading, setLoading] = useState(true);
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -136,6 +144,8 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [chatError, setChatError] = useState('');
   const [messageError, setMessageError] = useState('');
+  const [runnerActiveOrderId, setRunnerActiveOrderIdState] = useState(getRunnerActiveOrderId);
+  const [runnerOrderCheckComplete, setRunnerOrderCheckComplete] = useState(false);
   const messageEndRef = useRef(null);
   const lastMessageIdRef = useRef(null);
 
@@ -166,6 +176,44 @@ export default function Chat() {
       window.clearInterval(intervalId);
     };
   }, [fetchConversations]);
+
+  useEffect(() => {
+    if (role !== 'runner') return undefined;
+
+    let active = true;
+    const fetchActiveOrder = async () => {
+      try {
+        const orders = await api.get('/orders/courier');
+        if (!Array.isArray(orders)) {
+          throw new Error('Daftar pesanan aktif Runner dari server tidak valid.');
+        }
+
+        const activeOrders = orders.filter((order) => {
+          const status = String(order.status || '').toLowerCase();
+          return isRunnerOrderAssignedTo(order, { id: runnerUserId }) &&
+            !['completed', 'cancelled'].includes(status);
+        });
+        const savedOrderId = getRunnerActiveOrderId();
+        const activeOrder = activeOrders.find(
+          (order) => String(order.id) === savedOrderId
+        ) || activeOrders[0];
+
+        if (active) {
+          const orderId = activeOrder ? String(activeOrder.id) : '';
+          setRunnerActiveOrderId(orderId);
+          setRunnerActiveOrderIdState(orderId);
+          setRunnerOrderCheckComplete(true);
+        }
+      } catch (error) {
+        if (active) console.error('Gagal memuat pesanan aktif untuk navigasi Chat Runner:', error);
+      }
+    };
+
+    fetchActiveOrder();
+    return () => {
+      active = false;
+    };
+  }, [role, runnerUserId]);
 
   const activeConversation = useMemo(
     () => conversations.find((item) => String(item.id) === String(conversationId)),
@@ -249,13 +297,26 @@ export default function Chat() {
     }
   };
 
-  const role = String(profile?.role || '').toLowerCase();
   const isCustomer = role === 'customer';
-  const portalPath = role === 'canteen' || role === 'canteen_staff'
-    ? '/canteen-portal'
-    : role === 'courier'
-      ? '/courier-portal'
-      : '/runner-portal';
+  const runnerReturnTo = location.state?.returnTo;
+  const validRunnerReturnTo = typeof runnerReturnTo === 'string' &&
+    /^\/runner-portal\/detail\?orderId=\d+$/.test(runnerReturnTo);
+  const returnToOrderId = validRunnerReturnTo
+    ? new URLSearchParams(runnerReturnTo.split('?')[1]).get('orderId')
+    : '';
+  const portalPath = role === 'runner'
+    ? runnerActiveOrderId
+      ? validRunnerReturnTo && returnToOrderId === runnerActiveOrderId
+        ? runnerReturnTo
+        : `/runner-portal/detail?orderId=${encodeURIComponent(runnerActiveOrderId)}`
+      : validRunnerReturnTo && !runnerOrderCheckComplete
+        ? runnerReturnTo
+        : '/runner-portal'
+    : role === 'canteen' || role === 'canteen_staff'
+      ? '/canteen-portal'
+      : role === 'courier'
+        ? '/courier-portal'
+        : '/runner-portal';
 
   return (
     <div className={`chat-page ${isCustomer ? 'is-customer' : 'is-partner'}`}>

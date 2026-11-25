@@ -1,41 +1,66 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Phone,
   CheckCircle,
   MapPin,
   ChevronLeft,
-  X,
   MessageCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
-import { getRunnerCampusInfo, getRunnerCampusOrders } from '../../lib/runnerCampus';
+import {
+  getRunnerActiveOrderId,
+  getRunnerCampusInfo,
+  getRunnerCampusOrders,
+  isRunnerOrderAssignedTo,
+  setRunnerActiveOrderId,
+} from '../../lib/runnerCampus';
 
 export default function RunnerDetail() {
-  const { state } = useLocation();
+  const location = useLocation();
+  const { state } = location;
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
-  const order = state?.order;
+  const { user, profile, loading: authLoading } = useAuth();
+  const runnerUserId = user?.id || profile?.id;
+  const stateOrder = state?.order || null;
+  const queryOrderId = new URLSearchParams(location.search).get('orderId') || '';
+  const initialOrder = stateOrder && (
+    !queryOrderId || queryOrderId === String(stateOrder.id)
+  ) ? stateOrder : null;
+  const [order, setOrder] = useState(initialOrder);
+  const [loadingOrder, setLoadingOrder] = useState(!initialOrder);
+  const [orderLoadError, setOrderLoadError] = useState('');
   const activeOrderItems = Array.isArray(order?.items) ? order.items : [];
   const campusInfo = getRunnerCampusInfo(profile, user);
   const orderMatchesCampus = Boolean(
     order && getRunnerCampusOrders([order], campusInfo.campusId).length
   );
   const canProcessOrder = campusInfo.isActive && orderMatchesCampus;
+  const orderCampusId = String(order?.campusId || order?.campus?.campusId || '');
+  const campusMismatch = Boolean(
+    !authLoading &&
+    !loadingOrder &&
+    profile &&
+    order &&
+    orderCampusId &&
+    campusInfo.campusId &&
+    orderCampusId !== campusInfo.campusId
+  );
+  const campusInactive = Boolean(
+    !authLoading &&
+    !loadingOrder &&
+    profile &&
+    order &&
+    campusInfo.campusId &&
+    !campusInfo.isActive &&
+    !campusMismatch
+  );
   const canteenName = order?.canteen?.name || order?.canteenName || 'Kantin GoCan';
   const pickupLocation = order?.canteen?.location || order?.canteenLocation || order?.pickupLocation || 'Lokasi kantin belum tersedia';
   const customerName = order?.customer?.name || order?.user?.name || order?.customerName || 'Customer';
   const customerId = Number(
     order?.customer?.id ?? order?.customerId ?? order?.user?.id ?? order?.userId
   );
-  const customerPhone =
-    order?.customer?.phone ||
-    order?.customer?.phoneNumber ||
-    order?.user?.phoneNumber ||
-    order?.phoneNumber ||
-    '';
-  const customerPhoneDigits = customerPhone.replace(/\D/g, '');
   const destination = [
     order?.buildingName || order?.destinationBuilding || order?.destination_building,
     order?.destinationRoom || order?.destination_room,
@@ -55,11 +80,94 @@ export default function RunnerDetail() {
   );
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [completionError, setCompletionError] = useState('');
-  const [showCallModal, setShowCallModal] = useState(false);
   const [openingCustomerChat, setOpeningCustomerChat] = useState(false);
   const [chatError, setChatError] = useState('');
 
   const correctPin = '4821';
+
+  useEffect(() => {
+    if (initialOrder) {
+      setOrder(initialOrder);
+      setLoadingOrder(false);
+      setOrderLoadError('');
+      setRunnerActiveOrderId(initialOrder.id);
+      if (queryOrderId !== String(initialOrder.id)) {
+        navigate(`/runner-portal/detail?orderId=${encodeURIComponent(initialOrder.id)}`, {
+          replace: true,
+          state: { order: initialOrder },
+        });
+      }
+      return undefined;
+    }
+
+    if (authLoading || !profile || !runnerUserId) return undefined;
+
+    let active = true;
+    setLoadingOrder(true);
+    setOrderLoadError('');
+    const requestedOrderId = queryOrderId || getRunnerActiveOrderId();
+
+    api.get('/orders/courier').then((orders) => {
+      if (!Array.isArray(orders)) {
+        throw new Error('Daftar pesanan aktif Runner dari server tidak valid.');
+      }
+
+      const activeOrders = orders.filter((candidate) => {
+        const status = String(candidate.status || '').toLowerCase();
+        return isRunnerOrderAssignedTo(candidate, { id: runnerUserId }) &&
+          !['completed', 'cancelled'].includes(status);
+      });
+      const selectedOrder = activeOrders.find(
+        (candidate) => String(candidate.id) === requestedOrderId
+      ) || activeOrders[0] || null;
+      if (!active) return;
+
+      setOrder(selectedOrder);
+      if (selectedOrder) {
+        setRunnerActiveOrderId(selectedOrder.id);
+        const nextPath = `/runner-portal/detail?orderId=${encodeURIComponent(selectedOrder.id)}`;
+        if (location.search !== `?orderId=${encodeURIComponent(selectedOrder.id)}`) {
+          navigate(nextPath, { replace: true, state: { order: selectedOrder } });
+        }
+      } else {
+        setRunnerActiveOrderId('');
+      }
+    }).catch((requestError) => {
+      if (active) {
+        setOrder(null);
+        setOrderLoadError(requestError.message || 'Pesanan aktif Runner gagal dimuat.');
+      }
+    }).finally(() => {
+      if (active) setLoadingOrder(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    authLoading,
+    location.search,
+    navigate,
+    profile?.id,
+    queryOrderId,
+    runnerUserId,
+    initialOrder,
+  ]);
+
+  useEffect(() => {
+    const status = String(order?.status || '').toLowerCase();
+    setCurrentStep(
+      status === 'completed'
+        ? 4
+        : status === 'delivering'
+          ? 3
+          : ['ready', 'ready_for_pickup'].includes(status)
+            ? 2
+            : 1
+    );
+    setOrderStatus(order?.status || '');
+    setOrderCompleted(status === 'completed');
+  }, [order?.id, order?.status]);
 
   const handleChatCustomer = async () => {
     if (!Number.isSafeInteger(customerId) || customerId <= 0 || !order?.id) {
@@ -78,7 +186,9 @@ export default function RunnerDetail() {
       if (!Number.isSafeInteger(Number(conversationId)) || Number(conversationId) <= 0) {
         throw new Error('Server belum mengembalikan percakapan yang valid.');
       }
-      navigate(`/chat/${encodeURIComponent(conversationId)}`);
+      navigate(`/chat/${encodeURIComponent(conversationId)}`, {
+        state: { returnTo: `/runner-portal/detail?orderId=${encodeURIComponent(order.id)}` },
+      });
     } catch (requestError) {
       console.error(`Gagal membuka Live Chat untuk pesanan ${order.id}:`, requestError);
       setChatError(requestError.message || 'Live Chat dengan Customer gagal dibuka.');
@@ -156,6 +266,33 @@ export default function RunnerDetail() {
     }
   };
 
+  if (authLoading || loadingOrder) {
+    return (
+      <div role="status" className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm font-semibold text-slate-600">
+        Memuat detail pengantaran aktif...
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <section className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+        <h1 className="text-lg font-extrabold text-[#0A2E6E]">Pesanan aktif tidak ditemukan</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          {orderLoadError || 'Saat ini tidak ada pesanan pengantaran aktif yang ditugaskan kepada Anda.'}
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <Link to="/runner-portal" className="rounded-xl bg-[#2152B7] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#193F91]">
+            Kembali ke Portal
+          </Link>
+          <Link to="/runner-portal/orders" className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+            Lihat Job Board
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* 1. TOP BANNER (Matching gocan-delivery-detail-desktop.png) */}
@@ -208,10 +345,16 @@ export default function RunnerDetail() {
           </Link>
         </div>
       )}
-      {!canProcessOrder && (
+      {campusMismatch && (
         <div role="alert" className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
           <MapPin className="h-4 w-4 shrink-0" />
-          Pesanan tidak sesuai kampus Runner atau kampus sedang nonaktif. Hubungi Admin sebelum melanjutkan.
+          Pesanan berasal dari kampus yang berbeda dengan kampus Runner. Hubungi Admin sebelum melanjutkan.
+        </div>
+      )}
+      {campusInactive && (
+        <div role="alert" className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+          <MapPin className="h-4 w-4 shrink-0" />
+          Kampus Runner sedang nonaktif. Hubungi Admin sebelum melanjutkan.
         </div>
       )}
       {completionError && (
@@ -437,15 +580,6 @@ export default function RunnerDetail() {
               <span>{openingCustomerChat ? 'Membuka Chat...' : 'Chat Customer'}</span>
             </button>
 
-            {/* Hubungi Customer Button */}
-            <button
-              type="button"
-              onClick={() => setShowCallModal(true)}
-              className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white text-slate-800 text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs"
-            >
-              <Phone className="w-4 h-4 text-[#0A2E6E]" />
-              <span>Hubungi Customer</span>
-            </button>
             {chatError && (
               <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
                 {chatError}
@@ -526,34 +660,6 @@ export default function RunnerDetail() {
         </div>
       </div>
 
-      {/* CALL MODAL */}
-      {showCallModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 border border-slate-200 shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setShowCallModal(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="text-base font-bold text-slate-900">Hubungi {customerName}</h3>
-            <p className="text-xs text-slate-500 mt-1">Nomor WhatsApp & Telepon Terdaftar:</p>
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
-              <span className="font-mono font-bold text-[#0A2E6E] text-sm">{customerPhone || 'Nomor belum tersedia'}</span>
-              {customerPhoneDigits && (
-                <a
-                  href={`https://wa.me/${customerPhoneDigits}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold"
-                >
-                  Chat WA
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
