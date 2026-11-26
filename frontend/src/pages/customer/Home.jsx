@@ -21,6 +21,9 @@ import { getCampusId, useCampus } from '../../context/CampusContext';
 import { useCart } from '../../context/CartContext';
 import './Home.css';
 import SearchInput from '../../components/common/SearchInput';
+import SkeletonLoader from '../../components/SkeletonLoader';
+
+const EMPTY_BEST_SELLER_ITEMS = [];
 
 const categoryAliases = {
   Snack: ['snack', 'cemilan', 'camilan'],
@@ -63,7 +66,16 @@ export const Home = () => {
     : '';
   const [canteens, setCanteens] = useState([]);
   const [canteenMenus, setCanteenMenus] = useState({});
-  const [bestSellerItems, setBestSellerItems] = useState([]);
+  const [bestSellerResult, setBestSellerResult] = useState({
+    campusId: null,
+    items: [],
+    error: '',
+  });
+  const bestSellersLoading = bestSellerResult.campusId !== selectedCampusId;
+  const bestSellerItems = bestSellersLoading
+    ? EMPTY_BEST_SELLER_ITEMS
+    : bestSellerResult.items;
+  const bestSellersError = bestSellersLoading ? '' : bestSellerResult.error;
   const bestSellerTrackRef = useRef(null);
   const [showAllBestSellers, setShowAllBestSellers] = useState(false);
   const [showAllMenuCards, setShowAllMenuCards] = useState(false);
@@ -172,24 +184,38 @@ export const Home = () => {
   }, [fetchCanteens]);
 
   useEffect(() => {
+    let active = true;
     const fetchBestSellers = async () => {
       try {
         const requestConfig = selectedCampusId
           ? { params: { campusId: selectedCampusId } }
           : undefined;
         const data = await api.get('/menu/bestsellers', requestConfig);
-        setBestSellerItems(
-          Array.isArray(data)
-            ? data.map((item) => ({ ...item, campusId: getCampusId(item) }))
-            : []
-        );
+        if (active) {
+          setBestSellerResult({
+            campusId: selectedCampusId,
+            items: Array.isArray(data)
+              ? data.map((item) => ({ ...item, campusId: getCampusId(item) }))
+              : [],
+            error: '',
+          });
+        }
       } catch (err) {
         console.error('Gagal mengambil daftar best seller:', err);
-        setBestSellerItems([]);
+        if (active) {
+          setBestSellerResult({
+            campusId: selectedCampusId,
+            items: [],
+            error: err.message || 'Gagal memuat menu best seller.',
+          });
+        }
       }
     };
 
     fetchBestSellers();
+    return () => {
+      active = false;
+    };
   }, [selectedCampusId]);
 
   // ==========================================
@@ -847,7 +873,13 @@ canteenDescription:
             aria-label="Menu Best Seller, geser ke samping untuk melihat menu lainnya"
             tabIndex={0}
           >
-            {displayedBestSellerItems.map((item) => (
+            {bestSellersLoading ? (
+              <SkeletonLoader
+                variant="menu-strip"
+                count={3}
+                className="customer-best-seller-loading"
+              />
+            ) : displayedBestSellerItems.map((item) => (
               <Link
                 key={item.id}
                 to={`/canteen/${item.canteenId}`}
@@ -887,7 +919,13 @@ canteenDescription:
               </Link>
             ))}
 
-            {filteredBestSellerItems.length === 0 && (
+            {!bestSellersLoading && bestSellersError && (
+              <p role="alert" className="customer-best-seller-empty customer-card rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-sm text-red-700">
+                {bestSellersError}
+              </p>
+            )}
+
+            {!bestSellersLoading && !bestSellersError && filteredBestSellerItems.length === 0 && (
               <div className="customer-best-seller-empty customer-card rounded-2xl border border-slate-200 bg-white p-8 text-center">
                 <PackageX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="font-bold text-slate-700 text-sm">
@@ -942,7 +980,7 @@ canteenDescription:
             </div>
 
             <span className="text-xs font-bold text-white bg-[#2152B7] px-3 py-1.5 rounded-full whitespace-nowrap">
-              {filteredMenus.length} Menu
+              {loading ? 'Memuat...' : `${filteredMenus.length} Menu`}
             </span>
 
           </div>
@@ -952,32 +990,11 @@ canteenDescription:
 
           {loading && (
 
-            <div className="customer-menu-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-              {[1, 2, 3].map((item) => (
-
-                <div
-                  key={item}
-                  className="customer-card bg-white rounded-2xl overflow-hidden border border-slate-200 animate-pulse"
-                >
-
-                  <div className="h-44 bg-slate-200" />
-
-                  <div className="p-4 space-y-3">
-
-                    <div className="h-4 bg-slate-200 rounded w-3/4" />
-
-                    <div className="h-3 bg-slate-200 rounded w-1/2" />
-
-                    <div className="h-8 bg-slate-200 rounded-full w-full" />
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
+            <SkeletonLoader
+              variant="menu"
+              count={3}
+              className="customer-menu-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            />
 
           )}
 
@@ -1125,30 +1142,11 @@ canteenDescription:
 
           {loading && (
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-              {[1, 2].map((n) => (
-
-                <div
-                  key={n}
-                  className="customer-card bg-white rounded-2xl p-4 border border-slate-200 animate-pulse flex gap-3"
-                >
-
-                  <div className="w-20 h-20 bg-slate-200 rounded-xl shrink-0" />
-
-                  <div className="space-y-2 flex-1 pt-1">
-
-                    <div className="h-4 bg-slate-200 rounded-md w-3/4" />
-
-                    <div className="h-3 bg-slate-200 rounded-md w-1/2" />
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
+            <SkeletonLoader
+              variant="canteen"
+              count={2}
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+            />
 
           )}
 

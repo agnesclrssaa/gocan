@@ -186,7 +186,7 @@ export default function AdminManagement() {
                   </td>
                 </tr>
               ))}
-              {!loading && visibleUsers.length === 0 && (
+              {!loading && !error && visibleUsers.length === 0 && (
                 <tr><td colSpan="5" className="px-5 py-10 text-center text-sm text-slate-500">Tidak ada akun yang cocok.</td></tr>
               )}
               {loading && (
@@ -196,7 +196,9 @@ export default function AdminManagement() {
           </table>
         </div>
         <footer className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500">
-          Menampilkan {visibleUsers.length} dari {users.length} akun yang dimuat.
+          {loading
+            ? 'Memuat daftar akun...'
+            : `Menampilkan ${visibleUsers.length} dari ${users.length} akun yang dimuat.`}
         </footer>
       </section>
     </div>

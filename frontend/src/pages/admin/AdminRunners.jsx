@@ -14,6 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { ADMIN_OVERVIEW_REFRESH_EVENT, api, asArray } from '../../lib/api';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 const filters = [
   { value: 'all', label: 'Semua' },
@@ -175,8 +176,8 @@ export default function AdminRunners() {
       </nav>
 
       {loading ? (
-        <div role="status" className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">Memuat pendaftar Runner...</div>
-      ) : runners.length === 0 ? (
+        <SkeletonLoader variant="order" count={3} />
+      ) : !error && runners.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">Tidak ada pendaftar pada filter ini.</div>
       ) : (
         <section className="space-y-4">

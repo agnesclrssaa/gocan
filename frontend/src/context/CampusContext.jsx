@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
+import LoadingScreen from '../components/LoadingScreen';
 
 export const SELECTED_CAMPUS_STORAGE_KEY = 'gocan_selected_campus';
 
@@ -168,11 +169,7 @@ export function RequireSelectedCampus() {
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center text-sm font-semibold text-slate-600">
-        Memuat kampus aktif...
-      </div>
-    );
+    return <LoadingScreen message="Memuat kampus aktif..." />;
   }
 
   if (error) {

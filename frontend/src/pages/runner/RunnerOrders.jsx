@@ -17,6 +17,7 @@ import {
   getRunnerCampusOrders,
   setRunnerActiveOrderId,
 } from '../../lib/runnerCampus';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 export default function RunnerOrders() {
   const { isOnline } = useOutletContext();
@@ -188,9 +189,7 @@ export default function RunnerOrders() {
           </div>
         )}
         {loadingOrders && (
-          <div role="status" className="rounded-2xl border border-white/10 bg-slate-900/70 p-8 text-center text-sm text-slate-300">
-            Memuat pesanan tersedia...
-          </div>
+          <SkeletonLoader variant="order" count={3} className="!grid-cols-1" />
         )}
         {filteredOrders.map((order) => (
           <div
@@ -298,7 +297,7 @@ export default function RunnerOrders() {
           </div>
         ))}
 
-        {filteredOrders.length === 0 && (
+        {!loadingOrders && !ordersError && filteredOrders.length === 0 && (
           <div className="glass-card-dark rounded-3xl p-10 text-center space-y-3 text-slate-400">
             <Compass className="w-10 h-10 text-slate-600 mx-auto" />
             <h4 className="text-base font-bold text-white">Tidak ada orderan di zona {activeFilter}</h4>

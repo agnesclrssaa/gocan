@@ -330,7 +330,7 @@ export default function Register() {
                     );
                   })}
                 </select>
-                {activeCampuses.length === 0 && (
+                {!campusesLoading && !campusError && activeCampuses.length === 0 && (
                   <p role="status" className="text-xs text-[#2152B7]">
                     Belum ada kampus aktif yang tersedia untuk pendaftaran.
                   </p>
@@ -360,7 +360,7 @@ export default function Register() {
                       );
                     })}
                   </select>
-                  {activeCampuses.length === 0 && (
+                  {!campusesLoading && !campusError && activeCampuses.length === 0 && (
                     <span role="status" className="mt-1 block font-normal text-[#2152B7]">
                       Belum ada kampus aktif yang tersedia untuk pendaftaran.
                     </span>

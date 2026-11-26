@@ -19,6 +19,7 @@ import {
   getRunnerCampusOrders,
   isRunnerOrderAssignedTo,
 } from '../../lib/runnerCampus';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 export default function RunnerDashboard() {
   const { isOnline, setIsOnline } = useOutletContext();
@@ -262,7 +263,7 @@ export default function RunnerDashboard() {
 
         <div className="glass-card-dark rounded-2xl p-4 border border-white/10 antigravity-hover text-center sm:text-left">
           <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Pesanan Selesai</p>
-          <p className="text-xl sm:text-2xl font-black text-white mt-1">{history.length}</p>
+          <p className="text-xl sm:text-2xl font-black text-white mt-1">{ordersLoading ? '—' : history.length}</p>
           <span className="text-[11px] text-slate-400 font-medium hidden sm:inline-block mt-0.5">
             Tersimpan di perangkat ini
           </span>
@@ -293,9 +294,7 @@ export default function RunnerDashboard() {
 
           <div className="space-y-3">
             {ordersLoading && (
-              <p role="status" className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 text-sm text-slate-300">
-                Memuat pesanan kampus...
-              </p>
+              <SkeletonLoader variant="order" count={2} className="!grid-cols-1" />
             )}
             {!ordersLoading && recentAvailableOrders.map((order) => (
               <div
@@ -337,7 +336,7 @@ export default function RunnerDashboard() {
                 </div>
               </div>
             ))}
-            {!ordersLoading && recentAvailableOrders.length === 0 && (
+            {!ordersLoading && !ordersError && recentAvailableOrders.length === 0 && (
               <p className="rounded-2xl border border-dashed border-white/15 p-5 text-sm text-slate-400">
                 Belum ada pesanan tersedia untuk kampus ini.
               </p>
@@ -352,7 +351,7 @@ export default function RunnerDashboard() {
               <Clock className="w-5 h-5 text-indigo-400" />
               <span>Riwayat Pengantaran Hari Ini</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-400">{history.length} Selesai</span>
+            <span className="text-xs font-semibold text-slate-400">{ordersLoading ? '…' : history.length} Selesai</span>
           </div>
 
           <div className="space-y-3">
@@ -379,7 +378,9 @@ export default function RunnerDashboard() {
                 </p>
               </div>
             ))}
-            {recentHistory.length === 0 && (
+            {ordersLoading ? (
+              <SkeletonLoader variant="order" count={1} className="!grid-cols-1" />
+            ) : !ordersError && recentHistory.length === 0 && (
               <p className="rounded-2xl border border-dashed border-white/15 p-5 text-sm text-slate-400">
                 Riwayat selesai akan tersimpan di perangkat ini.
               </p>

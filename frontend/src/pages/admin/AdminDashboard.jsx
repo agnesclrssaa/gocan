@@ -235,7 +235,7 @@ export default function AdminDashboard() {
                 ))}
               </select>
             </label>
-            {!availableRunners.length && (
+            {!loading && overview && !availableRunners.length && (
               <p className="text-sm text-amber-700">Belum ada runner yang disetujui. Setujui pendaftaran terlebih dahulu.</p>
             )}
             <div className="flex justify-end gap-2">

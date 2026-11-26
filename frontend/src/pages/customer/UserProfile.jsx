@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../components/common/Navbar';
 import { api } from '../../lib/api';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const toForm = (profile) => ({
   name: profile.name || '',
@@ -169,9 +170,7 @@ export default function UserProfile() {
         )}
 
         {loading ? (
-          <p role="status" className="py-10 text-center text-sm text-slate-500">
-            Memuat profil...
-          </p>
+          <LoadingScreen message="Memuat profil..." />
         ) : !profile ? (
           <button
             type="button"

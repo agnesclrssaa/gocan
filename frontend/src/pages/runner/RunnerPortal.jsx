@@ -12,12 +12,14 @@ import { api } from '../../lib/api';
 import RunnerBackgroundDecoration from '../../components/common/RunnerBackgroundDecoration';
 import RunnerLayout from '../../layouts/RunnerLayout';
 import RunnerProfile from './RunnerProfile';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function RunnerPortal() {
   const { profile, loading, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [portalProfile, setPortalProfile] = useState(profile);
+  const [portalLoading, setPortalLoading] = useState(true);
   const [profileError, setProfileError] = useState('');
   const isProfilePage = location.pathname.endsWith('/profile');
   const status = String(portalProfile?.approval_status || portalProfile?.approvalStatus || 'pending').toLowerCase();
@@ -30,6 +32,9 @@ export default function RunnerPortal() {
       })
       .catch((error) => {
         if (active) setProfileError(error.message || 'Status pendaftaran tidak dapat diperbarui.');
+      })
+      .finally(() => {
+        if (active) setPortalLoading(false);
       });
     return () => {
       active = false;
@@ -51,6 +56,10 @@ export default function RunnerPortal() {
         <RunnerProfile />
       </RunnerLayout>
     );
+  }
+
+  if (portalLoading) {
+    return <LoadingScreen fullScreen message="Memuat status pendaftaran Runner..." />;
   }
 
   if (status !== 'approved') {

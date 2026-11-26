@@ -14,6 +14,7 @@ import { getCampusId, useCampus } from '../../context/CampusContext';
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
 import { getCustomerRoute, useCustomerPreview } from '../../lib/customerRoutes';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 import {
   formatOrderDate,
@@ -416,9 +417,7 @@ export const History = () => {
           </h2>
 
           {isLoading ? (
-            <p className="customer-card rounded-2xl bg-white p-5 text-sm text-slate-500">
-              Memuat pesanan...
-            </p>
+            <SkeletonLoader variant="order" count={2} className="!grid-cols-1" />
           ) : activeOrders.length > 0 ? (
 activeOrders.map((order) => (
   <OrderCard
@@ -459,9 +458,7 @@ activeOrders.map((order) => (
           </h2>
 
           {isLoading ? (
-            <p className="customer-card rounded-2xl bg-white p-5 text-sm text-slate-500">
-              Memuat riwayat...
-            </p>
+            <SkeletonLoader variant="order" count={2} className="!grid-cols-1" />
           ) : pastOrders.length > 0 ? (
 pastOrders.map((order) => (
   <OrderCard

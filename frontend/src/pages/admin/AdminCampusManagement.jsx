@@ -17,6 +17,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 const EMPTY_FORM = {
   campusId: '',
@@ -314,7 +315,9 @@ export default function AdminCampusManagement() {
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
             </div>
-            <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">{value.toLocaleString('id-ID')}</p>
+            <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">
+              {loading ? '—' : value.toLocaleString('id-ID')}
+            </p>
           </article>
         ))}
       </section>
@@ -325,7 +328,9 @@ export default function AdminCampusManagement() {
             <div>
               <h2 className="text-base font-black text-slate-900">Daftar Kampus</h2>
               <p className="mt-1 text-xs text-slate-500">
-                Menampilkan {filteredCampuses.length} dari {campuses.length} kampus
+                {loading
+                  ? 'Memuat daftar kampus...'
+                  : `Menampilkan ${filteredCampuses.length} dari ${campuses.length} kampus`}
               </p>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:w-[min(100%,44rem)] lg:grid-cols-[minmax(12rem,1fr)_minmax(10rem,0.8fr)_9rem]">
@@ -366,11 +371,9 @@ export default function AdminCampusManagement() {
           </div>
         </div>
 
-        {loading && campuses.length === 0 ? (
-          <div className="px-5 py-14 text-center text-sm font-semibold text-slate-500">
-            Memuat daftar kampus...
-          </div>
-        ) : filteredCampuses.length ? (
+        {loading ? (
+          <SkeletonLoader variant="table" count={5} className="rounded-none border-0" />
+        ) : campusData.error ? null : filteredCampuses.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="bg-white text-[11px] font-bold uppercase tracking-wide text-slate-500">

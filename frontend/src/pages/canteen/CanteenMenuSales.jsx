@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Plus, CheckCircle, X, Search, Upload, Image as ImageIcon, LoaderCircle, Trash2 } from 'lucide-react';
 import { belongsToCanteen, filterCanteenOrders, withCanteenOwnership } from '../../lib/canteenCampus';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 const defaultImage = 'https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=600&q=80';
 const menuCategories = ['Makanan Berat', 'Minuman', 'Cemilan', 'Healthy', 'Kopi'];
@@ -11,7 +12,7 @@ const formatPrice = (price) => `Rp ${Number(price || 0).toLocaleString('id-ID')}
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
 export default function CanteenMenuSales() {
-  const { canteen, refreshCanteen, isOpen, updateStoreStatus, updatingStoreStatus } = useOutletContext();
+  const { canteen, canteenLoading, refreshCanteen, isOpen, updateStoreStatus, updatingStoreStatus } = useOutletContext();
   const canteenId = canteen?.canteenId || canteen?.id || '';
   const campusId = canteen?.campusId || '';
   const campusName = canteen?.campusName || '';
@@ -368,7 +369,9 @@ export default function CanteenMenuSales() {
       <section className="merchant-card-glow space-y-6 rounded-xl border border-slate-200 bg-white p-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h2 className="text-base font-bold uppercase tracking-tight text-slate-900">Daftar Menu ({menuItems.length})</h2>
+            <h2 className="text-base font-bold uppercase tracking-tight text-slate-900">
+              Daftar Menu ({canteenLoading ? '…' : menuItems.length})
+            </h2>
             <p className="mt-0.5 text-xs text-slate-500">Kelola foto, harga, stok, dan informasi menu.</p>
           </div>
           <button type="button" onClick={openAddModal} className="flex items-center gap-1.5 self-start rounded-lg bg-[#0A2E6E] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#082457] sm:self-auto">
@@ -387,7 +390,9 @@ export default function CanteenMenuSales() {
           </select>
         </div>
 
-        {menuItems.length === 0 ? (
+        {canteenLoading ? (
+          <SkeletonLoader variant="menu" count={3} />
+        ) : menuItems.length === 0 ? (
           <p className="merchant-card-glow rounded-xl border p-8 text-center text-sm text-slate-500">Belum ada menu. Tambahkan menu pertama kantin Anda.</p>
         ) : filteredItems.length === 0 ? (
           <p className="merchant-card-glow rounded-xl border p-8 text-center text-sm text-slate-500">Tidak ada menu yang cocok dengan pencarian.</p>

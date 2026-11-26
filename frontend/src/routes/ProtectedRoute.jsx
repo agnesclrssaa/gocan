@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PendingApprovalScreen from '../components/common/PendingApprovalScreen';
+import LoadingScreen from '../components/LoadingScreen';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 const roleHome = {
@@ -18,15 +19,7 @@ export const ProtectedRoute = ({ allowedRoles = [], requireApproval = true }) =>
 
   // 1. Tampilkan state loading jika sesi atau profil sedang dimuat
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F0F4F9]">
-        <div className="flex flex-col items-center gap-3 bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm max-w-sm text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0A2E6E] border-t-transparent" />
-          <p className="text-sm font-bold text-slate-800">Memverifikasi Sesi GoCan...</p>
-          <p className="text-xs text-slate-500">Mohon tunggu sebentar selagi sistem memeriksa hak akses Anda.</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen fullScreen message="Memverifikasi sesi dan hak akses Anda..." />;
   }
 
   // 2. Jika belum login sama sekali, redirect ke Login dengan menyimpan path awal

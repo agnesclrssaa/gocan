@@ -5,6 +5,8 @@ import { CampusProvider, RequireSelectedCampus, useCampus } from './context/Camp
 import { AUTH_TOKEN_KEY } from './lib/api';
 import FloatingCart from './components/customer/FloatingCart';
 import CustomerMobileNav from './components/customer/CustomerMobileNav';
+import LoadingScreen from './components/LoadingScreen';
+import TopProgressBar from './components/TopProgressBar';
 import { AlertCircle, X } from 'lucide-react';
 
 // Intro Loading Screen
@@ -117,11 +119,7 @@ function PublicEntryFlow() {
   const startOrdering = useCallback(() => setScreen('auth'), []);
 
   if (loading && localStorage.getItem(AUTH_TOKEN_KEY)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F0F4F9]">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#2152B7] border-t-transparent" />
-      </div>
-    );
+    return <LoadingScreen fullScreen message="Memverifikasi sesi GoCan..." />;
   }
 
   if (user && screen !== 'auth') {
@@ -157,14 +155,7 @@ function RoleLanding() {
   } = useCampus();
 
   if (loading && localStorage.getItem(AUTH_TOKEN_KEY)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F0F4F9]">
-        <div className="flex flex-col items-center gap-3 bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
-          <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0A2E6E] border-t-transparent" />
-          <p className="text-sm font-bold text-slate-800">Memuat akun GoCan...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen fullScreen message="Memuat akun GoCan..." />;
   }
 
   // Public users go through the splash and welcome flow before authentication.
@@ -199,24 +190,13 @@ function RoleLanding() {
       );
     }
 
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F0F4F9]">
-        <div className="flex flex-col items-center gap-3 bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
-          <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0A2E6E] border-t-transparent" />
-          <p className="text-sm font-bold text-slate-800">Menyiapkan profil Anda...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen fullScreen message="Menyiapkan profil Anda..." />;
   }
 
   // Keep the storefront available at the root URL for customers and canteen partners.
   if (profile.role === 'customer') {
     if (campusesLoading) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-[#fbf7f1] text-sm font-semibold text-slate-600">
-          Memuat kampus aktif...
-        </div>
-      );
+      return <LoadingScreen fullScreen message="Memuat kampus aktif..." />;
     }
     if (campusError) {
       return (
@@ -325,6 +305,7 @@ function ApiNotice() {
 export function App() {
   return (
     <BrowserRouter>
+      <TopProgressBar />
       <AuthProvider>
         <CampusProvider>
           <CartProvider>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AlertCircle, MapPin, Search, Star, Store } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import AssetImage from '../../components/common/AssetImage';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import { api } from '../../lib/api';
 import { getCampusId, useCampus } from '../../context/CampusContext';
 import './Home.css';
@@ -271,21 +272,11 @@ const filteredCanteens = useMemo(() => {
           </div>
 
           {loading && (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((item) => (
-                <div
-                  key={item}
-                  className="customer-card overflow-hidden rounded-3xl border border-slate-200 bg-white"
-                >
-                  <div className="h-44 animate-pulse bg-slate-200" />
-                  <div className="space-y-3 p-5">
-                    <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
-                    <div className="h-3 animate-pulse rounded bg-slate-100" />
-                    <div className="h-3 w-1/2 animate-pulse rounded bg-slate-100" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <SkeletonLoader
+              variant="canteen"
+              count={3}
+              className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            />
           )}
 
           {!loading && error && (

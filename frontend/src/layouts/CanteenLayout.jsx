@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import BrandLogo from '../components/common/BrandLogo';
+import LoadingScreen from '../components/LoadingScreen';
 import './MerchantSidebarDecor.css';
 import './RoleMobile.css';
 import { useAuth } from '../context/AuthContext';
@@ -407,12 +408,11 @@ export default function CanteenLayout() {
             </div>
           )}
           {canteenLoading && !canteen ? (
-            <div role="status" className="merchant-card-glow rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-              Memuat data kantin...
-            </div>
+            <LoadingScreen message="Memuat data kantin..." />
           ) : (
             <Outlet context={{
               canteen,
+              canteenLoading,
               refreshCanteen,
               isOpen,
               updateStoreStatus: handleStoreStatusChange,

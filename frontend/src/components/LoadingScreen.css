@@ -1,0 +1,137 @@
+.gocan-loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: #116aa5;
+  text-align: center;
+}
+
+.gocan-loading-screen-full {
+  min-height: 100vh;
+  background: #fbf7f1;
+}
+
+.gocan-loading-screen-section {
+  min-height: 14rem;
+  padding: 2rem 1rem;
+  border-radius: 1.25rem;
+  background: #fbf7f1;
+}
+
+.gocan-loading-mark {
+  position: relative;
+  display: grid;
+  width: 5.25rem;
+  height: 5.25rem;
+  place-items: center;
+}
+
+.gocan-loading-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  animation: gocan-loading-bounce 1.8s ease-in-out infinite;
+}
+
+.gocan-loading-ring {
+  position: absolute;
+  inset: 0;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  animation: gocan-loading-spin 1.5s linear infinite;
+}
+
+.gocan-loading-ring-red {
+  border-top-color: #dc0413;
+  border-right-color: #dc0413;
+}
+
+.gocan-loading-ring-yellow {
+  inset: 7px;
+  border-bottom-color: #ffd612;
+  border-left-color: #ffd612;
+  animation-direction: reverse;
+  animation-duration: 1.9s;
+}
+
+.gocan-loading-message {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.gocan-top-progress {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.gocan-top-progress.is-visible {
+  opacity: 1;
+}
+
+.gocan-top-progress-track {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: #dc0413;
+  transition: transform 160ms ease-out;
+}
+
+.gocan-top-progress-accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18%;
+  height: 100%;
+  background: #ffd612;
+  box-shadow: 0 0 8px #ffd612;
+}
+
+.gocan-skeleton-block {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: #e8e4de;
+}
+
+.gocan-skeleton-block::after {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 70%), transparent);
+  animation: gocan-skeleton-shimmer 1.5s infinite;
+  content: '';
+}
+
+@keyframes gocan-loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gocan-loading-bounce {
+  50% { transform: translateY(-4px) scale(1.04); }
+}
+
+@keyframes gocan-skeleton-shimmer {
+  to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gocan-loading-logo,
+  .gocan-loading-ring,
+  .gocan-skeleton-block::after {
+    animation: none;
+  }
+
+  .gocan-top-progress-track {
+    transition: none;
+  }
+}

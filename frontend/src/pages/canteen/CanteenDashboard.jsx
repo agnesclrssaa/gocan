@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { filterCanteenOrders } from '../../lib/canteenCampus';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 const formatPrice = (price) => `Rp ${Number(price || 0).toLocaleString('id-ID')}`;
 
@@ -236,7 +237,7 @@ export default function CanteenDashboard() {
           </div>
 
           {loadingOrders ? (
-            <p role="status" className="py-12 text-center text-sm text-slate-500">Memuat data penjualan...</p>
+            <SkeletonLoader variant="order" count={2} className="!grid-cols-1" />
           ) : (
             <div className={`grid h-56 ${periodFilter === 30 ? 'grid-cols-10' : 'grid-cols-7'} items-end gap-2 border-t border-slate-100 px-1 pt-5 sm:gap-3`}>
               {trendData.map((day) => (
@@ -272,7 +273,9 @@ export default function CanteenDashboard() {
             <p className="text-xs text-slate-500">Diurutkan dari jumlah item terjual.</p>
           </div>
 
-          {bestSellers.length ? (
+          {loadingOrders ? (
+            <SkeletonLoader variant="order" count={2} className="!grid-cols-1" />
+          ) : bestSellers.length ? (
             <div className="space-y-3">
               {bestSellers.map((item) => (
                 <div key={item.name} className="merchant-card-glow space-y-2 rounded-lg border border-slate-100 bg-white p-3">
@@ -294,11 +297,11 @@ export default function CanteenDashboard() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : !ordersError ? (
             <p className="rounded-lg bg-slate-50 p-5 text-center text-sm text-slate-500">
-              {loadingOrders ? 'Memuat pesanan...' : 'Belum ada menu terjual hari ini.'}
+              Belum ada menu terjual hari ini.
             </p>
-          )}
+          ) : null}
 
           <Link
             to="/canteen-portal/orders"

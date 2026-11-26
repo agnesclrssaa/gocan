@@ -5,6 +5,7 @@ import { useCart } from '../../context/CartContext';
 import { getCampusId, useCampus } from '../../context/CampusContext';
 import CampusSwitchDialog from '../../components/customer/CampusSwitchDialog';
 import Navbar from '../../components/common/Navbar';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 const getReturnPath = (location) => {
   const from = location.state?.from;
@@ -133,9 +134,11 @@ export default function CampusSelection() {
         </div>
 
         {campusesLoading ? (
-          <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center text-sm font-semibold text-slate-500 shadow-sm">
-            Memuat kampus aktif...
-          </div>
+          <SkeletonLoader
+            variant="canteen"
+            count={3}
+            className="mx-auto mt-8 max-w-5xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          />
         ) : campusError ? null : activeCampuses.length === 0 ? (
           <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
             <Building2 className="mx-auto h-10 w-10 text-slate-300" aria-hidden="true" />

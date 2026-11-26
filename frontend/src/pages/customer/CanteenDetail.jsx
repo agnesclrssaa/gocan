@@ -7,6 +7,7 @@ import Navbar from '../../components/common/Navbar';
 import AssetImage from '../../components/common/AssetImage';
 import MenuCard from '../../components/customer/MenuCard';
 import { getCampusId, useCampus } from '../../context/CampusContext';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 export const CanteenDetail = ({ preview = false }) => {
   const { canteenId } = useParams();
@@ -104,11 +105,7 @@ export const CanteenDetail = ({ preview = false }) => {
           </h1>
         </div>
 
-        {loading && (
-          <p className="customer-card rounded-2xl border border-slate-200 bg-white p-5 text-sm font-medium text-slate-600">
-            Memuat kantin dan menu...
-          </p>
-        )}
+        {loading && <SkeletonLoader variant="canteen" count={1} className="max-w-3xl" />}
         {!loading && error && (
           <div className="flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             <AlertCircle className="h-4 w-4 shrink-0" />
@@ -201,7 +198,7 @@ export const CanteenDetail = ({ preview = false }) => {
 
           {/* Menu grid */}
           <div className="customer-menu-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {displayedMenus.map((menu) => (
+            {!loading && displayedMenus.map((menu) => (
               <MenuCard
                 key={menu.id}
                 menu={menu}
@@ -209,6 +206,7 @@ export const CanteenDetail = ({ preview = false }) => {
               />
             ))}
           </div>
+          {loading && <SkeletonLoader variant="menu" count={3} />}
           {filteredMenus.length > 6 && (
             <button
               type="button"
@@ -219,7 +217,7 @@ export const CanteenDetail = ({ preview = false }) => {
               {showAllMenus ? 'Lihat Lebih Sedikit' : 'Lihat Semua'}
             </button>
           )}
-          {filteredMenus.length === 0 && (
+          {!loading && !error && filteredMenus.length === 0 && (
             <div className="customer-card rounded-2xl border border-slate-200 bg-white px-5 py-10 text-center">
               <p className="font-bold text-slate-700">
                 {menus.length === 0 ? 'Menu kantin belum tersedia.' : 'Tidak ada menu di kategori ini.'}

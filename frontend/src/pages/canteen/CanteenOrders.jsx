@@ -5,6 +5,7 @@ import PickupScanner from '../../components/common/PickupScanner';
 import { useCallback, useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api, asArray } from '../../lib/api';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import { CheckCircle2, Clock3, FileText, MapPin, RefreshCw, Utensils, X } from 'lucide-react';
 import { belongsToCanteen, filterCanteenOrders } from '../../lib/canteenCampus';
 
@@ -198,15 +199,13 @@ export default function CanteenOrders() {
       <section aria-label="Daftar pesanan" className="space-y-4">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-sm font-black text-slate-900">
-            Daftar Pesanan ({filteredOrders.length}) · {statusTabs.find((tab) => tab.id === activeTab)?.label}
+            Daftar Pesanan ({loadingOrders ? '…' : filteredOrders.length}) · {statusTabs.find((tab) => tab.id === activeTab)?.label}
           </h2>
           <span className="text-[11px] text-slate-400">Data dari server GoCan</span>
         </div>
 
         {loadingOrders && (
-          <div role="status" className="merchant-card-glow bg-white border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-500">
-            Memuat pesanan kantin...
-          </div>
+          <SkeletonLoader variant="order" count={2} className="!grid-cols-1" />
         )}
 
         {!loadingOrders && filteredOrders.map((order) => (

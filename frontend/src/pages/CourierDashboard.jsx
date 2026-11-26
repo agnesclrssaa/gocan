@@ -4,6 +4,7 @@ import { AlertCircle, Bike, CheckCircle2, PackageCheck, RefreshCw } from 'lucide
 import Navbar from '../components/common/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { api, asArray } from '../lib/api';
+import SkeletonLoader from '../components/SkeletonLoader';
 import {
   getRunnerCampusInfo,
   getRunnerCampusOrders,
@@ -209,9 +210,7 @@ export default function CourierDashboard() {
         </section>
 
         {loading ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-500">
-            Memuat pesanan...
-          </div>
+          <SkeletonLoader variant="order" count={3} />
         ) : (
           <>
             <section aria-labelledby="ready-orders-heading" className="space-y-4">

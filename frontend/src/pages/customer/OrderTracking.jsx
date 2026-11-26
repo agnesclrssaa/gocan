@@ -14,6 +14,7 @@ import {
 
 import { api } from '../../lib/api';
 import Navbar from '../../components/common/Navbar';
+import LoadingScreen from '../../components/LoadingScreen';
 import {
   formatOrderDate,
   formatRupiah,
@@ -280,13 +281,7 @@ export const OrderTracking = () => {
       <div className="min-h-screen bg-[#F0F4F9]">
         <Navbar />
 
-        <div className="flex flex-col items-center justify-center pt-32">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#2152B7] border-t-transparent" />
-
-          <p className="mt-4 text-sm font-semibold text-slate-500">
-            Memuat status pesanan...
-          </p>
-        </div>
+        <LoadingScreen message="Memuat status pesanan..." />
       </div>
     );
   }

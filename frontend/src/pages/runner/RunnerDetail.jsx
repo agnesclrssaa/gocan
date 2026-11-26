@@ -15,6 +15,7 @@ import {
   isRunnerOrderAssignedTo,
   setRunnerActiveOrderId,
 } from '../../lib/runnerCampus';
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function RunnerDetail() {
   const location = useLocation();
@@ -267,11 +268,7 @@ export default function RunnerDetail() {
   };
 
   if (authLoading || loadingOrder) {
-    return (
-      <div role="status" className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm font-semibold text-slate-600">
-        Memuat detail pengantaran aktif...
-      </div>
-    );
+    return <LoadingScreen message="Memuat detail pengantaran aktif..." />;
   }
 
   if (!order) {

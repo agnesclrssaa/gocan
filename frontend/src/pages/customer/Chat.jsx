@@ -77,7 +77,7 @@ function ChatList({ conversations, activeId, onSelect, loading, error }) {
             </div>
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : !error && filtered.length === 0 ? (
         <div className="chat-empty-list">
           <div><Search /></div>
           <h2>Tidak ada percakapan</h2>
